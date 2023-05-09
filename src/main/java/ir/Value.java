@@ -3,17 +3,17 @@ package ir;
 import java.util.LinkedList;
 
 public abstract class Value {
-    private final Type type;
-
     public Value(Type type) {
         this.type = type;
     }
+
+    public final Type type;
 
     public Type getType() {
         return type;
     }
 
-    private String name = "";
+    public String name = "";
 
     public String getName() {
         return name;
@@ -23,11 +23,11 @@ public abstract class Value {
         this.name = name;
     }
 
-    private final LinkedList<Use> useList = new LinkedList<>();
+    public final LinkedList<Use> useList = new LinkedList<>();
 
     public void replaceAllUseWith(Value v) {
         for (Use use : useList) {
-            use.setV(v);
+            use.setValue(v);
             v.useList.add(use);
         }
     }

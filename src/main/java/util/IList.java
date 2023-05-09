@@ -2,10 +2,60 @@ package util;
 
 import java.util.Iterator;
 
-// 侵入式链表
-public class IList<T, P> implements Iterable<IList.INode> {
-    private INode<T, P> head;
-    private INode<T, P> tail;
+/**
+ * 侵入式链表实现
+ * @param <T>
+ * @param <P>
+ */
+public class IList<T, P> implements Iterable<IList.INode<T, P>> {
+    // 链表中的节点类
+    public static class INode<T, P> {
+        private T element;
+        private INode<T, P> prev;
+        private INode<T, P> next;
+        private IList<T, P> parentList = null;
+
+        public INode(T element, INode<T, P> prev, INode<T, P> next) {
+            this.element = element;
+            this.prev = prev;
+            this.next = next;
+        }
+
+        public T getElement() {
+            return element;
+        }
+
+        public void setElement(T element) {
+            this.element = element;
+        }
+
+        public INode<T, P> getPrev() {
+            return prev;
+        }
+
+        public void setPrev(INode<T, P> prev) {
+            this.prev = prev;
+        }
+
+        public INode<T, P> getNext() {
+            return next;
+        }
+
+        public void setNext(INode<T, P> next) {
+            this.next = next;
+        }
+
+        public IList<T, P> getParentList() {
+            return parentList;
+        }
+
+        public void setParent(IList<T, P> parentList) {
+            this.parentList = parentList;
+        }
+    }
+
+    private final INode<T, P> head;
+    private final INode<T, P> tail;
     private int size;
     private P val;
 
@@ -89,45 +139,12 @@ public class IList<T, P> implements Iterable<IList.INode> {
     }
 
     @Override
-    public IIterator iterator() {
-        return new IIterator<>(head, tail);
-    }
-
-    // 链表中的节点类
-    public class INode<T, P> {
-        private T element;
-        private INode<T, P> prev;
-        private INode<T, P> next;
-
-        public INode(T element, INode<T, P> prev, INode<T, P> next) {
-            this.element = element;
-            this.prev = prev;
-            this.next = next;
-        }
-
-        public T getElement() {
-            return element;
-        }
-
-        public INode<T, P> getPrev() {
-            return prev;
-        }
-
-        public void setPrev(INode<T, P> prev) {
-            this.prev = prev;
-        }
-
-        public INode<T, P> getNext() {
-            return next;
-        }
-
-        public void setNext(INode<T, P> next) {
-            this.next = next;
-        }
+    public Iterator<INode<T, P>> iterator() {
+        return new IIterator(head, tail);
     }
 
     // 迭代器的实现
-    private class IIterator<T, P> implements Iterator<INode<T, P>> {
+    class IIterator<T, P> implements Iterator<INode<T, P>> {
         INode<T, P> head;
         INode<T, P> tail;
         INode<T, P> cur;

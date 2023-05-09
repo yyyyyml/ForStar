@@ -1,23 +1,23 @@
 package ir;
 
 public class Use {
-    private int operandRank;
+    private int Position;
     private User u;
     private Value v;
 
-    public Use(Value v, User u, int operandRank) {
+    public Use(Value v, User u, int Position) {
         this.v = v;
         this.u = u;
-        this.operandRank = operandRank;
-//        v.useList.add(this);
-//        u.operandList.add(this);
+        this.Position = Position;
+        v.useList.add(this);
+        u.operandList.add(this);
     }
 
-    public void setV(Value v) {this.v = v;}
+    public void setValue(Value v) {this.v = v;}
 
-    public int getRank() {return operandRank;}
+    public int getPosition() {return this.Position;}
 
-    public Value getV() {return v;}
+    public Value getValue() {return this.v;}
 
-    public User getU() {return u;}
+    public User getUser() {return this.u;}
 }
