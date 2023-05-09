@@ -51,11 +51,11 @@ public class Function extends Value {
     //形参，记录各位置类型，不含值
     public class Param extends Value {
         private List<Value> bounds;
-        private int rank;
+        private int position;
 
-        public Param(Type type, int rank) {
+        public Param(Type type, int position) {
             super(type);
-            this.rank = rank;
+            this.position = position;
         }
 
         public void setBounds(List<Value> bounds) {this.bounds = bounds;}

@@ -9,7 +9,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 public class demoMain {
     public static void main(String[] args) throws Exception {
-        CharStream inputFile = CharStreams.fromFileName("E:\\ForStar\\src\\main\\java\\test.txt");
+        CharStream inputFile = CharStreams.fromFileName("src/main/java/test.txt");
         System.out.println(inputFile.toString()); // Test content read in.
 
         // lexical analysis

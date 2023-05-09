@@ -9,7 +9,7 @@ import java.util.LinkedList;
 public class Module {
     public IList<Function, Module> functionList;
 
-    private final LinkedList<GlobalVariable> globalVariableList = new LinkedList<>();
+    public final LinkedList<GlobalVariable> globalVariableList = new LinkedList<>();
 
     public void addGlobalVariable(GlobalVariable glbVar) {
         globalVariableList.add(glbVar);
