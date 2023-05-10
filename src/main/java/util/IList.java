@@ -1,5 +1,8 @@
 package util;
 
+import ir.Module;
+import ir.values.Function;
+
 import java.util.Iterator;
 
 /**
@@ -87,27 +90,27 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
         return val;
     }
 
-    public INode<T, P> addBefore(INode<T, P> p, T e) {
-        INode<T, P> newNode = new INode<>(e, p.getPrev(), p);
-        p.getPrev().setNext(newNode);
-        p.setPrev(newNode);
+    public INode<T, P> addBefore(INode<T, P> p, INode<T, P> e) {
+        //修改成两个节点
+        p.getPrev().setNext(e);
+        p.setPrev(e);
         size++;
-        return newNode;
+        return e;
     }
 
-    public INode<T, P> addAfter(INode<T, P> p, T e) {
-        INode<T, P> newNode = new INode<>(e, p, p.getNext());
-        p.getNext().setPrev(newNode);
-        p.setNext(newNode);
+    public INode<T, P> addAfter(INode<T, P> p, INode<T, P> e) {
+        //修改成两个节点
+        p.getNext().setPrev(e);
+        p.setNext(e);
         size++;
-        return newNode;
+        return e;
     }
 
-    public INode<T, P> addFirst(T e) {
+    public INode<T, P> addFirst(INode<T, P> e) {
         return addAfter(head, e);
     }
 
-    public INode<T, P> addLast(T e) {
+    public INode<T, P> addLast(INode<T, P> e) {
         return addBefore(tail, e);
     }
 

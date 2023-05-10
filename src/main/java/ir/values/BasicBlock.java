@@ -24,4 +24,16 @@ public class BasicBlock extends Value {
         list = new IList<>(this);
         node = new IList.INode<BasicBlock, Function>(this, null, null);
     }
+    //新加函数
+    public void insertAtEnd(Instruction inst) {
+        //Security checks.
+        //if (inst.getBB() != null) {
+        //   throw new RuntimeException("Try to insert an Inst that has already belonged to another BB.");
+        //}
+        //if (this.list.size() != 0 && this.getLastInst().getTag().isTerminator()) {
+        //throw new RuntimeException("Try to insert an Inst to a BB which has already ended with a Terminator.");
+        //
+        // Insertion.
+        this.list.addAfter(inst.node.getPrev(),inst.node);
+    }
 }
