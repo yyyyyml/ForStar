@@ -33,5 +33,21 @@ public class Scope {
         }
     }
 
+
+    public void addDecl(String name, Value val) {
+        // Check name repetition. (Security check)
+        //其实这个检查目前还不用
+        if(this.duplicateDecl(name)) {
+            throw new RuntimeException(String.format(
+                    "Try to add an declaration with an existing name \"%s\" into current symbol table.",
+                    name
+            ));
+        }
+        // If it's a new name.
+        curTab().put(name, val);
+    }
+    public boolean duplicateDecl(String name) {
+        return curTab().get(name) != null;
+    }
 }
 

@@ -47,6 +47,10 @@ public class Instruction extends User{
         Phi,//用于 mem2reg
     }
 
+    public TAG getTag() {
+        return tag;
+    }
+
     public boolean isBinary() {
         return this.tag.ordinal() <= TAG.Or.ordinal()
                 && this.tag.ordinal() <= TAG.Ge.ordinal();

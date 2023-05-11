@@ -36,4 +36,8 @@ public class BasicBlock extends Value {
         // Insertion.
         this.list.addAfter(inst.node.getPrev(),inst.node);
     }
+
+    public Instruction getLastInst() {
+        return this.list.isEmpty() ? null : this.list.getLast().getElement();
+    }
 }

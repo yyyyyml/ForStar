@@ -17,4 +17,14 @@ public class FunctionType extends Type {
         this.retType = retType;
         this.paramsTypeList = paramsTypeList;
     }
+    /*public static FunctionType getType(Type retType, ArrayList<Type> argTypes) {
+        var key = new PrototypeKey(retType, argTypes);
+        if (pool.containsKey(key)) {
+            return pool.get(key);
+        }
+
+        var newType = new FunctionType(retType, argTypes);
+        pool.put(key, newType);
+        return newType;
+    }*/
 }
