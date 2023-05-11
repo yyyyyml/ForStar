@@ -2,6 +2,7 @@ package ir.values;
 
 import ir.Type;
 import ir.Value;
+import ir.Module;
 import ir.types.FunctionType;
 import util.IList;
 
