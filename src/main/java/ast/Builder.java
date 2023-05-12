@@ -120,7 +120,7 @@ public class Builder {
         }
         // Construct, insert, and return.
         TerminatorInst.Ret ret = new TerminatorInst.Ret(retVal);
-        getCurBB().insertAtEnd(ret);
+        getCurBB().list.addLast(ret.node);
         return ret;
     }
 

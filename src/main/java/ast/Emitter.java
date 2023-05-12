@@ -90,6 +90,7 @@ public class Emitter {
                     }
                     for (IList.INode<Instruction, BasicBlock> instInode : bbInode.getElement().list) {
                         Instruction inst = instInode.getElement();
+                        sb.append("\t");
                         sb.append(inst.toString());
                         sb.append("\n");
                     }

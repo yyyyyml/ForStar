@@ -23,6 +23,7 @@ public class BasicBlock extends Value {
         this.nextList = new ArrayList<>();
         list = new IList<>(this);
         node = new IList.INode<BasicBlock, Function>(this, null, null);
+        this.name = name;
     }
     //新加函数
     public void insertAtEnd(Instruction inst) {

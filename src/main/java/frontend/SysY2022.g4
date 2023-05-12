@@ -64,7 +64,7 @@ cond : lOrExp;
 
 lVal
     : Ident                                             # scalarLVal
-    | Ident ('[' exp ']')+                             # arrLVal
+    | Ident ('[' exp ']')+                              # arrLVal
     ;
 
 primaryExp

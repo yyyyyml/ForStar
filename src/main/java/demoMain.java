@@ -10,7 +10,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 public class demoMain {
     public static void main(String[] args) throws Exception {
-        CharStream inputFile = CharStreams.fromFileName("D:/ForStar/src/main/java/test.txt");
+        CharStream inputFile = CharStreams.fromFileName("src/main/java/test.txt");
         System.out.println(inputFile.toString()); // Test content read in.
 
         // lexical analysis
@@ -29,6 +29,9 @@ public class demoMain {
         // Traversal the ast to build the IR.
         visitor.visit(ast);
         // Traversal the ast to build the IR.
+
+        Emitter emitter = new Emitter("out.ll");
+        emitter.emit(module);
 
 
     }

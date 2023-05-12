@@ -93,7 +93,10 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
     public INode<T, P> addBefore(INode<T, P> p, INode<T, P> e) {
         //修改成两个节点
         p.getPrev().setNext(e);
+        e.setPrev(p.getPrev());
         p.setPrev(e);
+        e.setNext(p);
+
         size++;
         return e;
     }
@@ -101,7 +104,9 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
     public INode<T, P> addAfter(INode<T, P> p, INode<T, P> e) {
         //修改成两个节点
         p.getNext().setPrev(e);
+        e.setNext(p.getNext());
         p.setNext(e);
+        e.setPrev(p);
         size++;
         return e;
     }

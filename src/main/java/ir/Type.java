@@ -58,7 +58,7 @@ public class Type {
         public static IntegerType getType() {return type;}
 
         @Override
-        public String toString() {return "i32 ";}
+        public String toString() {return "i32";}
     }
 
     // BoolType
@@ -70,7 +70,7 @@ public class Type {
         public static BoolType getType() {return type;}
 
         @Override
-        public String toString() {return "i1 ";}
+        public String toString() {return "i1";}
     }
 
     // FloatType
@@ -82,7 +82,7 @@ public class Type {
         public static FloatType getType() {return type;}
 
         @Override
-        public String toString() {return "float ";}
+        public String toString() {return "float";}
     }
 
     public boolean isNonType() {

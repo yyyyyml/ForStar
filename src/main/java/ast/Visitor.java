@@ -12,11 +12,12 @@ import ir.Instruction;
 
 import java.util.ArrayList;
 
+
 public class Visitor extends SysY2022BaseVisitor<Void> {
     private final Scope scope = new Scope();
-    private final Builder builder = new Builder();
+    private Builder builder;
     public Visitor (Module module) {
-        Builder builder = new Builder(module);
+        this.builder = new Builder(module);
         //this.initRuntimeFunctions();
     }
 
@@ -176,10 +177,14 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         Type retType;
         String strRetType = ctx.funcType().getText();
         switch (strRetType) {
-            case "int" -> retType = ir.Type.IntegerType.getI32();
+            case "int" -> {
+                retType = ir.Type.IntegerType.getType();
+                setConveyedType(DataType.INT);//我随便加了个地方set了一下，应该不太对，你后面再改
+            }
+
             //先不着急写
             //case "float" -> retType = FloatType.getType();
-            //case "void" -> retType = VoidType.getType();
+            case "void" -> retType = Type.VoidType.getType();
             default -> throw new RuntimeException("Unsupported function return type.");
         }
 
@@ -245,11 +250,14 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         // If no instruction in the bb, or the last instruction is not a terminator.
         if (tailInst == null || !tailInst.isTerminator()) {
             //function.getType().getRetType().isFloatType()这下面三个在Function类完善后可能要把type分成paramtype和returntype
-            if (function.getType().isVoidType()) {
+//            System.out.println("要判断类型");
+            if (((FunctionType)function.getType()).getRetType().isVoidType()) {
                 builder.buildRet();
+//                System.out.println("类型为空");
             }
-            else if (function.getType().isIntegerType()) {
+            else if (((FunctionType)function.getType()).getRetType().isIntegerType()) {
                 builder.buildRet(builder.buildConstant(0)); // Return 0 by default.
+//                System.out.println("类型为整数");
             }
             /*else if (function.getType().getRetType().isFloatType()) {
                 builder.buildRet(builder.buildConstant(.0f)); // Return 0.0f by default.
@@ -306,7 +314,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             builder.buildRet();
         }
         // Add a dead block for possible remaining dead code.
-        builder.buildBB("_FOLLOWING_BLK");
+//        builder.buildBB("_FOLLOWING_BLK");
         return null;
     }
 
@@ -320,6 +328,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     @Override
     public Void visitNumber(SysY2022Parser.NumberContext ctx) {
         super.visitNumber(ctx);
+        //我觉得这应该访问子节点 判断那个数是啥
+        //然后把retInt_ set成那个数
+        //然后这再build进去就行了
         if (!this.inConstFolding()) {
             switch (getConveyedType()) {
                 case INT -> retVal_ = builder.buildConstant(retInt_);
