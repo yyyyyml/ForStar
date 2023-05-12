@@ -59,7 +59,7 @@ public class Builder {
         //else {
         // getCurModule().functions.add(func);
         // Set the pointer.
-        //this.setCurFunc(func);
+        this.setCurFunc(func);
         //}
         return func;
     }
@@ -67,6 +67,9 @@ public class Builder {
 
     public BasicBlock buildBB(String bbInfo) {
         BasicBlock bb = new BasicBlock(bbInfo);
+        curFunc.list.addLast(bb.node);
+        // Set the pointer.
+        this.setCurBB(bb);
         return bb;
     }
 
@@ -91,12 +94,14 @@ public class Builder {
     public TerminatorInst.Ret buildRet() {
         // Security checks.
         //!getCurFunc().getType().getRetType().isVoidType()
-        if (!getCurFunc().getType().isVoidType()) {
+        if (!((FunctionType)getCurFunc().getType()).getRetType().isVoidType()) {
             throw new RuntimeException("Try to return void with Ret inst in a non-void function.");
         }
         // Construct, insert, and return.
         TerminatorInst.Ret ret = new TerminatorInst.Ret();
-        getCurBB().insertAtEnd(ret);
+        getCurBB().list.addLast(ret.node);
+        System.out.println(getCurBB().name);
+        System.out.println("buildRet");
         return ret;
     }
 
@@ -109,7 +114,7 @@ public class Builder {
     public TerminatorInst.Ret buildRet(Value retVal) {
         // Security checks.
         //retVal.getType() != getCurFunc().getType().getRetType()
-        if (retVal.getType() != getCurFunc().getType()) {
+        if (retVal.getType() != ((FunctionType)getCurFunc().getType()).getRetType()) {
             throw new RuntimeException(
                     "The type of retVal doesn't match with the return type defined in the function prototype.");
         }
