@@ -1,5 +1,8 @@
 //主函数
 import ast.*;
+import backend.RISCBuilder;
+import backend.RISCClass;
+import backend.RISCEmitter;
 import frontend.*;
 import ir.Module;
 import org.antlr.v4.runtime.CharStream;
@@ -32,6 +35,14 @@ public class demoMain {
 
         Emitter emitter = new Emitter("out.ll");
         emitter.emit(module);
+
+        RISCBuilder mcBuilder = RISCBuilder.get();
+        mcBuilder.loadModule(module);
+        RISCClass target = mcBuilder.codeGeneration();
+
+        /* Write file */
+        RISCEmitter mcEmitter = new RISCEmitter();
+        System.out.println(mcEmitter.emit(target));
 
 
     }
