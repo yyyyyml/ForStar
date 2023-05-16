@@ -4,6 +4,10 @@ import ir.Type;
 
 import java.util.ArrayList;
 
+/**
+ * 函数类型
+ * 包含返回类型和参数类型列表 不含值
+ */
 public class FunctionType extends Type {
     private Type retType;// 返回类型
 
