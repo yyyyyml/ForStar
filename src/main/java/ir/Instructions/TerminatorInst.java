@@ -6,7 +6,7 @@ import ir.Value;
 
 /**
  * 表示基本块终止的指令
- * 包含Ret,Br,Call
+ * 包含RET,BR,CALL
  * 待修改
  */
 public class TerminatorInst {

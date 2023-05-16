@@ -8,18 +8,22 @@ import ir.types.PointerType;
 import java.util.LinkedList;
 
 /**
+ * 全局变量类 继承自User类
  * 全局变量都是PointerType
- * 待修改
  */
 public class GlobalVariable extends User {
     public boolean isConst = false;
-    public Constant init;//初始化值
-
-    public void setConst() {this.isConst = true;}
+    public Constant init; // 初始化值
 
     public GlobalVariable(String name, Type type) {
         super(new PointerType(type));
         this.name = name;
+    }
+
+    public void setConst() {this.isConst = true;}
+
+    public void setInit(Constant init) {
+        this.init = init;
     }
 
     @Override
@@ -33,7 +37,14 @@ public class GlobalVariable extends User {
             sb.append(tmp.getPointedType().toString());
             sb.append(" ");
             //没有初始化的值默认其为0
-            sb.append(this.init == null ? "0 " : ((Constant.ConstantInt) this.init).getVal());
+            if (this.init == null) sb.append("0 ");
+            else sb.append(((Constant.ConstantInt) this.init).getVal());
+        } else if (tmp.getPointedType().isFloatType()) {
+            sb.append(tmp.getPointedType().toString());
+            sb.append(" ");
+            //没有初始化的值默认其为0
+            if (this.init == null) sb.append("0.0 ");
+            else sb.append(((Constant.ConstantFloat) this.init).getVal());
         } else if (tmp.getPointedType().isArrayType()) {
             if (this.init == null) {
                 sb.append(tmp.getPointedType().toString());

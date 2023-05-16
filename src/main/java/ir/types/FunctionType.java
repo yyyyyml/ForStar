@@ -9,13 +9,13 @@ public class FunctionType extends Type {
 
     public Type getRetType() {return retType;}
 
-    private ArrayList<Type> paramsTypeList; //参数类型列表
+    private ArrayList<Type> paramTypeList; //参数类型列表
 
-    public ArrayList<Type> getParamsTypeList() {return paramsTypeList;}
+    public ArrayList<Type> getParamTypeList() {return paramTypeList;}
 
     public FunctionType(Type retType, ArrayList<Type> paramsTypeList) {
         this.retType = retType;
-        this.paramsTypeList = paramsTypeList;
+        this.paramTypeList = paramsTypeList;
     }
     /*public static FunctionType getType(Type retType, ArrayList<Type> argTypes) {
         var key = new PrototypeKey(retType, argTypes);
