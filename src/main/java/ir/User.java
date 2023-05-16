@@ -3,13 +3,16 @@ package ir;
 import java.util.LinkedList;
 
 /**
- * 待修改
+ * User类 继承自Value类
+ * 包括numOP属性，表示操作数数量
+ * operandList表示所有这个User使用其他Value(操作数)的Use的链表
+ * addInOperandList()用于向operandList中添加Use
  */
 public abstract class User extends Value {
-    public LinkedList<Use> operandList = new LinkedList<>();//联系 User 与 Value 的 Use list,是乱序的，顺序通过 Use 的成员变量 operandRank 来体现
+    public LinkedList<Use> operandList = new LinkedList<>();
     private int numOP = 0;//操作数的数量
 
-    public Value getOP(int i) {//这是个 O(n) 的操作，所幸 n 不会太大，而且operands是基本有序的
+    public Value getOperandAt(int i) {
         for (Use use : operandList) {
             if (use.getPosition() == i) {
                 return use.getValue();
@@ -19,21 +22,33 @@ public abstract class User extends Value {
     }
 
     public void addOperand(Value v) {
-        operandList.add(new Use(v, this, numOP++));
+        operandList.add(new Use(this, v, numOP++));
     }
 
     public void setOperand(Value v, int i) {
         assert i < numOP && i >= 0;
-        //有就替换，无就分一个新的对象
+
+        Use existingUse = null;
         for (Use use : operandList) {
             if (use.getPosition() == i) {
-                use.getValue().useList.removeIf(h -> h.equals(use));//从原Value中删去这条use
-                use.setValue(v);
-                v.useList.add(use);
-                return;
+                existingUse = use;
+                break;
             }
         }
-        Use newUse = new Use(v, this, i);
+
+        if (existingUse != null) { // 当前位置有操作数，替换
+            existingUse.getValue().useList.remove(existingUse);
+            existingUse.setValue(v);
+            v.addInUseList(existingUse);
+        } else { // 当前位置没有操作数，替换
+            Use newUse = new Use(this, v, i);
+            this.addInOperandList(newUse);
+            v.addInUseList(newUse);
+        }
+    }
+
+    public void addInOperandList(Use use) {
+        operandList.add(use);
     }
 
     public int getNumOP() {return numOP;}

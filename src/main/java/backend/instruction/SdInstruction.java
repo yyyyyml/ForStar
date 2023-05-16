@@ -16,7 +16,7 @@ public class SdInstruction extends RISCinstruction {
     public SdInstruction(int r1, int offset, int basicAddress) {
         this.reg1=new Register(r1);
         this.mem=new Memory(offset,basicAddress);
-        this.type = ITYPE.sw;
+        this.type = ITYPE.sd;
     }
 
 

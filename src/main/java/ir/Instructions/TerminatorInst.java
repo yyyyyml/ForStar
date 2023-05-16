@@ -1,4 +1,4 @@
-package ir.values.Instructions;
+package ir.Instructions;
 
 import ir.Instruction;
 import ir.Type;
@@ -15,12 +15,12 @@ public class TerminatorInst {
      */
     public static class Ret extends Instruction {
         public Ret() {
-            super(Type.VoidType.getType(), Instruction.TAG.Ret, 0);
+            super(Type.VoidType.getType(), Instruction.TAG.RET, 0);
             needName = false;
         }
 
         public Ret(Value val) {
-            super(Type.VoidType.getType(), TAG.Ret, 1);
+            super(Type.VoidType.getType(), TAG.RET, 1);
             this.setOperand(val, 0);
             needName = false;
         }
@@ -30,7 +30,7 @@ public class TerminatorInst {
             StringBuilder sb = new StringBuilder();
             sb.append("ret ");
             if (this.getNumOP() == 1) {
-                sb.append(getOP(0).type + " " + getOP(0).name);
+                sb.append(getOperandAt(0).type + " " + getOperandAt(0).name);
             } else {
                 sb.append("void ");
             }

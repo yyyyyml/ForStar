@@ -23,6 +23,6 @@ public class AddiInstruction extends RISCinstruction {
 
 
     public String emit() {
-        return this.type.name()+" "+reg1.type.name()+","+reg2.type.name()+Integer.toString(imm);
+        return this.type.name()+" "+reg1.type.name()+","+reg2.type.name()+","+Integer.toString(imm);
     }
 }

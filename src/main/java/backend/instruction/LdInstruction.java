@@ -17,7 +17,7 @@ public class LdInstruction extends RISCinstruction {
     public LdInstruction(int r1, int offset, int basicAddress) {
         this.reg1=new Register(r1);
         this.mem1=new Memory(offset,basicAddress);
-        this.type = ITYPE.lw;
+        this.type = ITYPE.ld;
     }
 
 

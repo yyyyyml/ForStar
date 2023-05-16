@@ -1,13 +1,11 @@
 package ast;
 
 import ir.Module;
-import ir.Type;
 import ir.Value;
 import ir.types.*;
 import ir.values.*;
 
-import ir.values.Instructions.*;
-import util.IList;
+import ir.Instructions.*;
 
 
 public class Builder {

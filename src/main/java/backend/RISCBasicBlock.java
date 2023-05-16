@@ -51,8 +51,8 @@ public class RISCBasicBlock {
     public RISCBasicBlock(BasicBlock iRbb) {
             for(IList.INode<Instruction, BasicBlock> Inode : iRbb.list){
                 Instruction curInst=Inode.getElement();
-                switch (curInst.tag){
-                    case Ret:  translateRet(curInst);
+                switch (curInst.getTag()){
+                    case RET:  translateRet(curInst);
                 }
 
             }

@@ -36,7 +36,9 @@ public class RISCinstruction {
         sh,
         sw,
         jr,
-        nop
+        nop,
+        sd,
+        ld
     }
 
 

@@ -1,3 +1,3 @@
-define dso_local void @main(){
+define dso_local void @fun(){
 	ret void 
 }
