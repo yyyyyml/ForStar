@@ -30,7 +30,7 @@ public class TerminatorInst {
             StringBuilder sb = new StringBuilder();
             sb.append("ret ");
             if (this.getNumOP() == 1) {
-                sb.append(getOperandAt(0).type + " " + getOperandAt(0).name);
+                sb.append(getOperandAt(0).getType() + " " + getOperandAt(0).getName());
             } else {
                 sb.append("void ");
             }

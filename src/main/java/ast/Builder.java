@@ -98,7 +98,7 @@ public class Builder {
         // Construct, insert, and return.
         TerminatorInst.Ret ret = new TerminatorInst.Ret();
         getCurBB().list.addLast(ret.node);
-        System.out.println(getCurBB().name);
+        System.out.println(getCurBB().getName());
         System.out.println("buildRet");
         return ret;
     }

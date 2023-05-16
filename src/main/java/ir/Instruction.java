@@ -25,30 +25,48 @@ public class Instruction extends User{
         return this.node.getParentList().getVal();
     }
     public enum TAG {
-        //binary
-        ADD,// +
-        SUB,// -
-        MUL,// *
-        DIV,// /
+        //ArithmeticBinary i32
+        ADD, // +
+        SUB, // -
+        MUL, // *
+        DIV, // /
+        // ArithmeticBinary float
+        FADD, // +
+        FSUB, // -
+        FMUL, // *
+        FDIV, // /
+        // RelationBinary i32
         LT, // <
         LE, // <=
         GE, // >=
         GT, // >
         EQ, // ==
         NE, // !=
+        // RelationBinary float
+        FLT, // <
+        FLE, // <=
+        FGE, // >=
+        FGT, // >
+        FEQ, // ==
+        FNE, // !=
+        // LogicalBinary
         AND,// &
         OR, // |
-        //terminator
+        // Terminator
         BR,
         CALL,
         RET,
-        //memory
+        // Memory
         ALLOCA,
         LOAD,
         STORE,
+        // Conversion
+        ZEXT, // 整数0拓展
+        FPTOSI, // float->int
+        SITOFP, //int->float
+        PTRCAST, //指针转换
         GEP,
-        ZEXT,
-        PHI,//用于 mem2reg
+        PHI,// 用于mem2reg
     }
 
     public boolean isBinary() {
@@ -82,39 +100,59 @@ public class Instruction extends User{
     }
 
     //判断当前指令是什么
-    public boolean isAdd() {return this.tag == TAG.ADD;}
+    public boolean isADD() {return this.tag == TAG.ADD;}
 
-    public boolean isSub() {return this.tag == TAG.SUB;}
+    public boolean isSUB() {return this.tag == TAG.SUB;}
 
-    public boolean isMul() {return this.tag == TAG.MUL;}
+    public boolean isMUL() {return this.tag == TAG.MUL;}
 
-    public boolean isDiv() {return this.tag == TAG.DIV;}
+    public boolean isDIV() {return this.tag == TAG.DIV;}
 
-    public boolean isLt() {return this.tag == TAG.LT;}
+    public boolean isFADD() {return this.tag == TAG.FADD;}
 
-    public boolean isLe() {return this.tag == TAG.LE;}
+    public boolean isFSUB() {return this.tag == TAG.FSUB;}
 
-    public boolean isGe() {return this.tag == TAG.GE;}
+    public boolean isFMUL() {return this.tag == TAG.FMUL;}
 
-    public boolean isGt() {return this.tag == TAG.GT;}
+    public boolean isFDIV() {return this.tag == TAG.FDIV;}
 
-    public boolean isEq() {return this.tag == TAG.EQ;}
+    public boolean isLT() {return this.tag == TAG.LT;}
 
-    public boolean isNe() {return this.tag == TAG.NE;}
+    public boolean isLE() {return this.tag == TAG.LE;}
 
-    public boolean isAnd() {return this.tag == TAG.AND;}
+    public boolean isGE() {return this.tag == TAG.GE;}
 
-    public boolean isOr() {return this.tag == TAG.OR;}
+    public boolean isGT() {return this.tag == TAG.GT;}
+
+    public boolean isEQ() {return this.tag == TAG.EQ;}
+
+    public boolean isNE() {return this.tag == TAG.NE;}
+
+    public boolean isFLT() {return this.tag == TAG.FLT;}
+
+    public boolean isFLE() {return this.tag == TAG.FLE;}
+
+    public boolean isFGE() {return this.tag == TAG.FGE;}
+
+    public boolean isFGT() {return this.tag == TAG.FGT;}
+
+    public boolean isFEQ() {return this.tag == TAG.FEQ;}
+
+    public boolean isFNE() {return this.tag == TAG.FNE;}
+
+    public boolean isAND() {return this.tag == TAG.AND;}
+
+    public boolean isOR() {return this.tag == TAG.OR;}
 
     public boolean isGEP() {return this.tag == TAG.GEP;}
 
-    public boolean isLoad() {return this.tag == TAG.LOAD;}
+    public boolean isLOAD() {return this.tag == TAG.LOAD;}
 
-    public boolean isStore() {return this.tag == TAG.STORE;}
+    public boolean isSTORE() {return this.tag == TAG.STORE;}
 
-    public boolean isPhi() {return this.tag == TAG.PHI;}
+    public boolean isPHI() {return this.tag == TAG.PHI;}
 
-    public boolean isRet() {return this.tag == TAG.RET;}
+    public boolean isRET() {return this.tag == TAG.RET;}
 
-    public boolean isBr() {return this.tag == TAG.BR;}
+    public boolean isBR() {return this.tag == TAG.BR;}
 }

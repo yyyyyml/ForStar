@@ -29,7 +29,7 @@ public class Constant extends User {
         public ConstantInt(Type type, int val) {
             super(type);
             this.val = val;
-            this.name = String.valueOf(this.getVal());
+            this.setName(String.valueOf(this.getVal()));
         }
 
         public ConstantInt getBool(boolean val) {
@@ -42,7 +42,7 @@ public class Constant extends User {
 
         @Override
         public String toString() {
-            return this.type.toString() + this.val;
+            return this.getType().toString() + this.val;
         }
 
         public void setVal(int val) {

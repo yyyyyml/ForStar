@@ -23,7 +23,7 @@ public class BasicBlock extends Value {
         this.nextList = new ArrayList<>();
         this.list = new IList<>(this);
         this.node = new IList.INode<>(this, null, null);
-        this.name = name;
+        this.setName(name);
     }
 
     public Instruction getLastInst() {

@@ -17,7 +17,7 @@ public class GlobalVariable extends User {
 
     public GlobalVariable(String name, Type type) {
         super(new PointerType(type));
-        this.name = name;
+        this.setName(name);
     }
 
     public void setConst() {this.isConst = true;}
@@ -29,10 +29,10 @@ public class GlobalVariable extends User {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.name).append(" = dso_local ");
+        sb.append(this.getName()).append(" = dso_local ");
         if (isConst) sb.append("constant ");
         else sb.append("global ");
-        var tmp = ((PointerType) this.type);
+        var tmp = ((PointerType) this.getType());
         if (tmp.getPointedType().isIntegerType()) {
             sb.append(tmp.getPointedType().toString());
             sb.append(" ");

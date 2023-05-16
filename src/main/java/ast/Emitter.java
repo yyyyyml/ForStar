@@ -41,8 +41,8 @@ public class Emitter {
 
     private void nameAll(Module m) {
         for (GlobalVariable gv : m.globalVariableList) {
-            if (!gv.name.startsWith("@")) {
-                gv.name = "@" + gv.name;
+            if (!gv.getName().startsWith("@")) {
+                gv.setName("@" + gv.getName());
             }
         }
         for (IList.INode<Function, Module> funcInode : m.functionList) {
@@ -50,13 +50,13 @@ public class Emitter {
             Function func = funcInode.getElement();
             if (!func.isBuiltin()) {
                 for (Function.Param arg : func.getParamList()) {
-                    arg.name = "%" + newName();
+                    arg.setName("%" + newName());
                 }
                 for (IList.INode<BasicBlock, Function> bbInode : func.list) {
-                    bbInode.getElement().name = newName();
+                    bbInode.getElement().setName(newName());
                     for (IList.INode<Instruction, BasicBlock> instInode : bbInode.getElement().list) {
                         if (instInode.getElement().needName) {
-                            instInode.getElement().name = "%" + newName();
+                            instInode.getElement().setName("%" + newName());
                         }
                     }
                 }
@@ -84,7 +84,7 @@ public class Emitter {
                 for(IList.INode<BasicBlock, Function> bbInode : func.list) {
                     BasicBlock bb = bbInode.getElement();
                     if (!func.list.getFirst().equals(bbInode)) {
-                        sb.append(bb.name);
+                        sb.append(bb.getName());
                         sb.append(":");
                         sb.append("\n");
                     }

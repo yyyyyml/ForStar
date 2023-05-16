@@ -13,13 +13,13 @@ public abstract class Value {
         this.type = type;
     }
 
-    public final Type type;
+    private final Type type;
 
     public Type getType() {
         return type;
     }
 
-    public String name = "";
+    private String name = "";
 
     public String getName() {
         return name;

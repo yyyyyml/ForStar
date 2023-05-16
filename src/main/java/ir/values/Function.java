@@ -56,16 +56,16 @@ public class Function extends Value {
 
         @Override
         public String toString() {
-            return this.type + " " + this.name;
+            return this.getType() + " " + this.getName();
         }
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(((FunctionType) this.type).getRetType())
+        sb.append(((FunctionType) this.getType()).getRetType())
                 .append(" @")
-                .append(this.name)
+                .append(this.getName())
                 .append("(");
 
         for (int i = 0; i < paramList.size(); i++) {

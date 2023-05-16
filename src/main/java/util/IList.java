@@ -7,8 +7,8 @@ import java.util.Iterator;
 
 /**
  * 侵入式链表实现
- * @param <T>
- * @param <P>
+ * @param <T> 自身（本项目中一般是一种Value）
+ * @param <P> 父（本项目中一般是一种Value）
  */
 public class IList<T, P> implements Iterable<IList.INode<T, P>> {
     // 链表中的节点类

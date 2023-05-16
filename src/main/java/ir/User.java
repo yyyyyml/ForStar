@@ -21,10 +21,6 @@ public abstract class User extends Value {
         return null;
     }
 
-    public void addOperand(Value v) {
-        operandList.add(new Use(this, v, numOP++));
-    }
-
     public void setOperand(Value v, int i) {
         assert i < numOP && i >= 0;
 
@@ -40,7 +36,7 @@ public abstract class User extends Value {
             existingUse.getValue().useList.remove(existingUse);
             existingUse.setValue(v);
             v.addInUseList(existingUse);
-        } else { // 当前位置没有操作数，替换
+        } else { // 当前位置没有操作数，新建
             Use newUse = new Use(this, v, i);
             this.addInOperandList(newUse);
             v.addInUseList(newUse);
