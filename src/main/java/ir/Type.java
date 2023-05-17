@@ -11,10 +11,7 @@ import ir.types.*;
  */
 public class Type {
 
-    private static final ir.Type.IntegerType i32 = new ir.Type.IntegerType();
-    public static ir.Type.IntegerType getI32() {
-        return i32;
-    }
+
 
     // NoneType
     public static class NonType extends Type {
