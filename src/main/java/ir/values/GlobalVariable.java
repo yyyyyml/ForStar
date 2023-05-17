@@ -34,22 +34,18 @@ public class GlobalVariable extends User {
         else sb.append("global ");
         var tmp = ((PointerType) this.getType());
         if (tmp.getPointedType().isIntegerType()) {
-            sb.append(tmp.getPointedType().toString());
-            sb.append(" ");
+            sb.append(tmp.getPointedType().toString()).append(" ");
             //没有初始化的值默认其为0
             if (this.init == null) sb.append("0 ");
             else sb.append(((Constant.ConstantInt) this.init).getVal());
         } else if (tmp.getPointedType().isFloatType()) {
-            sb.append(tmp.getPointedType().toString());
-            sb.append(" ");
+            sb.append(tmp.getPointedType().toString()).append(" ");
             //没有初始化的值默认其为0
             if (this.init == null) sb.append("0.0 ");
             else sb.append(((Constant.ConstantFloat) this.init).getVal());
         } else if (tmp.getPointedType().isArrayType()) {
             if (this.init == null) {
-                sb.append(tmp.getPointedType().toString());
-                sb.append(" ");
-                sb.append("zeroinitializer ");
+                sb.append(tmp.getPointedType().toString()).append(" zeroinitializer ");
             } else sb.append(init);
         }
         return sb.toString();

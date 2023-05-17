@@ -15,11 +15,9 @@ import java.util.List;
  */
 public class Function extends Value {
     private boolean isBuiltin = false;//是否是库函数
+    private ArrayList<Param> paramList;// 形参列表
     public IList<BasicBlock, Function> list;
     public IList.INode<Function, Module> node;
-    private ArrayList<Function> caller;//会在函数内联的时候被用到，用来记录调用自己的函数
-    private ArrayList<Function> callee;//用来记录自己调用的函数
-    private ArrayList<Param> paramList;//形参列表
 
     public Function(Type type, boolean isBuiltin) {
         super(type);
@@ -31,8 +29,6 @@ public class Function extends Value {
         for (int i = 0; i < paramTypeList.size(); i++) {
             paramList.add(new Param(paramTypeList.get(i), i));
         }
-        caller = new ArrayList<>();
-        callee = new ArrayList<>();
         this.isBuiltin = isBuiltin;
     }
 
@@ -63,18 +59,15 @@ public class Function extends Value {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(((FunctionType) this.getType()).getRetType())
-                .append(" @")
-                .append(this.getName())
-                .append("(");
+        sb.append(((FunctionType) this.getType()).getRetType()).append(" @").append(this.getName());
 
+        sb.append("(");
         for (int i = 0; i < paramList.size(); i++) {
             sb.append(paramList.get(i));
             if (i != paramList.size() - 1) {
                 sb.append(",");
             }
         }
-
         sb.append(")");
 
         return sb.toString();
