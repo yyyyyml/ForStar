@@ -17,7 +17,7 @@ public class RISCBuilder {
 
     private Module IRModule;
 
-    private RISCClass target;
+    private RISCModule riscModule;
 
     /* Current MC function & basic block */
     private Function curIRFunc;
@@ -33,12 +33,12 @@ public class RISCBuilder {
      * 遍历函数块
      * @return
      */
-    public RISCClass codeGeneration() {
-        target = new RISCClass();
-        mapGlobalVariable(IRModule, target);
-        mapFunction(IRModule, target);
+    public RISCModule codeGeneration() {
+        riscModule = new RISCModule();
+        mapGlobalVariable(IRModule, riscModule);
+        mapFunction(IRModule, riscModule);
 
-        return target;
+        return riscModule;
     }
 
     /**
@@ -46,7 +46,7 @@ public class RISCBuilder {
      * @param IRModule
      * @param target
      */
-    private void mapGlobalVariable(Module IRModule, RISCClass target){
+    private void mapGlobalVariable(Module IRModule, RISCModule target){
         for(GlobalVariable gv:IRModule.getGlobalVariableList()){
             target.addGlobalvar(gv);
         }
@@ -57,7 +57,7 @@ public class RISCBuilder {
      * @param IRModule
      * @param target
      */
-    private void mapFunction(Module IRModule, RISCClass target){
+    private void mapFunction(Module IRModule, RISCModule target){
         for(IList.INode<Function, Module> funcInode : IRModule.functionList){
             target.AddFunction(funcInode.getElement());
         }

@@ -1,4 +1,6 @@
-package backend.riscvalues;
+package backend.operands;
+
+import backend.RISCOperand;
 
 public class Memory extends RISCOperand {
     public RealRegister basicAddress;

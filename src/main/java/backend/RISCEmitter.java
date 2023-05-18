@@ -4,7 +4,7 @@ public class RISCEmitter {
 
     public static RISCEmitter emitter=new RISCEmitter();
 
-    public StringBuilder emit(RISCClass target){
+    public StringBuilder emit(RISCModule target){
         StringBuilder out=new StringBuilder();
         out.append("\t.file\t" + target.inputFilename+'\n');
         out.append("\t.option\tpic\n");

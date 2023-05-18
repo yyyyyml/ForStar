@@ -1,6 +1,6 @@
 package backend;
 
-import backend.riscvalues.VirtualRegister;
+import backend.operands.VirtualRegister;
 import ir.Value;
 import ir.values.BasicBlock;
 import ir.values.Function;
@@ -15,10 +15,11 @@ public class RISCFunction {
 
     public String funcName;
     private LinkedList<RISCBasicBlock> BasicBlockList;
-    private  Function IRFunction ;
+    private  Function irFunction;
     public int parameterSize;
     public int virtualRegisterIndex = 0;
     public HashMap<Value, VirtualRegister> valueVRMap;
+    public int localStackIndex = 20;
 
 
     public LinkedList<RISCBasicBlock> getBasicBlockList() {
@@ -31,17 +32,19 @@ public class RISCFunction {
      * @param irFunc
      */
     public RISCFunction(Function irFunc) {
-        valueVRMap=new HashMap<>();
+        valueVRMap = new HashMap<>();
         BasicBlockList = new LinkedList<>();
-        this.IRFunction  = irFunc;
+        this.irFunction = irFunc;
         this.funcName = irFunc.getName();
         this.parameterSize = irFunc.getParamList().size();
-        RISCBasicBlock firstBB = new RISCBasicBlock(0,irFunc,this);
-        BasicBlockList.add(firstBB);
+
         for(IList.INode<BasicBlock, Function> bbInode : irFunc.list){
             RISCBasicBlock curBB = new RISCBasicBlock(bbInode.getElement(),irFunc,this);
             BasicBlockList.add(curBB);
         }
+
+        RISCBasicBlock firstBB = new RISCBasicBlock(0,irFunc,this);
+        BasicBlockList.add(0,firstBB);
         RISCBasicBlock lastBB = new RISCBasicBlock(1,irFunc,this);
         BasicBlockList.add(lastBB);
     }

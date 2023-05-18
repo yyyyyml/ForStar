@@ -1,6 +1,6 @@
 package pass;
 
-import backend.RISCClass;
+import backend.RISCModule;
 import ir.Module;
 import pass.backend.BaseBackendPass;
 import pass.backend.RegisterAllocator;
@@ -28,9 +28,9 @@ public class PassDriver {
         }
     }
 
-    public void runBackend(RISCClass target) {
+    public void runBackend(RISCModule riscModule) {
         for (BaseBackendPass passClass : backendPassList) {
-            passClass.run(target);
+            passClass.run(riscModule);
         }
     }
 

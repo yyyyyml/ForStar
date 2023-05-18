@@ -1,20 +1,17 @@
-package backend.instruction;
+package backend.instructions;
 
 import backend.RISCInstruction;
-import backend.riscvalues.RISCOperand;
-import backend.riscvalues.RealRegister;
-import ir.Instruction;
+import backend.RISCOperand;
+import backend.operands.RealRegister;
 
 public class JrInstruction extends RISCInstruction {
 
     public RISCOperand op;
 
-    public JrInstruction(Instruction iRin) {
-        super(iRin);
-    }
-
     public JrInstruction(RealRegister reg) {
-        op=reg;
+        this.operandNum = 1;
+        this.op = reg;
+        this.setOperand(op, 0);
         this.type = ITYPE.jr;
     }
 

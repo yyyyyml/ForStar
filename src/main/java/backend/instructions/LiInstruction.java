@@ -1,23 +1,21 @@
-package backend.instruction;
+package backend.instructions;
 
 import backend.RISCInstruction;
-import backend.riscvalues.Immediate;
-import backend.riscvalues.RISCOperand;
-import backend.riscvalues.RealRegister;
-import ir.Instruction;
+import backend.operands.Immediate;
+import backend.RISCOperand;
+import backend.operands.RealRegister;
 
 public class LiInstruction extends RISCInstruction {
-
-    public Immediate imm;
     public RISCOperand op1;
-
-    public LiInstruction(Instruction iRin) {
-        super(iRin);
-    }
+    public Immediate imm;
 
     public LiInstruction(RealRegister r1, Immediate imm) {
+        this.operandNum = 2;
         this.op1=r1;
+        this.setOperand(op1, 0);;
         this.imm=imm;
+        this.setOperand(imm, 1);;
+        this.type = ITYPE.li;
     }
 
 

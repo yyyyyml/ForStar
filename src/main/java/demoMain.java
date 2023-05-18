@@ -1,7 +1,7 @@
 //主函数
 import ast.*;
 import backend.RISCBuilder;
-import backend.RISCClass;
+import backend.RISCModule;
 import backend.RISCEmitter;
 import frontend.*;
 import ir.Module;
@@ -32,7 +32,6 @@ public class demoMain {
         Visitor visitor = new Visitor(module);
         // Traversal the ast to build the IR.
         visitor.visit(ast);
-        // Traversal the ast to build the IR.
 
         Emitter emitter = new Emitter("out.ll");
         emitter.emit(module);
@@ -42,13 +41,13 @@ public class demoMain {
 
         RISCBuilder mcBuilder = RISCBuilder.get();
         mcBuilder.loadModule(module);
-        RISCClass target = mcBuilder.codeGeneration();
+        RISCModule riscModule = mcBuilder.codeGeneration();
 
-        passDriver.runBackend(target);
+        passDriver.runBackend(riscModule);
 
         /* Write file */
         RISCEmitter mcEmitter = new RISCEmitter();
-        System.out.println(mcEmitter.emit(target));
+        System.out.println(mcEmitter.emit(riscModule));
 
 
     }

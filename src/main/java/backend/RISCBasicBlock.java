@@ -1,10 +1,11 @@
 package backend;
 
-import backend.riscvalues.*;
-import backend.riscvalues.RISCOperand;
-import backend.instruction.*;
+import backend.operands.*;
+import backend.instructions.*;
 import ir.Instruction;
+import ir.Type;
 import ir.Value;
+import ir.types.PointerType;
 import ir.values.BasicBlock;
 import ir.values.Constant;
 import ir.values.Function;
@@ -20,12 +21,12 @@ public class RISCBasicBlock {
      *此构造函数为创建函数的初始块和结束块
      */
     public RISCBasicBlock(int i, Function irFunc, RISCFunction riscFunction) {
-        this.riscFunction =riscFunction;
+        this.riscFunction = riscFunction;
         this.irFunction = irFunc;
         //初始块
         if(i==0){
-            int imm=0;
-            imm=(irFunc.getParamList().size()/4)*4+16;
+            int imm = 0;
+            imm = riscFunction.localStackIndex;
             AddiInstruction addi1=new AddiInstruction(new RealRegister(2),new RealRegister(2),new Immediate(-imm));
             instructionList.add(addi1);
             SdInstruction sd1=new SdInstruction(new RealRegister(3),new Memory(imm-8,2));
@@ -41,7 +42,7 @@ public class RISCBasicBlock {
         //结束块
         else{
             int imm=0;
-            imm=(irFunc.getParamList().size()/4)*4+16;
+            imm = riscFunction.localStackIndex;
             LdInstruction ld1=new LdInstruction(new RealRegister(3),new Memory(imm-8,2));
             instructionList.add(ld1);
             LdInstruction ld2=new LdInstruction(new RealRegister(1),new Memory(imm-16,2));
@@ -71,14 +72,38 @@ public class RISCBasicBlock {
                 Instruction curInst=Inode.getElement();
                 switch (curInst.getTag()){
                     case RET ->  translateRet(curInst);
+                    case ALLOCA -> translateAlloca(curInst);
+                    case STORE -> translateStore(curInst);
                 }
 
             }
     }
 
-    /**
-     * 转换ir指令
-     */
+    private void translateStore(Instruction curInst) {
+        Value op1 = curInst.getOperandAt(0);
+        Value op2 = curInst.getOperandAt(1);
+        if(op1 instanceof Constant.ConstantInt){
+            RISCOperand rOp1 = getOperand(op1);
+            RISCOperand rop2 = getOperand(op2);
+            SwInstruction sw1 = new SwInstruction(rOp1,rop2);
+            instructionList.add(sw1);
+
+        }
+    }
+
+    private void translateAlloca(Instruction curInst) {
+        if(((PointerType) curInst.getType()).getPointedType() == Type.IntegerType.getType()) {
+            VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++,curInst );
+            riscFunction.valueVRMap.put(curInst,vr);
+            AddiInstruction add1 = new AddiInstruction(vr,new RealRegister(1),new Immediate(-riscFunction.localStackIndex));
+            instructionList.add(add1);
+            riscFunction.localStackIndex+=4;
+
+
+        }
+    }
+
+
 
     private RISCOperand getOperand(Value value){
         if(value instanceof Constant){

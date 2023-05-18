@@ -1,4 +1,4 @@
-package backend.riscvalues;
+package backend.operands;
 
 import ir.Value;
 

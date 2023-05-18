@@ -1,4 +1,4 @@
-package backend.instruction;
+package backend.instructions;
 
 import backend.RISCInstruction;
 
