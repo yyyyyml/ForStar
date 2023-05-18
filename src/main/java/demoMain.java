@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
+import pass.PassDriver;
 
 
 public class demoMain {
@@ -36,9 +37,14 @@ public class demoMain {
         Emitter emitter = new Emitter("out.ll");
         emitter.emit(module);
 
+        PassDriver passDriver = new PassDriver();
+        passDriver.runIR(module);
+
         RISCBuilder mcBuilder = RISCBuilder.get();
         mcBuilder.loadModule(module);
         RISCClass target = mcBuilder.codeGeneration();
+
+        passDriver.runBackend(target);
 
         /* Write file */
         RISCEmitter mcEmitter = new RISCEmitter();
