@@ -1,28 +1,30 @@
 package backend.instruction;
 
-import backend.RISCinstruction;
-import backend.Riscvalues.Register;
+import backend.RISCInstruction;
+import backend.riscvalues.Immediate;
+import backend.riscvalues.RISCOperand;
+import backend.riscvalues.RealRegister;
 import ir.Instruction;
 
-public class AddiInstruction extends RISCinstruction {
+public class AddiInstruction extends RISCInstruction {
 
-    public Register reg1;
-    public Register reg2;
-    public int imm;
+    public RISCOperand op1;
+    public RISCOperand op2;
+    public Immediate imm;
 
     public AddiInstruction(Instruction iRin) {
         super(iRin);
     }
 
-    public AddiInstruction(int r1, int r2, int imm) {
-        this.reg1=new Register(r1);
-        this.reg2=new Register(r2);
+    public AddiInstruction(RealRegister r1, RealRegister r2, Immediate imm) {
+        this.op1=r1;
+        this.op2=r2;
         this.imm=imm;
         this.type=ITYPE.addi;
     }
 
 
     public String emit() {
-        return this.type.name()+" "+reg1.type.name()+","+reg2.type.name()+","+Integer.toString(imm);
+        return this.type.name()+" "+op1.emit()+","+op2.emit()+","+imm.val;
     }
 }

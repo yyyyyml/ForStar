@@ -1,23 +1,24 @@
 package backend.instruction;
 
-import backend.RISCinstruction;
-import backend.Riscvalues.Register;
+import backend.RISCInstruction;
+import backend.riscvalues.RISCOperand;
+import backend.riscvalues.RealRegister;
 import ir.Instruction;
 
-public class JrInstruction extends RISCinstruction {
+public class JrInstruction extends RISCInstruction {
 
-    public Register reg;
+    public RISCOperand op;
 
     public JrInstruction(Instruction iRin) {
         super(iRin);
     }
 
-    public JrInstruction(int i) {
-        reg=new Register(i);
+    public JrInstruction(RealRegister reg) {
+        op=reg;
         this.type = ITYPE.jr;
     }
 
     public String emit() {
-        return this.type.name()+" "+reg.type.name();
+        return this.type.name()+" "+op.emit();
     }
 }

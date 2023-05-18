@@ -1,26 +1,27 @@
 package backend.instruction;
 
-import backend.RISCinstruction;
-import backend.Riscvalues.Memory;
-import backend.Riscvalues.Register;
+import backend.RISCInstruction;
+import backend.riscvalues.Memory;
+import backend.riscvalues.RISCOperand;
+import backend.riscvalues.RealRegister;
 import ir.Instruction;
 
-public class SdInstruction extends RISCinstruction {
-    public Register reg1;
-    public Memory mem;
+public class SdInstruction extends RISCInstruction {
+    public RISCOperand op1;
+    public RISCOperand op2;
 
     public SdInstruction(Instruction iRin) {
         super(iRin);
     }
 
-    public SdInstruction(int r1, int offset, int basicAddress) {
-        this.reg1=new Register(r1);
-        this.mem=new Memory(offset,basicAddress);
+    public SdInstruction(RealRegister r1, Memory memory) {
+        this.op1=r1;
+        this.op2=memory;
         this.type = ITYPE.sd;
     }
 
 
     public String emit() {
-        return this.type.name()+" "+reg1.type.name()+","+mem.emit();
+        return this.type.name()+" "+op1.emit()+","+op2.emit();
     }
 }

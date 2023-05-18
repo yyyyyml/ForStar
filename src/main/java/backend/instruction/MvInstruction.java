@@ -1,20 +1,26 @@
 package backend.instruction;
 
-import backend.RISCinstruction;
-import backend.Riscvalues.Register;
+import backend.RISCInstruction;
+import backend.riscvalues.RISCOperand;
+import backend.riscvalues.RealRegister;
 import ir.Instruction;
 
-public class MvInstruction extends RISCinstruction {
+public class MvInstruction extends RISCInstruction {
 
-    public Register reg1;
-    public Register reg2;
+    public RISCOperand op1;
+    public RISCOperand op2;
 
     public MvInstruction(Instruction iRin) {
         super(iRin);
     }
 
+    public MvInstruction(RealRegister reg1, RealRegister reg2) {
+        this.op1=reg1;
+        this.op2=reg2;
+    }
+
     @Override
     public String emit() {
-        return this.type.name()+" "+reg1.type.name()+","+reg2.type.name();
+        return this.type.name()+" "+op1.emit()+","+op2.emit();
     }
 }

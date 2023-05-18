@@ -2,7 +2,7 @@ package backend;
 
 import ir.Instruction;
 
-public class RISCinstruction {
+public class RISCInstruction {
     public enum ITYPE{
         addi,
         slti,
@@ -44,11 +44,11 @@ public class RISCinstruction {
 
 
     public ITYPE type;
-    public String emit(){return "\t"+type.name()+"\n";}
-    public RISCinstruction(Instruction iRin) {
+    public String emit(){return type.name();}
+    public RISCInstruction(Instruction iRin) {
         ;
     }
-    public RISCinstruction() {
+    public RISCInstruction() {
         ;
     }
 }

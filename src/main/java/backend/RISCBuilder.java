@@ -11,7 +11,9 @@ public class RISCBuilder {
 
     private RISCBuilder() {}
 
-    static public RISCBuilder get(){return builder;}
+    static public RISCBuilder get(){
+        return builder;
+    }
 
     private Module IRModule;
 
@@ -22,13 +24,15 @@ public class RISCBuilder {
     private RISCFunction curFunc;
     private RISCBasicBlock curMCBB;
 
-    /**
-     * Load LLVM IR module. Separate this process to support multi-module codegen.
-     * (if possible?)
-     * @param m IR module
-     */
+
     public void loadModule(Module m) {IRModule = m;}
 
+    /**
+     * Codegen
+     * 遍历变量（还没写）
+     * 遍历函数块
+     * @return
+     */
     public RISCClass codeGeneration() {
         target = new RISCClass();
         mapGlobalVariable(IRModule, target);
@@ -37,12 +41,22 @@ public class RISCBuilder {
         return target;
     }
 
+    /**
+     * 遍历全局变量
+     * @param IRModule
+     * @param target
+     */
     private void mapGlobalVariable(Module IRModule, RISCClass target){
         for(GlobalVariable gv:IRModule.getGlobalVariableList()){
-            target.AddGlobalvar(gv);
+            target.addGlobalvar(gv);
         }
     }
 
+    /**
+     * 遍历Ir函数转换为Risc函数类
+     * @param IRModule
+     * @param target
+     */
     private void mapFunction(Module IRModule, RISCClass target){
         for(IList.INode<Function, Module> funcInode : IRModule.functionList){
             target.AddFunction(funcInode.getElement());

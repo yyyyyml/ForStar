@@ -1,27 +1,28 @@
 package backend.instruction;
 
-import backend.RISCinstruction;
-import backend.Riscvalues.Memory;
-import backend.Riscvalues.Register;
+import backend.RISCInstruction;
+import backend.riscvalues.Memory;
+import backend.riscvalues.RISCOperand;
+import backend.riscvalues.RealRegister;
 import ir.Instruction;
 
-public class LdInstruction extends RISCinstruction {
+public class LdInstruction extends RISCInstruction {
 
-    public Register reg1;
-    public Memory mem1;
+    public RISCOperand op1;
+    public RISCOperand op2;
 
     public LdInstruction(Instruction iRin) {
         super(iRin);
     }
 
-    public LdInstruction(int r1, int offset, int basicAddress) {
-        this.reg1=new Register(r1);
-        this.mem1=new Memory(offset,basicAddress);
+    public LdInstruction(RealRegister r1, Memory memory) {
+        this.op1=r1;
+        this.op2=memory;
         this.type = ITYPE.ld;
     }
 
 
     public String emit() {
-        return this.type.name()+" "+reg1.type.name()+","+mem1.emit();
+        return this.type.name()+" "+op1.emit()+","+op2.emit();
     }
 }
