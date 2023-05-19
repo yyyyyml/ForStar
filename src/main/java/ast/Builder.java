@@ -1,6 +1,7 @@
 package ast;
 
 import ir.Module;
+import ir.Type;
 import ir.Value;
 import ir.types.*;
 import ir.values.*;
@@ -39,6 +40,20 @@ public class Builder {
 
     public Constant.ConstantInt buildConstant(int i) {
         return Constant.ConstantInt.getConstantInt(i);
+    }
+
+    public Constant.ConstantFloat buildConstant(float f) {return Constant.ConstantFloat.getConstantFloat(f);}
+
+    public GlobalVariable buildGlobalVar(String name, Type type) {
+        GlobalVariable glbVar = new GlobalVariable(name, type);
+        getCurModule().addGlobalVariable(glbVar);
+        return glbVar;
+    }
+
+    public MemoryInst.Alloca buildAlloca(Type allocatedType) {
+        MemoryInst.Alloca inst = new MemoryInst.Alloca(allocatedType);
+        getCurBB().list.addFirst(inst.node);
+        return inst;
     }
 
     public Function buildFunction(String name, FunctionType type, boolean isBuiltIn) {

@@ -4,11 +4,14 @@ import frontend.*;
 
 import frontend.SysY2022Parser.ReturnStmtContext;
 import ir.Module;
+import ir.Type;
 import ir.Value;
 import ir.types.*;
-import ir.Type;
+import ir.Type.*;
 import ir.values.*;
 import ir.Instruction;
+import ir.values.Constant;
+import ir.Instructions.*;
 
 import java.util.ArrayList;
 import java.math.BigInteger;
@@ -109,17 +112,105 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitScalarConstDef(SysY2022Parser.ScalarConstDefContext ctx) {
-        // Retrieve the name of the variable defined and check for duplication.//把identifier改成了Ident（）
-        String varName = ctx.Ident().getText();
-
+        // Retrieve the name of the variable defined and check for duplication.//把identifier改成了Ident（)
+        String name = ctx.Ident().getText();
+        if(scope.isDuplicateSymbol(name)){
+            throw new RuntimeException("Duplicate definition of constant name: " + name);
+        }
         visit(ctx.constInitVal());
         Value initVal = retVal_;
-
-        scope.addSymbol(varName, initVal);
+        String bType = ctx.getParent().getChild(1).getText();
+        if(bType == "int"){
+            builder.buildConstant(((Constant.ConstantInt)initVal).getVal());
+        }
+        scope.addSymbol(name, initVal);
 
         return null;
     }
 
+    @Override
+    public Void visitScalarVarDef(SysY2022Parser.ScalarVarDefContext ctx) {
+        // The text of the grammar symbol bType ("int" / "float")
+        String bType = ctx.getParent().getChild(0).getText();
+
+        // Retrieve the name of the variable defined and check for duplication.
+        String name = ctx.Ident().getText();
+        if (scope.isDuplicateSymbol(name)) {
+            throw new RuntimeException("Duplicate definition of variable name: " + name);
+        }
+
+        /*
+        A global variable.
+         */
+        if (scope.isGlobal()) {
+            GlobalVariable glbVar;
+
+            // With initialization.
+            if (ctx.initVal() != null) {
+                visit(ctx.initVal());
+                Value initVal = retVal_;
+                // Type matching check and conversion.
+                switch (bType) {
+                    case "int" -> {
+                        if (initVal.getType().isFloatType()) {
+                            float numericVal = ((Constant.ConstantFloat) initVal).getVal();
+                            initVal = builder.buildConstant((int) numericVal);
+                        }
+                    }
+                    case "float" -> {
+                        if (initVal.getType().isIntegerType()) {
+                            int numericVal = ((Constant.ConstantInt) initVal).getVal();
+                            initVal = builder.buildConstant((float) numericVal);
+                        }
+                    }
+                }
+                // Build the glb var.
+                glbVar = builder.buildGlobalVar(name,  initVal.getType());
+            }
+
+            // W/o initialization.
+            else {
+                switch (bType) {
+                    case "int" -> glbVar = builder.buildGlobalVar(name, IntegerType.getType());
+                    case "float" -> glbVar = builder.buildGlobalVar(name, FloatType.getType());
+                    default -> throw new RuntimeException("Unsupported type."); // Impossible case.
+                }
+            }
+
+            // Update the symbol table.
+            scope.addSymbol(name, glbVar);
+        }
+
+        /*
+        A local variable.
+         */
+        else {
+            MemoryInst.Alloca addrAllocated;
+            switch (bType) {
+                case "int" -> addrAllocated = builder.buildAlloca(IntegerType.getType());
+                case "float" -> addrAllocated = builder.buildAlloca(FloatType.getType());
+                default -> throw new RuntimeException("Unsupported type."); // Impossible case.
+            }
+            scope.addSymbol(name, addrAllocated);
+            // If it's a definition with initialization.
+           /* if (ctx.initVal() != null) {
+                // Retrieve the Value for initialization.
+                visit(ctx.initVal());
+                Value initVal = retVal_;
+                // Implicit type conversion.
+                if (initVal.getType().isIntegerType() && addrAllocated.getAllocatedType().isFloatType()) {
+                    initVal = builder.buildSitofp(initVal);
+                }
+                else if(initVal.getType().isFloatType() && addrAllocated.getAllocatedType().isIntegerType()) {
+                    initVal = builder.buildFptosi(initVal, (IntegerType) addrAllocated.getAllocatedType());
+                }
+                // Assignment by building a Store inst.
+                builder.buildStore(initVal, addrAllocated);
+            }*/
+        }
+
+        return null;
+    }
 
     @Override
     public Void visitScalarConstInitVal(SysY2022Parser.ScalarConstInitValContext ctx) {
@@ -317,6 +408,14 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
+
+    @Override
+    public Void visitConstExp(SysY2022Parser.ConstExpContext ctx) {
+        visit(ctx.addExp());
+        Value lOp = retVal_;
+        retVal_ = lOp;
+        return null;
+    }
 
     @Override
     public Void visitAdd1(SysY2022Parser.Add1Context ctx) {
