@@ -1,3 +1,3 @@
-define dso_local void @fun(){
-	ret void 
+define dso_local i32 @main(){
+	ret i32 0
 }

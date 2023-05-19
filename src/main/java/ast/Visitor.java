@@ -11,14 +11,13 @@ import ir.values.*;
 import ir.Instruction;
 
 import java.util.ArrayList;
-
+import java.math.BigInteger;
 
 public class Visitor extends SysY2022BaseVisitor<Void> {
     private final Scope scope = new Scope();
     private Builder builder;
     public Visitor (Module module) {
         this.builder = new Builder(module);
-        //this.initRuntimeFunctions();
     }
 
     //<editor-fold desc="Environment variables indicating the building status">
@@ -116,7 +115,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         visit(ctx.constInitVal());
         Value initVal = retVal_;
 
-        scope.addDecl(varName, initVal);
+        scope.addSymbol(varName, initVal);
 
         return null;
     }
@@ -207,11 +206,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         //FunctionType funcType = FunctionType.getType(retType, argTypes);
         FunctionType funcType = new FunctionType(retType, argTypes);
         Function function = builder.buildFunction(funcName, funcType, false);
-        scope.addDecl(funcName, function);
+        scope.addSymbol(funcName, function);
 
         // Insert a basic block. Then scope in.
         BasicBlock bb = builder.buildBB(funcName + "_ENTRY");
-        scope.scopeIn();
+        scope.pushTable();
 
         /*
         Allocate all the formal arguments INSIDE the scope of the function.
@@ -267,7 +266,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         /*
         Scope out.
          */
-        scope.scopeOut();
+        scope.popTable();
 
         /*
         Check the function just built.
@@ -281,9 +280,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitBlock(SysY2022Parser.BlockContext ctx) {
-        scope.scopeIn(); // Add a new layer of scope (a new symbol table).
+        scope.pushTable(); // Add a new layer of scope (a new symbol table).
         ctx.blockItem().forEach(this::visit);
-        scope.scopeOut(); // Pop it out before exiting the scope.
+        scope.popTable(); // Pop it out before exiting the scope.
         return null;
     }
 
@@ -299,13 +298,13 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
             // Return type matching check and conversion.
             Value retVal = retVal_;
-            //Type retType = builder.getCurFunc().getType(); // The return type defined in the prototype.builder.getCurFunc().getType().getRetType()
+            //Type retType = ((FunctionType)builder.getCurFunc().getType()).getRetType(); // The return type defined in the prototype.builder.getCurFunc().getType().getRetType()
             //if (retVal.getType().isIntegerType() && retType.isFloatType()) {
-             //   retVal = builder.buildSitofp(retVal);
-           // }
+                //retVal = builder.buildSitofp(retVal);
+            //}
             //else if (retVal.getType().isFloatType() && retType.isIntegerType()) {
-             //   retVal = builder.buildFptosi(retVal, (IntegerType) retType);
-           // }
+               //retVal = builder.buildFptosi(retVal, (IntegerType) retType);
+            //}
 
             builder.buildRet(retVal);
         }
@@ -318,16 +317,45 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
-    /**
-     * number
-     *     : intConst
-     *     | floatConst
-     * -------------------------------------
-     * primaryExp : number # primExpr3
-     */
+
+    @Override
+    public Void visitAdd1(SysY2022Parser.Add1Context ctx) {
+        visit(ctx.mulExp());
+        Value lOp = retVal_;
+        retVal_ = lOp;
+        return null;
+    }
+    @Override
+    public Void visitMul1(SysY2022Parser.Mul1Context ctx) {
+        visit(ctx.unaryExp());
+        Value lOp = retVal_;
+        retVal_ = lOp;
+        return null;
+    }
+
+
+    @Override
+    public Void visitUnaryExp1(SysY2022Parser.UnaryExp1Context ctx) {
+        visit(ctx.primaryExp());
+        Value lOp = retVal_;
+        retVal_ = lOp;
+        return null;
+    }
+
+    @Override public Void visitPrimaryExp3(SysY2022Parser.PrimaryExp3Context ctx) {
+        visit(ctx.number());
+        Value lOp = retVal_;
+        retVal_ = lOp;
+        return null;
+    }
     @Override
     public Void visitNumber(SysY2022Parser.NumberContext ctx) {
-        super.visitNumber(ctx);
+        int ret = 0;
+        if (ctx.IntConst() != null) {
+            ret = new BigInteger(ctx.IntConst().getText(), 10).intValue();
+        }
+        setConveyedType(DataType.INT);
+        retInt_ = ret;
         //我觉得这应该访问子节点 判断那个数是啥
         //然后把retInt_ set成那个数
         //然后这再build进去就行了
@@ -337,6 +365,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 //case FLT -> retVal_ = builder.buildConstant(retFloat_);
             }
         }
+
+
         return null;
     }
 }
