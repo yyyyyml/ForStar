@@ -11,6 +11,15 @@ public class VirtualRegister extends Register{
         this.value = value;
     }
 
+    public VirtualRegister(int i) {
+        super();
+        this.name = i;
+        this.value = null;
+    }
+
+    public int getName(){return name;}
+    public Value getValue(){return value;}
+
     public String emit(){return "vr_"+name;}
 
 }

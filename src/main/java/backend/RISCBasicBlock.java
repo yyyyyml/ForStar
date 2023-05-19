@@ -74,9 +74,60 @@ public class RISCBasicBlock {
                     case RET ->  translateRet(curInst);
                     case ALLOCA -> translateAlloca(curInst);
                     case STORE -> translateStore(curInst);
+                    case LOAD -> translateLoad(curInst);
+                    case ADD -> translateCaculate(curInst);
+                    case SUB -> translateCaculate(curInst);
+                    case MUL -> translateCaculate(curInst);
+                    case DIV -> translateCaculate(curInst);
                 }
 
             }
+    }
+
+    private void translateCaculate(Instruction curInst) {
+        Value vop1 = curInst.getOperandAt(0);
+        RISCOperand op1 = getOperand(vop1);
+        Value vop2 = curInst.getOperandAt(1);
+        RISCOperand op2 = getOperand(vop2);
+        VirtualRegister temp1 = new VirtualRegister(riscFunction.virtualRegisterIndex++);
+        VirtualRegister temp2 = new VirtualRegister(riscFunction.virtualRegisterIndex++);
+        LwInstruction lw1 = new LwInstruction(temp1,op1);
+        instructionList.add(lw1);
+        LwInstruction lw2 = new LwInstruction(temp2,op2);
+        instructionList.add(lw2);
+        switch (curInst.getTag()){
+            case ADD -> {
+                AddwInstruction cal = new AddwInstruction(temp1,temp1,temp2);
+                instructionList.add(cal);
+            }
+            case SUB -> {
+                SubwInstruction cal = new SubwInstruction(temp1,temp1,temp2);
+                instructionList.add(cal);
+            }
+            case MUL -> {
+                MulwInstruction cal = new MulwInstruction(temp1,temp1,temp2);
+                instructionList.add(cal);
+            }
+            case DIV -> {
+                DivwInstruction cal = new DivwInstruction(temp1,temp1,temp2);
+                instructionList.add(cal);
+            }
+        }
+        RISCOperand dst = getOperand(curInst);
+        SwInstruction sw1 = new SwInstruction(dst,temp1);
+        instructionList.add(sw1);
+
+    }
+
+    private void translateLoad(Instruction curInst) {
+        if(((PointerType) curInst.getType()).getPointedType() == Type.IntegerType.getType()){
+            Value op1 = curInst.getOperandAt(0);
+            RISCOperand src = getOperand(op1);
+            RISCOperand dst = getOperand(curInst);
+            LwInstruction lw1 = new LwInstruction(dst,src);
+            instructionList.add(lw1);
+
+        }
     }
 
     private void translateStore(Instruction curInst) {

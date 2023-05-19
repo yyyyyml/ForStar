@@ -40,7 +40,11 @@ public class RISCInstruction {
         sd,
         ld,
         li,
-        mv
+        mv,
+        addw,
+        subw,
+        mulw,
+        divw
     }
 
 
