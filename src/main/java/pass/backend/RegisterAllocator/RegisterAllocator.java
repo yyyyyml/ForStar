@@ -1,55 +1,32 @@
-package pass.backend;
+package pass.backend.RegisterAllocator;
 
 import backend.*;
 import backend.RISCOperand;
 import backend.operands.VirtualRegister;
+import pass.backend.BaseBackendPass;
 
 import java.util.*;
+
 
 /**
  * 简单的线性扫描寄存器分配
  */
-public class RegisterAllocator implements BaseBackendPass{
+public class RegisterAllocator implements BaseBackendPass {
 
     private HashMap<Integer, LiveInterval> liveIntervalMapList;
     private List<Map.Entry<Integer, LiveInterval>> activeList;
     private HashMap<Integer, VirtualRegister> intMapVreg;
     private int regNum;
+    private RegisterUsage regUsage;
+    private RegisterUsageTracker regUsageTracker;
 
     public RegisterAllocator() {
         liveIntervalMapList = new HashMap<>();
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>();
         regNum = 10;
-    }
-
-    /**
-     * live interval类
-     */
-    public class LiveInterval {
-        private int start;
-        private int end;
-
-        public LiveInterval(int start, int end) {
-            this.start = start;
-            this.end = end;
-        }
-
-        public int getStart() {
-            return start;
-        }
-
-        public void setStart(int start) {
-            this.start = start;
-        }
-
-        public int getEnd() {
-            return end;
-        }
-
-        public void setEnd(int end) {
-            this.end = end;
-        }
+        regUsage = new RegisterUsage(regNum);
+        regUsageTracker = new RegisterUsageTracker();
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
@@ -134,16 +111,13 @@ public class RegisterAllocator implements BaseBackendPass{
                 spill(entry);
             } else {
                 // 分配一个寄存器
-                
+                var curVreg = intMapVreg.get(entry.getKey());
+                curVreg.setRealReg(regUsage.getRandomFreeRegister());
                 // 加入activeList，并按End排序
                 activeList.add(entry);
                 Collections.sort(activeList, Comparator.comparingInt(e -> e.getValue().getEnd()));
             }
         }
-
-
-
-
 
 
 
@@ -170,18 +144,44 @@ public class RegisterAllocator implements BaseBackendPass{
 
     }
 
+    /**
+     * 处理溢出情况
+     * @param curEntry 当前处理到的Map对
+     */
     private void spill(Map.Entry<Integer, LiveInterval> curEntry) {
         // 取出最后一个，也是End最大的
         var spillEntry = activeList.get(activeList.size() - 1);
+        // 记录当前的index这里是time，以便存到spillTime
+        var time = curEntry.getValue().getStart();
         if (spillEntry.getValue().getEnd() > curEntry.getValue().getEnd()) {
+            // 如果需要把activeList中的spill
+            // 找到他们的虚拟寄存器
             var curVreg = intMapVreg.get(curEntry.getKey());
             var spillVreg = intMapVreg.get(spillEntry.getKey());
             // 换寄存器
             curVreg.setRealReg(spillVreg.getRealReg());
-
+            // 分配栈地址
+            spillVreg.setStackLocation(4);
+            // 记录spillTime
+            spillVreg.setSpillTime(time);
+            // 从activeList移除spill
+            activeList.remove(spillEntry);
+            // 将curEntry加入activeList，并按End排序
+            activeList.add(curEntry);
+        } else {
+            // 如果需要把当前的spill
+            // 分配栈地址
+            var curVreg = intMapVreg.get(curEntry.getKey());
+            curVreg.setStackLocation(4);
+            // 记录spillTime
+            curVreg.setSpillTime(time);
         }
     }
 
+    /**
+     * 判断并处理是否有一些虚拟寄存器已经不再live
+     * @param curEntry
+     */
     private void expireOld(Map.Entry<Integer, LiveInterval> curEntry) {
         for (Map.Entry<Integer, LiveInterval> entry: activeList) {
             if (entry.getValue().getEnd() > curEntry.getValue().getStart()) {
@@ -191,7 +191,7 @@ public class RegisterAllocator implements BaseBackendPass{
             // 这个变量已经不用了，删掉
             activeList.remove(entry);
             // 释放他的已分配的寄存器
-            
+            regUsage.freeRegister(entry.getKey());
         }
     }
 }

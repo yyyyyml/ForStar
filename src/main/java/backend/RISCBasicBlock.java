@@ -120,7 +120,7 @@ public class RISCBasicBlock {
     }
 
     private void translateLoad(Instruction curInst) {
-        if(((PointerType) curInst.getType()).getPointedType() == Type.IntegerType.getType()){
+        if(curInst.getType() == Type.IntegerType.getType()){
             Value op1 = curInst.getOperandAt(0);
             RISCOperand src = getOperand(op1);
             RISCOperand dst = getOperand(curInst);
@@ -195,6 +195,12 @@ public class RISCBasicBlock {
                 instructionList.add(li1);
                 MvInstruction mv1=new MvInstruction(new RealRegister(9),new RealRegister(10));
                 instructionList.add(mv1);
+            }
+            else{
+                RISCOperand src = getOperand(curInst.getOperandAt(0));
+                LwInstruction lw1 = new LwInstruction(new RealRegister(9),src);
+                instructionList.add(lw1);
+
             }
 
     }

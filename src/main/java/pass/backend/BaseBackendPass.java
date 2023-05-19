@@ -7,5 +7,5 @@ import backend.RISCModule;
  * 都要实现run方法
  */
 public interface BaseBackendPass {
-    public void run(RISCModule target);
+    public void run(RISCModule riscModule);
 }

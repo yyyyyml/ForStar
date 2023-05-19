@@ -3,7 +3,7 @@ package pass;
 import backend.RISCModule;
 import ir.Module;
 import pass.backend.BaseBackendPass;
-import pass.backend.RegisterAllocator;
+import pass.backend.RegisterAllocator.RegisterAllocator;
 import pass.ir.BaseIRPass;
 
 import java.util.ArrayList;

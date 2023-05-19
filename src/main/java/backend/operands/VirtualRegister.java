@@ -7,6 +7,7 @@ public class VirtualRegister extends Register{
     private Value value;
     private int realReg;
     private int stackLocation;
+    private int spillTime;
 
     public VirtualRegister(int i, Value value) {
         this.name = i;
@@ -39,5 +40,13 @@ public class VirtualRegister extends Register{
 
     public void setStackLocation(int stackLocation) {
         this.stackLocation = stackLocation;
+    }
+
+    public int getSpillTime() {
+        return spillTime;
+    }
+
+    public void setSpillTime(int spillTime) {
+        this.spillTime = spillTime;
     }
 }
