@@ -523,7 +523,20 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         retVal_ = lOp;
         return null;
     }
+    @Override public Void visitPrimaryExp2(SysY2022Parser.PrimaryExp2Context ctx) {
 
+        visit(ctx.lVal());
+        // If it's not in a function call,
+        // load the memory block pointed by the PointerType Value retrieved from lVal.
+        if (!inBuildFCall() && retVal_.getType().isPointerType()) {
+            Type pointedType = ((PointerType) retVal_.getType()).getPointedType();
+            retVal_ = builder.buildLoad(pointedType, retVal_);
+        }
+
+
+
+        return null;
+    }
     @Override public Void visitPrimaryExp3(SysY2022Parser.PrimaryExp3Context ctx) {
         visit(ctx.number());
         Value lOp = retVal_;
