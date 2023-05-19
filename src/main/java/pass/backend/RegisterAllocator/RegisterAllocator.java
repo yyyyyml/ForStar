@@ -14,24 +14,25 @@ import java.util.*;
 public class RegisterAllocator implements BaseBackendPass {
 
     private HashMap<Integer, LiveInterval> liveIntervalMapList;
+    private List<Map.Entry<Integer, LiveInterval>> sortedLiveIntervalList;
     private List<Map.Entry<Integer, LiveInterval>> activeList;
     private HashMap<Integer, VirtualRegister> intMapVreg;
     private int regNum;
-    private RegisterUsage regUsage;
+
     private RegisterUsageTracker regUsageTracker;
+    private int time = 0;
 
     public RegisterAllocator() {
         liveIntervalMapList = new HashMap<>();
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>();
-        regNum = 10;
-        regUsage = new RegisterUsage(regNum);
-        regUsageTracker = new RegisterUsageTracker();
+        regNum = 5;
+        regUsageTracker = new RegisterUsageTracker(regNum);
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
     public void setLiveIntervalStart(int virtualRegister, int start) {
-        LiveInterval interval = new LiveInterval(start, 10000);
+        LiveInterval interval = new LiveInterval(start, start + 10);
         addLiveInterval(virtualRegister, interval);
     }
 
@@ -94,7 +95,7 @@ public class RegisterAllocator implements BaseBackendPass {
             }
         }
 
-        List<Map.Entry<Integer, LiveInterval>> sortedLiveIntervalList = sortByStart();
+        sortedLiveIntervalList = sortByStart();
         for (Map.Entry<Integer, LiveInterval> entry: sortedLiveIntervalList) {
             System.out.println("Register: " + entry.getKey().toString());
             System.out.println("Start: " + entry.getValue().getStart());
@@ -103,22 +104,19 @@ public class RegisterAllocator implements BaseBackendPass {
         }
 
         // 线性扫描
-        for (Map.Entry<Integer, LiveInterval> entry: sortedLiveIntervalList) {
-            // 把已经不需要的变量的寄存器释放
-            expireOld(entry);
-            if (activeList.size() == regNum) {
-                // 溢出，找End最大的
-                spill(entry);
-            } else {
-                // 分配一个寄存器
-                var curVreg = intMapVreg.get(entry.getKey());
-                curVreg.setRealReg(regUsage.getRandomFreeRegister());
-                // 加入activeList，并按End排序
-                activeList.add(entry);
-                Collections.sort(activeList, Comparator.comparingInt(e -> e.getValue().getEnd()));
-            }
-        }
+        linearScan();
 
+        for (Map.Entry<Integer, RegisterUsage> entry : regUsageTracker.getRegisterUsageMap().entrySet()) {
+            int timePoint = entry.getKey();
+            RegisterUsage registerUsage = entry.getValue();
+
+            System.out.println("Time Point: " + timePoint);
+            for (int register = 0; register < registerUsage.getRegNum(); register++) {
+                boolean isUsed = registerUsage.isRegisterUsed(register);
+                System.out.println("Register " + register + ": " + (isUsed ? "Used" : "Free"));
+            }
+            System.out.println("-------------------");
+        }
 
 
         for (RISCOperand variable: globalVars) {
@@ -144,19 +142,38 @@ public class RegisterAllocator implements BaseBackendPass {
 
     }
 
-    /**
-     * 处理溢出情况
-     * @param curEntry 当前处理到的Map对
-     */
+    private void linearScan() {
+        for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
+            // 更新time
+            time = entry.getValue().getStart();
+            // 把已经不需要的变量的寄存器释放
+            expireOld(entry);
+            if (activeList.size() == regNum) {
+                // 溢出，找End最大的
+                spill(entry);
+            } else {
+                // 分配一个寄存器
+                var curVreg = intMapVreg.get(entry.getKey());
+                var curRegUsage = regUsageTracker.getRegisterUsage(time);
+                int freeRegister = curRegUsage.getNextFreeRegister();
+                System.out.println("Allocating register: " + entry.getKey() + " -> " + freeRegister);
+                curVreg.setRealReg(freeRegister);
+                // 加入activeList，并按End排序
+                activeList.add(entry);
+                Collections.sort(activeList, Comparator.comparingInt(e -> e.getValue().getEnd()));
+            }
+        }
+    }
+
     private void spill(Map.Entry<Integer, LiveInterval> curEntry) {
         // 取出最后一个，也是End最大的
         var spillEntry = activeList.get(activeList.size() - 1);
-        // 记录当前的index这里是time，以便存到spillTime
-        var time = curEntry.getValue().getStart();
+        // 找到当前对应的虚拟寄存器
+        var curVreg = intMapVreg.get(curEntry.getKey());
+
         if (spillEntry.getValue().getEnd() > curEntry.getValue().getEnd()) {
             // 如果需要把activeList中的spill
             // 找到他们的虚拟寄存器
-            var curVreg = intMapVreg.get(curEntry.getKey());
             var spillVreg = intMapVreg.get(spillEntry.getKey());
             // 换寄存器
             curVreg.setRealReg(spillVreg.getRealReg());
@@ -168,30 +185,38 @@ public class RegisterAllocator implements BaseBackendPass {
             activeList.remove(spillEntry);
             // 将curEntry加入activeList，并按End排序
             activeList.add(curEntry);
+            Collections.sort(activeList, Comparator.comparingInt(e -> e.getValue().getEnd()));
+            System.out.println("Spilling: " + spillEntry.getKey() + " -> stack");
+            System.out.println("Allocating register: " + curEntry.getKey() + " -> " + spillVreg.getRealReg());
         } else {
             // 如果需要把当前的spill
             // 分配栈地址
-            var curVreg = intMapVreg.get(curEntry.getKey());
             curVreg.setStackLocation(4);
             // 记录spillTime
             curVreg.setSpillTime(time);
+            System.out.println("Spilling: " + curEntry.getKey() + " -> stack");
         }
     }
 
-    /**
-     * 判断并处理是否有一些虚拟寄存器已经不再live
-     * @param curEntry
-     */
     private void expireOld(Map.Entry<Integer, LiveInterval> curEntry) {
-        for (Map.Entry<Integer, LiveInterval> entry: activeList) {
+        // 不能直接在activeList中删除元素，会影响循环，报错
+        List<Map.Entry<Integer, LiveInterval>> entriesToRemove = new ArrayList<>();
+
+        for (Map.Entry<Integer, LiveInterval> entry : activeList) {
             if (entry.getValue().getEnd() > curEntry.getValue().getStart()) {
                 // 第一个的尾都比当前的头大，说明不需要删除activeList中的元素
                 return;
             }
-            // 这个变量已经不用了，删掉
-            activeList.remove(entry);
+            entriesToRemove.add(entry); // 添加到待删除列表中
             // 释放他的已分配的寄存器
-            regUsage.freeRegister(entry.getKey());
+            var curRegUsage = regUsageTracker.getRegisterUsage(time);
+            curRegUsage.freeRegister(entry.getKey());
+            System.out.println("Freeing register: " + entry.getKey());
         }
+
+        // 在循环结束后进行删除
+        activeList.removeAll(entriesToRemove);
     }
+
+
 }

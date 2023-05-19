@@ -14,6 +14,14 @@ public class RegisterUsage {
         this.bitmap = 0; // 初始时所有寄存器都是空闲的
     }
 
+    public int getBitmap() {
+        return bitmap;
+    }
+
+    public int getRegNum() {
+        return regNum;
+    }
+
     public boolean isRegisterUsed(int register) {
         return ((bitmap >> register) & 1) == 1; // 检查寄存器是否被占用
     }
@@ -30,23 +38,17 @@ public class RegisterUsage {
         this.bitmap = other.bitmap;
     }
 
-    public int getRandomFreeRegister() {
-        int numFreeRegisters = regNum - Integer.bitCount(bitmap); // 计算空闲寄存器的数量
-        if (numFreeRegisters > 0) {
-            Random random = new Random();
-            int randomIndex = random.nextInt(numFreeRegisters); // 生成一个随机索引
-            int register = 0;
-            while (randomIndex >= 0) {
-                if (!isRegisterUsed(register)) {
-                    if (randomIndex == 0) {
-                        return register; // 找到了第 randomIndex 个空闲寄存器
-                    }
-                    randomIndex--;
-                }
-                register++;
+    public int getNextFreeRegister() {
+        int register = 0;
+        while (register < regNum) {
+            if (!isRegisterUsed(register)) {
+                this.allocateRegister(register);
+                return register; // 返回空闲寄存器
             }
+            register++;
         }
         // 如果没有空闲寄存器，则返回一个特殊值（例如 -1）表示无法分配
         return -1;
     }
+
 }

@@ -1,5 +1,6 @@
 package pass.backend.RegisterAllocator;
 
+import javax.swing.*;
 import java.util.HashMap;
 
 /**
@@ -7,23 +8,37 @@ import java.util.HashMap;
  */
 public class RegisterUsageTracker {
     private HashMap<Integer, RegisterUsage> registerUsageMap;
+    private int regNum;
 
-    public RegisterUsageTracker() {
+    public RegisterUsageTracker(int regNum) {
         registerUsageMap = new HashMap<>();
+        RegisterUsage registerUsage = new RegisterUsage(regNum);
+        registerUsageMap.put(0, registerUsage);
+        this.regNum = regNum;
     }
 
-    public void addRegisterUsage(int timePoint, RegisterUsage registerUsage) {
-        if (timePoint > 0) {
-            RegisterUsage previousUsage = registerUsageMap.get(timePoint - 1);
-            registerUsage.copyFrom(previousUsage); // 从前一个RegisterUsage对象复制状态
-        }
-        registerUsageMap.put(timePoint, registerUsage);
+    public HashMap<Integer, RegisterUsage> getRegisterUsageMap() {
+        return registerUsageMap;
     }
 
-    // 获取指定时间点的RegisterUsage对象
+    // 找这个时间点的上一个时间点的RegisterUsage
+    public RegisterUsage getPreRegisterUsage(int timePoint) {
+        RegisterUsage registerUsage = registerUsageMap.get(timePoint - 1);
+        if (registerUsage == null) return getPreRegisterUsage(timePoint - 1);
+        else return registerUsage;
+    }
+
     public RegisterUsage getRegisterUsage(int timePoint) {
-        return registerUsageMap.get(timePoint);
+        // 找当前时间点有没有
+        RegisterUsage registerUsage = registerUsageMap.get(timePoint);
+        if (registerUsage == null) {
+            // 没有找到，新建
+            RegisterUsage previousUsage = getPreRegisterUsage(timePoint);
+            registerUsage = new RegisterUsage(regNum); // 创建新的RegisterUsage对象
+            registerUsage.copyFrom(previousUsage); // 从前一个RegisterUsage对象复制状态
+            registerUsageMap.put(timePoint, registerUsage);
+        }
+        // 找到了，返回
+        return registerUsage;
     }
-
-
 }
