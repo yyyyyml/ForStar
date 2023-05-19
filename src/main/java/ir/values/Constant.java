@@ -61,7 +61,7 @@ public class Constant extends User {
     public static class ConstantFloat extends Constant {
         private float val;
 
-        private ConstantFloat(Type type, float val) {
+        public ConstantFloat(Type type, float val) {
             super(type);
             this.val = val;
             this.setName("0x" + Long.toHexString(Double.doubleToLongBits(val)));
@@ -73,8 +73,8 @@ public class Constant extends User {
         }
 
         public static ConstantFloat getConstantFloat(float value) {
-            ConstantFloat f = new ConstantFloat(Type.FloatType.getType(), value);
-            return f;
+            return new ConstantFloat(Type.FloatType.getType(), value);
+
         }
     }
 }

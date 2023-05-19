@@ -11,10 +11,16 @@ import java.util.*;
  */
 public class RegisterAllocator implements BaseBackendPass{
 
-    private HashMap<Integer, LiveInterval> liveIntervals;
+    private HashMap<Integer, LiveInterval> liveIntervalMapList;
+    private List<Map.Entry<Integer, LiveInterval>> activeList;
+    private HashMap<Integer, VirtualRegister> intMapVreg;
+    private int regNum;
 
     public RegisterAllocator() {
-        liveIntervals = new HashMap<>();
+        liveIntervalMapList = new HashMap<>();
+        activeList = new ArrayList<>();
+        intMapVreg = new HashMap<>();
+        regNum = 10;
     }
 
     /**
@@ -46,30 +52,33 @@ public class RegisterAllocator implements BaseBackendPass{
         }
     }
 
+    // 寄存器第一次出现，设置Start，并放进Map
     public void setLiveIntervalStart(int virtualRegister, int start) {
         LiveInterval interval = new LiveInterval(start, 10000);
         addLiveInterval(virtualRegister, interval);
     }
 
+    // Map中已有这个寄存器，直接修改它的End
     public void setLiveIntervalEnd(int virtualRegister, int end) {
-        LiveInterval interval = liveIntervals.get(virtualRegister);
+        LiveInterval interval = liveIntervalMapList.get(virtualRegister);
         interval.setEnd(end);
     }
 
     public void addLiveInterval(int virtualRegister, LiveInterval interval) {
-        liveIntervals.put(virtualRegister, interval);
+        liveIntervalMapList.put(virtualRegister, interval);
     }
 
-    public void sortByStart() {
-        List<Map.Entry<Integer, LiveInterval>> sortedIntervals = new ArrayList<>(liveIntervals.entrySet());
+    public List<Map.Entry<Integer, LiveInterval>> sortByStart() {
+        List<Map.Entry<Integer, LiveInterval>> sortedIntervals = new ArrayList<>(liveIntervalMapList.entrySet());
 
         Collections.sort(sortedIntervals, Comparator.comparingInt(e -> e.getValue().getStart()));
 
-        liveIntervals.clear();
+        liveIntervalMapList.clear();
 
         for (Map.Entry<Integer, LiveInterval> entry : sortedIntervals) {
-            liveIntervals.put(entry.getKey(), entry.getValue());
+            liveIntervalMapList.put(entry.getKey(), entry.getValue());
         }
+        return sortedIntervals;
     }
 
     @Override
@@ -89,19 +98,100 @@ public class RegisterAllocator implements BaseBackendPass{
             for (RISCBasicBlock riscBB: riscBBList) {
                 LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
                 for (RISCInstruction riscInst: riscInstList) {
-                    index += 1;
                     LinkedList<RISCOperand> operandList = riscInst.getOperandList();
                     for (RISCOperand riscOp: operandList) {
                         if (riscOp.isVirtualRegister()) {
                             var name = ((VirtualRegister) riscOp).getName();
-                            if (!liveIntervals.containsKey(name)) {
+                            intMapVreg.put(name, (VirtualRegister) riscOp);
+                            if (!liveIntervalMapList.containsKey(name)) {
+                                // 记录Start
                                 setLiveIntervalStart(name, index);
+                            } else {
+                                // 记录End
+                                setLiveIntervalEnd(name, index + 1);
                             }
                         }
                     }
+                    index += 1;
                 }
             }
+        }
 
+        List<Map.Entry<Integer, LiveInterval>> sortedLiveIntervalList = sortByStart();
+        for (Map.Entry<Integer, LiveInterval> entry: sortedLiveIntervalList) {
+            System.out.println("Register: " + entry.getKey().toString());
+            System.out.println("Start: " + entry.getValue().getStart());
+            System.out.println("End: " + entry.getValue().getEnd());
+            System.out.println();
+        }
+
+        // 线性扫描
+        for (Map.Entry<Integer, LiveInterval> entry: sortedLiveIntervalList) {
+            // 把已经不需要的变量的寄存器释放
+            expireOld(entry);
+            if (activeList.size() == regNum) {
+                // 溢出，找End最大的
+                spill(entry);
+            } else {
+                // 分配一个寄存器
+                
+                // 加入activeList，并按End排序
+                activeList.add(entry);
+                Collections.sort(activeList, Comparator.comparingInt(e -> e.getValue().getEnd()));
+            }
+        }
+
+
+
+
+
+
+
+        for (RISCOperand variable: globalVars) {
+
+        }
+        for (RISCFunction riscFunc: funcList) {
+            LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
+            for (RISCBasicBlock riscBB: riscBBList) {
+                LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
+                for (RISCInstruction riscInst: riscInstList) {
+                    LinkedList<RISCOperand> operandList = riscInst.getOperandList();
+                    for (RISCOperand riscOp: operandList) {
+                        if (riscOp.isVirtualRegister()) {
+                            var name = ((VirtualRegister) riscOp).getName();
+
+                        }
+                    }
+                    index += 1;
+                }
+            }
+        }
+
+
+    }
+
+    private void spill(Map.Entry<Integer, LiveInterval> curEntry) {
+        // 取出最后一个，也是End最大的
+        var spillEntry = activeList.get(activeList.size() - 1);
+        if (spillEntry.getValue().getEnd() > curEntry.getValue().getEnd()) {
+            var curVreg = intMapVreg.get(curEntry.getKey());
+            var spillVreg = intMapVreg.get(spillEntry.getKey());
+            // 换寄存器
+            curVreg.setRealReg(spillVreg.getRealReg());
+
+        }
+    }
+
+    private void expireOld(Map.Entry<Integer, LiveInterval> curEntry) {
+        for (Map.Entry<Integer, LiveInterval> entry: activeList) {
+            if (entry.getValue().getEnd() > curEntry.getValue().getStart()) {
+                // 第一个的尾都比当前的头大，说明不需要删除activeList中的元素
+                return;
+            }
+            // 这个变量已经不用了，删掉
+            activeList.remove(entry);
+            // 释放他的已分配的寄存器
+            
         }
     }
 }
