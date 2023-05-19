@@ -39,11 +39,13 @@ public class RegisterAllocator implements BaseBackendPass{
         }
     }
 
-
-    public void run(RISCModule target) {
+    @Override
+    public void run(RISCModule riscModule) {
         System.out.println("优化：分配寄存器");
-        LinkedList<RISCOperand> globalVars = target.getGlobalVars();
-        LinkedList<RISCFunction> funcList = target.getFunctionList();
+        LinkedList<RISCOperand> globalVars = riscModule.getGlobalVars();
+        LinkedList<RISCFunction> funcList = riscModule.getFunctionList();
+
+        int index = 0; // 用于记录位置，存到live interval中
 
         // 先遍历一遍 记录变量的live interval
         for (RISCOperand variable: globalVars) {
@@ -54,9 +56,12 @@ public class RegisterAllocator implements BaseBackendPass{
             for (RISCBasicBlock riscBB: riscBBList) {
                 LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
                 for (RISCInstruction riscInst: riscInstList) {
+                    index += 1;
                     LinkedList<RISCOperand> operandList = riscInst.getOperandList();
                     for (RISCOperand riscOp: operandList) {
+                        if (riscOp.isVirtualRegister()) {
 
+                        }
                     }
                 }
             }
