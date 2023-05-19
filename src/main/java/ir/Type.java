@@ -82,6 +82,8 @@ public class Type {
         public String toString() {return "float";}
     }
 
+
+
     public boolean isNonType() {
         return (this instanceof NonType);
     }

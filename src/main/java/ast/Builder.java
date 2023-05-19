@@ -64,6 +64,11 @@ public class Builder {
         return inst;
     }
 
+    public MemoryInst.Load buildLoad(Type loadedType, Value addr) {
+        MemoryInst.Load inst = new MemoryInst.Load(loadedType, addr);
+        getCurBB().list.addLast(inst.node);
+        return inst;
+    }
     public Function buildFunction(String name, FunctionType type, boolean isBuiltIn) {
         Function func = new Function(type, isBuiltIn);
         func.setName(name);

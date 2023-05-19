@@ -407,31 +407,31 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             retVal_ = val;
             return null;
         }
-//        // Case 2, return a PointerType Value.
-//        if (val.getType().isPointerType()) {
-//            Type pointeeType = ((PointerType) val.getType()).getPointeeType();
-//            // i32**: Return i32*.
-//            if (pointeeType.isPointerType()) {
-//                retVal_ = builder.buildLoad(pointeeType, val);
-//            }
-//            // [2 x i32]*: Return i32*
-//            else if (pointeeType.isArrayType()) {
+        // Case 2, return a PointerType Value.
+        if (val.getType().isPointerType()) {
+            Type pointedType = ((PointerType) val.getType()).getPointedType();
+            // i32**: Return i32*.
+            if (pointedType.isPointerType()) {
+                retVal_ = builder.buildLoad(pointedType, val);
+            }
+            // [2 x i32]*: Return i32*
+//            else if (pointedType.isArrayType()) {
 //                retVal_ = builder.buildGEP(val, new ArrayList<>(){{
 //                    add(builder.buildConstant(0));
 //                    add(builder.buildConstant(0));
 //                }});
 //            }
-//            // i32* / float*.
-//            else {
-//                // Load it up when being a real argument of a function call.
-//                // Otherwise, return directly for being a left value.
-//                if (inBuildFCall()) {
-//                    val = builder.buildLoad(pointeeType, val);
-//                }
-//                retVal_ = val;
-//            }
-//            return null;
-//        }
+            // i32* / float*.
+            else {
+                // Load it up when being a real argument of a function call.
+                // Otherwise, return directly for being a left value.
+                if (inBuildFCall()) {
+                    val = builder.buildLoad(pointedType, val);
+                }
+                retVal_ = val;
+            }
+            return null;
+        }
         return null;
     }
 
