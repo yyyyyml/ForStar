@@ -58,6 +58,12 @@ public class Builder {
         return inst;
     }
 
+    public MemoryInst.Store buildStore(Value val, Value address) {
+        MemoryInst.Store inst = new MemoryInst.Store(val, address);
+        getCurBB().list.addLast(inst.node);
+        return inst;
+    }
+
     public Function buildFunction(String name, FunctionType type, boolean isBuiltIn) {
         Function func = new Function(type, isBuiltIn);
         func.setName(name);

@@ -49,5 +49,16 @@ public class Scope {
     public boolean isDuplicateSymbol(String name) {
         return curTable().get(name) != null;
     }
+
+    public Value getVal(String name){
+        //要从当前层开始搜索
+        for(int i = symbolTables.size()-1;i>=0 ;i--) {
+
+            Value val = symbolTables.get(i).get(name);
+            if (val != null) return val;
+        }
+            return null;
+    }
+
 }
 

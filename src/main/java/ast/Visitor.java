@@ -193,20 +193,20 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             }
             scope.addSymbol(name, addrAllocated);
             // If it's a definition with initialization.
-           /* if (ctx.initVal() != null) {
+            if (ctx.initVal() != null) {
                 // Retrieve the Value for initialization.
                 visit(ctx.initVal());
                 Value initVal = retVal_;
                 // Implicit type conversion.
-                if (initVal.getType().isIntegerType() && addrAllocated.getAllocatedType().isFloatType()) {
-                    initVal = builder.buildSitofp(initVal);
-                }
-                else if(initVal.getType().isFloatType() && addrAllocated.getAllocatedType().isIntegerType()) {
-                    initVal = builder.buildFptosi(initVal, (IntegerType) addrAllocated.getAllocatedType());
-                }
+//                if (initVal.getType().isIntegerType() && addrAllocated.allocatedType.isFloatType()) {
+//                    initVal = builder.buildSitofp(initVal);
+//                }
+//                else if(initVal.getType().isFloatType() && addrAllocated.allocatedType.isIntegerType()) {
+//                    initVal = builder.buildFptosi(initVal, (IntegerType) addrAllocated.allocatedType);
+//                }
                 // Assignment by building a Store inst.
                 builder.buildStore(initVal, addrAllocated);
-            }*/
+            }
         }
 
         return null;
@@ -223,7 +223,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         // Convert the constant value aft folding as a Constant IR Value.
         switch (getConveyedType()) {
             case INT -> retVal_ = builder.buildConstant(retInt_);
-            //case FLT -> retVal_ = builder.buildConstant(retFloat_);
+            case FLT -> retVal_ = builder.buildConstant(retFloat_);
         }
         return null;
     }
@@ -245,7 +245,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         if (scope.isGlobal()) {
             switch (getConveyedType()) {
                 case INT -> retVal_ = builder.buildConstant(retInt_);
-                //case FLT -> retVal_ = builder.buildConstant(retFloat_);
+                case FLT -> retVal_ = builder.buildConstant(retFloat_);
             }
             setConstFolding(OFF);
         }
@@ -376,6 +376,89 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         scope.popTable(); // Pop it out before exiting the scope.
         return null;
     }
+
+    @Override
+    public Void visitScalarLVal(SysY2022Parser.ScalarLValContext ctx) {
+        /*
+        Retrieve the value defined previously from the symbol table.
+         */
+        String name  = ctx.Ident().getText();
+        Value val = scope.getVal(name);
+
+        /*
+        If the value does not exist, report the semantic error.
+         */
+        if (val == null) {
+            throw new RuntimeException("Undefined value: " + name);
+        }
+
+        /*
+        There are two cases for lVal as a grammar symbol:
+        1.  If a lVal can be reduced to a primaryExp,
+            in this case it is a scalar value (IntegerType or FloatType)
+            thus the value can be returned directly, which will then
+            be handled by visitPrimExpr2().
+        2.  Otherwise, a lVal represents a left value,
+            which generates an address (PointerType Value)
+            designating a memory block for assignment.
+         */
+        // Case 1, return directly.
+        if (val.getType().isIntegerType() || val.getType().isFloatType()) {
+            retVal_ = val;
+            return null;
+        }
+//        // Case 2, return a PointerType Value.
+//        if (val.getType().isPointerType()) {
+//            Type pointeeType = ((PointerType) val.getType()).getPointeeType();
+//            // i32**: Return i32*.
+//            if (pointeeType.isPointerType()) {
+//                retVal_ = builder.buildLoad(pointeeType, val);
+//            }
+//            // [2 x i32]*: Return i32*
+//            else if (pointeeType.isArrayType()) {
+//                retVal_ = builder.buildGEP(val, new ArrayList<>(){{
+//                    add(builder.buildConstant(0));
+//                    add(builder.buildConstant(0));
+//                }});
+//            }
+//            // i32* / float*.
+//            else {
+//                // Load it up when being a real argument of a function call.
+//                // Otherwise, return directly for being a left value.
+//                if (inBuildFCall()) {
+//                    val = builder.buildLoad(pointeeType, val);
+//                }
+//                retVal_ = val;
+//            }
+//            return null;
+//        }
+        return null;
+    }
+
+
+    @Override
+    public Void visitAssignment(SysY2022Parser.AssignmentContext ctx) {
+        // Retrieve left value (the address to store) by visiting child.
+        // Retrieve the value to be stored by visiting child.
+        visit(ctx.lVal());
+        Value addr = retVal_;
+        visit(ctx.exp());
+        Value val = retVal_;
+
+        // Type matching check and implicit type conversions.
+//        Type destType = ((PointerType) addr.getType()).getPointeType();
+//        if (destType.isFloatType() && val.getType().isIntegerType()) {
+//            val = builder.buildSitofp(val);
+//        }
+//        else if (destType.isIntegerType() && val.getType().isFloatType()) {
+//            val = builder.buildFptosi(val, (IntegerType) destType);
+//        }
+
+        // Build the Store instruction.
+        builder.buildStore(val, addr);
+        return null;
+    }
+
 
     /**
      * stmt : 'return' (expr)? ';'

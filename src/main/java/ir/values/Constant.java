@@ -64,7 +64,7 @@ public class Constant extends User {
         public ConstantFloat(Type type, float val) {
             super(type);
             this.val = val;
-            this.setName("0x" + Long.toHexString(Double.doubleToLongBits(val)));
+            this.setName(String.valueOf(this.getVal()));
         }
 
 
