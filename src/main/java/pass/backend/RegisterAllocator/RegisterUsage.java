@@ -1,7 +1,5 @@
 package pass.backend.RegisterAllocator;
 
-import java.util.Random;
-
 /**
  * 寄存器使用情况类
  */

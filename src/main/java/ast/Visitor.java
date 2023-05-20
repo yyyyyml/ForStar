@@ -1,49 +1,73 @@
 package ast;
 
-import frontend.*;
-
+import frontend.SysY2022BaseVisitor;
+import frontend.SysY2022Parser;
 import frontend.SysY2022Parser.ReturnStmtContext;
+import ir.Instruction;
+import ir.Instructions.MemoryInst;
 import ir.Module;
 import ir.Type;
+import ir.Type.FloatType;
+import ir.Type.IntegerType;
 import ir.Value;
-import ir.types.*;
-import ir.Type.*;
-import ir.values.*;
-import ir.Instruction;
+import ir.types.FunctionType;
+import ir.types.PointerType;
+import ir.values.BasicBlock;
 import ir.values.Constant;
-import ir.Instructions.*;
+import ir.values.Function;
+import ir.values.GlobalVariable;
 
-import java.util.ArrayList;
 import java.math.BigInteger;
+import java.util.ArrayList;
 
 public class Visitor extends SysY2022BaseVisitor<Void> {
     private final Scope scope = new Scope();
-    private Builder builder;
-    public Visitor (Module module) {
-        this.builder = new Builder(module);
-    }
-
     //<editor-fold desc="Environment variables indicating the building status">
     private final boolean ON = true;
     private final boolean OFF = false;
-
-
-    //判断visitor是否在在工作的一些参数
+    private Builder builder;
     /**
      * If the visitor is currently in a constant folding progression.
      */
     private boolean envConstFolding = OFF;
 
+
+    //判断visitor是否在在工作的一些参数
+    /**
+     * If the visitor is currently building a function call (invocation).
+     */
+    private boolean envBuildFCall = OFF;
+    /**
+     * Represents data type returned from the lower layer of visiting method.
+     * Only for passing data in primitive types int and float (by retInt_ and retFloat_)
+     */
+    private DataType envConveyedType = null;
+    //<editor-fold desc="Variables storing returned data from the lower layers of visiting.">
+    private Value retVal_;
+    private ArrayList<Value> retValList_;
+    private Type retType_;
+    private ArrayList<Type> retTypeList_;
+    private int retInt_;
+    private float retFloat_;
+
+    public Visitor(Module module) {
+        this.builder = new Builder(module);
+    }
+
     /**
      * Set the environment variable of constant folding.
+     *
      * @param stat ON / OFF
      */
     private void setConstFolding(boolean stat) {
         envConstFolding = stat;
     }
 
+    //</editor-fold>
+
     /**
      * If the visitor is currently in a constant folding progression.
+     *
      * @return Yes or no.
      */
     public boolean inConstFolding() {
@@ -51,12 +75,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     }
 
     /**
-     * If the visitor is currently building a function call (invocation).
-     */
-    private boolean envBuildFCall = OFF;
-
-    /**
      * Set the environment variable of building function call.
+     *
      * @param stat ON / OFF
      */
     private void setBuildFCall(boolean stat) {
@@ -65,23 +85,12 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     /**
      * If the visitor is currently building a function call (invocation).
+     *
      * @return Yes or no.
      */
     private boolean inBuildFCall() {
         return envBuildFCall;
     }
-
-    /**
-     * The enum is for indicating which data type returned from the lower layer
-     * for visiting method. (INT -> read retInt_, FLT -> read retFlt_)
-     */
-    private enum DataType {FLT, INT}
-
-    /**
-     * Represents data type returned from the lower layer of visiting method.
-     * Only for passing data in primitive types int and float (by retInt_ and retFloat_)
-     */
-    private DataType envConveyedType = null;
 
     private DataType getConveyedType() {
         return envConveyedType;
@@ -91,37 +100,26 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         envConveyedType = dataType;
     }
 
-    //</editor-fold>
-
-    //<editor-fold desc="Variables storing returned data from the lower layers of visiting.">
-    private Value retVal_;
-    private ArrayList<Value> retValList_;
-    private Type retType_;
-    private ArrayList<Type> retTypeList_;
-    private int retInt_;
-    private float retFloat_;
-    //</editor-fold>
-
     /*重写visitor -_-|| */
     @Override
     public Void visitCompUnit(SysY2022Parser.CompUnitContext ctx) {
         super.visitCompUnit(ctx);
         return null;
     }
-
+    //</editor-fold>
 
     @Override
     public Void visitScalarConstDef(SysY2022Parser.ScalarConstDefContext ctx) {
         // Retrieve the name of the variable defined and check for duplication.//把identifier改成了Ident（)
         String name = ctx.Ident().getText();
-        if(scope.isDuplicateSymbol(name)){
+        if (scope.isDuplicateSymbol(name)) {
             throw new RuntimeException("Duplicate definition of constant name: " + name);
         }
         visit(ctx.constInitVal());
         Value initVal = retVal_;
         String bType = ctx.getParent().getChild(1).getText();
-        if(bType == "int"){
-            builder.buildConstant(((Constant.ConstantInt)initVal).getVal());
+        if (bType == "int") {
+            builder.buildConstant(((Constant.ConstantInt) initVal).getVal());
         }
         scope.addSymbol(name, initVal);
 
@@ -165,7 +163,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     }
                 }
                 // Build the glb var.
-                glbVar = builder.buildGlobalVar(name,  initVal.getType());
+                glbVar = builder.buildGlobalVar(name, initVal.getType());
             }
 
             // W/o initialization.
@@ -227,7 +225,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         }
         return null;
     }
-
 
     /**
      * initVal : expr # scalarInitVal
@@ -341,11 +338,10 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         if (tailInst == null || !tailInst.isTerminator()) {
             //function.getType().getRetType().isFloatType()这下面三个在Function类完善后可能要把type分成paramtype和returntype
 //            System.out.println("要判断类型");
-            if (((FunctionType)function.getType()).getRetType().isVoidType()) {
+            if (((FunctionType) function.getType()).getRetType().isVoidType()) {
                 builder.buildRet();
 //                System.out.println("类型为空");
-            }
-            else if (((FunctionType)function.getType()).getRetType().isIntegerType()) {
+            } else if (((FunctionType) function.getType()).getRetType().isIntegerType()) {
                 builder.buildRet(builder.buildConstant(0)); // Return 0 by default.
 //                System.out.println("类型为整数");
             }
@@ -367,8 +363,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
-
-
     @Override
     public Void visitBlock(SysY2022Parser.BlockContext ctx) {
         scope.pushTable(); // Add a new layer of scope (a new symbol table).
@@ -382,7 +376,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         /*
         Retrieve the value defined previously from the symbol table.
          */
-        String name  = ctx.Ident().getText();
+        String name = ctx.Ident().getText();
         Value val = scope.getVal(name);
 
         /*
@@ -435,7 +429,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
-
     @Override
     public Void visitAssignment(SysY2022Parser.AssignmentContext ctx) {
         // Retrieve left value (the address to store) by visiting child.
@@ -459,7 +452,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
-
     /**
      * stmt : 'return' (expr)? ';'
      */
@@ -474,10 +466,10 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             Value retVal = retVal_;
             //Type retType = ((FunctionType)builder.getCurFunc().getType()).getRetType(); // The return type defined in the prototype.builder.getCurFunc().getType().getRetType()
             //if (retVal.getType().isIntegerType() && retType.isFloatType()) {
-                //retVal = builder.buildSitofp(retVal);
+            //retVal = builder.buildSitofp(retVal);
             //}
             //else if (retVal.getType().isFloatType() && retType.isIntegerType()) {
-               //retVal = builder.buildFptosi(retVal, (IntegerType) retType);
+            //retVal = builder.buildFptosi(retVal, (IntegerType) retType);
             //}
 
             builder.buildRet(retVal);
@@ -490,7 +482,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 //        builder.buildBB("_FOLLOWING_BLK");
         return null;
     }
-
 
     @Override
     public Void visitConstExp(SysY2022Parser.ConstExpContext ctx) {
@@ -507,6 +498,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         retVal_ = lOp;
         return null;
     }
+
     @Override
     public Void visitMul1(SysY2022Parser.Mul1Context ctx) {
         visit(ctx.unaryExp());
@@ -515,7 +507,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
-
     @Override
     public Void visitUnaryExp1(SysY2022Parser.UnaryExp1Context ctx) {
         visit(ctx.primaryExp());
@@ -523,7 +514,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         retVal_ = lOp;
         return null;
     }
-    @Override public Void visitPrimaryExp2(SysY2022Parser.PrimaryExp2Context ctx) {
+
+    @Override
+    public Void visitPrimaryExp2(SysY2022Parser.PrimaryExp2Context ctx) {
 
         visit(ctx.lVal());
         // If it's not in a function call,
@@ -534,15 +527,17 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         }
 
 
-
         return null;
     }
-    @Override public Void visitPrimaryExp3(SysY2022Parser.PrimaryExp3Context ctx) {
+
+    @Override
+    public Void visitPrimaryExp3(SysY2022Parser.PrimaryExp3Context ctx) {
         visit(ctx.number());
         Value lOp = retVal_;
         retVal_ = lOp;
         return null;
     }
+
     @Override
     public Void visitNumber(SysY2022Parser.NumberContext ctx) {
         int ret = 0;
@@ -564,4 +559,10 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
         return null;
     }
+
+    /**
+     * The enum is for indicating which data type returned from the lower layer
+     * for visiting method. (INT -> read retInt_, FLT -> read retFlt_)
+     */
+    private enum DataType {FLT, INT}
 }

@@ -39,5 +39,5 @@ public abstract class RISCOperand {
         return this instanceof Memory;
     }
 
-    public  abstract String emit() ;
+    public abstract String emit();
 }

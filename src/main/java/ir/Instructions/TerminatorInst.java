@@ -125,7 +125,7 @@ public class TerminatorInst {
             sb.append("(");
             for (int i = 1; i < this.getNumOP(); i++) {
                 sb.append(this.getOperandAt(i).getType()).append(" ").append(this.getOperandAt(i).getName());
-                if(i != this.getNumOP() - 1)
+                if (i != this.getNumOP() - 1)
                     sb.append(", ");
             }
             sb.append(")");

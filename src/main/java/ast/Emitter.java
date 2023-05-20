@@ -1,11 +1,10 @@
 package ast;
 
 import ir.Instruction;
-import ir.Value;
+import ir.Module;
 import ir.values.BasicBlock;
 import ir.values.Function;
 import ir.values.GlobalVariable;
-import ir.Module;
 import util.IList;
 
 import java.io.FileWriter;
@@ -13,14 +12,7 @@ import java.io.FileWriter;
 public class Emitter {
     private String outputName = "out.ll";
     private StringBuilder sb;
-
-    public String getOutputName() {
-        return outputName;
-    }
-
-    public void setOutputName(String outputName) {
-        this.outputName = outputName;
-    }
+    private int nameCounter = 0;
 
     public Emitter() {
         sb = new StringBuilder();
@@ -31,7 +23,13 @@ public class Emitter {
         sb = new StringBuilder();
     }
 
-    private int nameCounter = 0;
+    public String getOutputName() {
+        return outputName;
+    }
+
+    public void setOutputName(String outputName) {
+        this.outputName = outputName;
+    }
 
     private String newName() {
         String name = String.valueOf(nameCounter);
@@ -81,7 +79,7 @@ public class Emitter {
                         .append("{");
                 sb.append("\n");
 
-                for(IList.INode<BasicBlock, Function> bbInode : func.list) {
+                for (IList.INode<BasicBlock, Function> bbInode : func.list) {
                     BasicBlock bb = bbInode.getElement();
                     if (!func.list.getFirst().equals(bbInode)) {
                         sb.append(bb.getName());

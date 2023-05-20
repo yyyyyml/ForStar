@@ -94,21 +94,6 @@ public class MemoryInst {
             RetType = getRetType(ptr, indices);
         }
 
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            // %2 = getelementptr [2 x i32], [2 x i32]* %1, i64 0, i64 1
-            Value ptr = getOperandAt(0); // 第一个操作数 指针
-            sb.append(this.getName()).append("= getelementptr ").
-                    append(((PointerType) ptr.getType()).getPointedType()).append(",")
-                    .append(ptr.getType()).append(" ").append(ptr.getName());
-            // , i64 0, i64 1
-            for (int i = 1; i < getNumOP(); i++) {
-                sb.append(", ").append(getOperandAt(i).getType()).append(" ").append(getOperandAt(i).getName());
-            }
-            return sb.toString();
-        }
-
         // 遍历一下，确定GEP指令的类型是什么，即它是个什么类型的指针，一层一层找
         private static Type getRetType(Value ptr, ArrayList<Value> indices) {
             assert ptr.getType().isPointerType();
@@ -124,6 +109,21 @@ public class MemoryInst {
                 return retType;
             }
             return retType;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            // %2 = getelementptr [2 x i32], [2 x i32]* %1, i64 0, i64 1
+            Value ptr = getOperandAt(0); // 第一个操作数 指针
+            sb.append(this.getName()).append("= getelementptr ").
+                    append(((PointerType) ptr.getType()).getPointedType()).append(",")
+                    .append(ptr.getType()).append(" ").append(ptr.getName());
+            // , i64 0, i64 1
+            for (int i = 1; i < getNumOP(); i++) {
+                sb.append(", ").append(getOperandAt(i).getType()).append(" ").append(getOperandAt(i).getName());
+            }
+            return sb.toString();
         }
 
     }

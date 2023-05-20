@@ -1,67 +1,18 @@
 package util;
 
-import ir.Module;
-import ir.values.Function;
-
 import java.util.Iterator;
 
 /**
  * 侵入式链表实现
+ *
  * @param <T> 自身（本项目中一般是一种Value）
  * @param <P> 父（本项目中一般是一种Value）
  */
 public class IList<T, P> implements Iterable<IList.INode<T, P>> {
-    // 链表中的节点类
-    public static class INode<T, P> {
-        private T element;
-        private INode<T, P> prev;
-        private INode<T, P> next;
-        private IList<T, P> parentList = null;
-
-        public INode(T element, INode<T, P> prev, INode<T, P> next) {
-            this.element = element;
-            this.prev = prev;
-            this.next = next;
-        }
-
-        public T getElement() {
-            return element;
-        }
-
-        public void setElement(T element) {
-            this.element = element;
-        }
-
-        public INode<T, P> getPrev() {
-            return prev;
-        }
-
-        public void setPrev(INode<T, P> prev) {
-            this.prev = prev;
-        }
-
-        public INode<T, P> getNext() {
-            return next;
-        }
-
-        public void setNext(INode<T, P> next) {
-            this.next = next;
-        }
-
-        public IList<T, P> getParentList() {
-            return parentList;
-        }
-
-        public void setParent(IList<T, P> parentList) {
-            this.parentList = parentList;
-        }
-    }
-
     private final INode<T, P> head;
     private final INode<T, P> tail;
     private int size;
     private P val;
-
     public IList(P val) {
         head = new INode<>(null, null, null);
         tail = new INode<>(null, head, null);
@@ -149,6 +100,52 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
     @Override
     public Iterator<INode<T, P>> iterator() {
         return new IIterator(head, tail);
+    }
+
+    // 链表中的节点类
+    public static class INode<T, P> {
+        private T element;
+        private INode<T, P> prev;
+        private INode<T, P> next;
+        private IList<T, P> parentList = null;
+
+        public INode(T element, INode<T, P> prev, INode<T, P> next) {
+            this.element = element;
+            this.prev = prev;
+            this.next = next;
+        }
+
+        public T getElement() {
+            return element;
+        }
+
+        public void setElement(T element) {
+            this.element = element;
+        }
+
+        public INode<T, P> getPrev() {
+            return prev;
+        }
+
+        public void setPrev(INode<T, P> prev) {
+            this.prev = prev;
+        }
+
+        public INode<T, P> getNext() {
+            return next;
+        }
+
+        public void setNext(INode<T, P> next) {
+            this.next = next;
+        }
+
+        public IList<T, P> getParentList() {
+            return parentList;
+        }
+
+        public void setParent(IList<T, P> parentList) {
+            this.parentList = parentList;
+        }
     }
 
     // 迭代器的实现

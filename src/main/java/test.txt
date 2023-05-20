@@ -17,14 +17,22 @@ int main() {
     h = 8;
     int ee;
     ee = h;
-    int i = h;
-    int j = g;
-    int k = f;
-    int l = e;
-    int m = d;
-    int n = c;
-    int o = b;
-    int p = a;
+    int i = ee;
+    int j = i;
+    int k = j;
+    int l = k;
+    int m = l;
+    int n = m;
+    int o = n;
+    int p = ee;
+    a = i;
+    b = j;
+    c = k;
+    d = l;
+    e = m;
+    f = n;
+    g = ee;
+    h = a;
 
-	return 1;
+	return g;
 }

@@ -12,6 +12,15 @@ public abstract class User extends Value {
     public LinkedList<Use> operandList = new LinkedList<>();
     private int numOP = 0;//操作数的数量
 
+    public User(Type type) {
+        super(type);
+    }
+
+    public User(Type type, int numOp) {
+        super(type);
+        this.numOP = numOp;
+    }
+
     public Value getOperandAt(int i) {
         for (Use use : operandList) {
             if (use.getPosition() == i) {
@@ -47,15 +56,8 @@ public abstract class User extends Value {
         operandList.add(use);
     }
 
-    public int getNumOP() {return numOP;}
-
-    public User(Type type) {
-        super(type);
-    }
-
-    public User(Type type, int numOp) {
-        super(type);
-        this.numOP = numOp;
+    public int getNumOP() {
+        return numOP;
     }
 
 

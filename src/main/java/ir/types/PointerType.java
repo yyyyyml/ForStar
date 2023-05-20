@@ -9,11 +9,17 @@ import ir.Type;
 public class PointerType extends Type {
     private Type pointedType;
 
-    public static PointerType getPointerType(Type pointedType){return new PointerType(pointedType);}
+    public PointerType(Type pointedType) {
+        this.pointedType = pointedType;
+    }
 
-    public PointerType(Type pointedType) {this.pointedType = pointedType;}
+    public static PointerType getPointerType(Type pointedType) {
+        return new PointerType(pointedType);
+    }
 
-    public Type getPointedType() {return pointedType;}
+    public Type getPointedType() {
+        return pointedType;
+    }
 
     @Override
     public String toString() {

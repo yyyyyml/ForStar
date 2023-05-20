@@ -12,11 +12,10 @@ public class Memory extends RISCOperand {
     }
 
     public String emit() {
-        if(offset == 0){
-            return "("+basicAddress.regType.name()+")";
-        }
-        else {
-            return Integer.toString(offset)+"("+basicAddress.regType.name()+")";
+        if (offset == 0) {
+            return "(" + basicAddress.regType.name() + ")";
+        } else {
+            return Integer.toString(offset) + "(" + basicAddress.regType.name() + ")";
         }
     }
 }

@@ -2,8 +2,6 @@ package backend.instructions;
 
 import backend.RISCInstruction;
 import backend.RISCOperand;
-import backend.operands.Immediate;
-import backend.operands.Register;
 
 public class AddwInstruction extends RISCInstruction {
     public RISCOperand op1;

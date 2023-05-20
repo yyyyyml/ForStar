@@ -17,14 +17,12 @@ public class Use {
         u.addInOperandList(this);
     }
 
-    public void setValue(Value v) {this.v = v;}
+    public int getPosition() {
+        return this.position;
+    }
 
     public void setPosition(int position) {
         this.position = position;
-    }
-
-    public int getPosition() {
-        return this.position;
     }
 
     public User getUser() {
@@ -33,5 +31,9 @@ public class Use {
 
     public Value getValue() {
         return this.v;
+    }
+
+    public void setValue(Value v) {
+        this.v = v;
     }
 }

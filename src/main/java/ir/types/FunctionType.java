@@ -10,16 +10,19 @@ import java.util.ArrayList;
  */
 public class FunctionType extends Type {
     private Type retType;// 返回类型
-
-    public Type getRetType() {return retType;}
-
     private ArrayList<Type> paramTypeList; //参数类型列表
-
-    public ArrayList<Type> getParamTypeList() {return paramTypeList;}
 
     public FunctionType(Type retType, ArrayList<Type> paramsTypeList) {
         this.retType = retType;
         this.paramTypeList = paramsTypeList;
+    }
+
+    public Type getRetType() {
+        return retType;
+    }
+
+    public ArrayList<Type> getParamTypeList() {
+        return paramTypeList;
     }
     /*public static FunctionType getType(Type retType, ArrayList<Type> argTypes) {
         var key = new PrototypeKey(retType, argTypes);

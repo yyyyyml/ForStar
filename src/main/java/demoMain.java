@@ -1,9 +1,12 @@
 //主函数
-import ast.*;
+
+import ast.Emitter;
+import ast.Visitor;
 import backend.RISCBuilder;
-import backend.RISCModule;
 import backend.RISCEmitter;
-import frontend.*;
+import backend.RISCModule;
+import frontend.SysY2022Lexer;
+import frontend.SysY2022Parser;
 import ir.Module;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;

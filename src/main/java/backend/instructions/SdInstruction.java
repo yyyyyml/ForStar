@@ -1,8 +1,8 @@
 package backend.instructions;
 
 import backend.RISCInstruction;
-import backend.operands.Memory;
 import backend.RISCOperand;
+import backend.operands.Memory;
 import backend.operands.RealRegister;
 
 public class SdInstruction extends RISCInstruction {

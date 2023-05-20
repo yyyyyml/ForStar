@@ -11,17 +11,6 @@ public class ArrayType extends Type {
     private Type containedType; // 这层数组的元素的类型，可能还是数组，或整数、浮点
     private int size;// 这一层的元素数
 
-    public int getTotalSize() {
-        return totalSize;
-    }
-
-    public Type getContainedType() {
-        return containedType;
-    }
-
-    public int getSize() {
-        return size;
-    }
     public ArrayType(Type containedType, int size) {
         assert size > 0;
 
@@ -32,6 +21,18 @@ public class ArrayType extends Type {
         } else {
             totalSize = ((ArrayType) containedType).totalSize * size;
         }
+    }
+
+    public int getTotalSize() {
+        return totalSize;
+    }
+
+    public Type getContainedType() {
+        return containedType;
+    }
+
+    public int getSize() {
+        return size;
     }
 
     @Override

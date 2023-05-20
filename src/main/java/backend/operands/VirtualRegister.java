@@ -2,7 +2,7 @@ package backend.operands;
 
 import ir.Value;
 
-public class VirtualRegister extends Register{
+public class VirtualRegister extends Register {
     private int name;
     private Value value;
     private int realReg = -1;
@@ -20,9 +20,13 @@ public class VirtualRegister extends Register{
         this.value = null;
     }
 
-    public int getName(){return name;}
+    public int getName() {
+        return name;
+    }
 
-    public Value getValue(){return value;}
+    public Value getValue() {
+        return value;
+    }
 
     public int getRealReg() {
         return realReg;
@@ -32,7 +36,9 @@ public class VirtualRegister extends Register{
         this.realReg = realReg;
     }
 
-    public String emit(){return "vr_"+name;}
+    public String emit() {
+        return "vr_" + name;
+    }
 
     public int getStackLocation() {
         return stackLocation;

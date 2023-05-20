@@ -1,23 +1,22 @@
 package ir.values;
 
+import ir.Module;
 import ir.Type;
 import ir.Value;
-import ir.Module;
 import ir.types.FunctionType;
 import util.IList;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 函数类 继承自Value类
  * 待修改
  */
 public class Function extends Value {
-    private boolean isBuiltin = false;//是否是库函数
-    private ArrayList<Param> paramList;// 形参列表
     public IList<BasicBlock, Function> list;
     public IList.INode<Function, Module> node;
+    private boolean isBuiltin = false;//是否是库函数
+    private ArrayList<Param> paramList;// 形参列表
 
     public Function(Type type, boolean isBuiltin) {
         super(type);
@@ -40,22 +39,6 @@ public class Function extends Value {
         return this.isBuiltin;
     }
 
-
-    // 形参，只记录各位置类型
-    public class Param extends Value {
-        private int position;
-
-        public Param(Type type, int position) {
-            super(type);
-            this.position = position;
-        }
-
-        @Override
-        public String toString() {
-            return this.getType() + " " + this.getName();
-        }
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -71,6 +54,21 @@ public class Function extends Value {
         sb.append(")");
 
         return sb.toString();
+    }
+
+    // 形参，只记录各位置类型
+    public class Param extends Value {
+        private int position;
+
+        public Param(Type type, int position) {
+            super(type);
+            this.position = position;
+        }
+
+        @Override
+        public String toString() {
+            return this.getType() + " " + this.getName();
+        }
     }
 
 }

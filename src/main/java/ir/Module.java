@@ -4,7 +4,6 @@ import ir.values.Function;
 import ir.values.GlobalVariable;
 import util.IList;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 
 /**
@@ -15,9 +14,13 @@ import java.util.LinkedList;
  * Module->Function->BasicBlock->Instruction遍历出所有信息
  */
 public class Module {
+    public final LinkedList<GlobalVariable> globalVariableList;
     public IList<Function, Module> functionList;
 
-    public final LinkedList<GlobalVariable> globalVariableList;
+    public Module() {
+        functionList = new IList<>(this);
+        globalVariableList = new LinkedList<>();
+    }
 
     public void addGlobalVariable(GlobalVariable glbVar) {
         globalVariableList.add(glbVar);
@@ -25,10 +28,5 @@ public class Module {
 
     public LinkedList<GlobalVariable> getGlobalVariableList() {
         return globalVariableList;
-    }
-
-    public Module() {
-        functionList = new IList<>(this);
-        globalVariableList = new LinkedList<>();
     }
 }

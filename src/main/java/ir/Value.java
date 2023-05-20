@@ -9,25 +9,25 @@ import java.util.LinkedList;
  * addInUseList()用于向useList中添加Use
  */
 public abstract class Value {
+    public final LinkedList<Use> useList = new LinkedList<>();
+    private final Type type;
+    private String name = "";
+
     public Value(Type type) {
         this.type = type;
     }
-
-    private final Type type;
 
     public Type getType() {
         return type;
     }
 
-    private String name = "";
-
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
     public void setName(String name) {
         this.name = name;
     }
-
-    public final LinkedList<Use> useList = new LinkedList<>();
 
     public void addInUseList(Use use) {
         useList.add(use);

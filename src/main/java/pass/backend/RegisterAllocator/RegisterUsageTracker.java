@@ -1,6 +1,5 @@
 package pass.backend.RegisterAllocator;
 
-import javax.swing.*;
 import java.util.HashMap;
 
 /**

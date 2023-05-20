@@ -1,6 +1,8 @@
 package ir;
 
-import ir.types.*;
+import ir.types.ArrayType;
+import ir.types.FunctionType;
+import ir.types.PointerType;
 
 /**
  * 对于没有其他属性的Type,
@@ -10,78 +12,6 @@ import ir.types.*;
  * 在Types文件夹中单独定义
  */
 public class Type {
-
-
-
-    // NoneType
-    public static class NonType extends Type {
-        private NonType() {}
-
-        private static NonType type = new NonType();
-
-        public static NonType getType() {return type;}
-    }
-
-    // VoidType
-    public static class VoidType extends Type {
-        private VoidType() {}
-
-        private static VoidType type = new VoidType();
-
-        public static VoidType getType() {return type;}
-
-        @Override
-        public String toString() {return "void";}
-    }
-
-    // LabelType
-    public static class LabelType extends Type {
-        private LabelType() {}
-
-        private static LabelType type = new LabelType();
-
-        public static LabelType getType() {return type;}
-
-        @Override
-        public String toString() {return "label ";}
-    }
-
-    // IntegerType
-    public static class IntegerType extends Type {
-        private IntegerType() {}
-
-        private static IntegerType type = new IntegerType();
-
-        public static IntegerType getType() {return type;}
-
-        @Override
-        public String toString() {return "i32";}
-    }
-
-    // BoolType
-    public static class BoolType extends Type {
-        private BoolType() {}
-
-        private static BoolType type = new BoolType();
-
-        public static BoolType getType() {return type;}
-
-        @Override
-        public String toString() {return "i1";}
-    }
-
-    // FloatType
-    public static class FloatType extends Type {
-        private FloatType() {}
-
-        private static FloatType type = new FloatType();
-
-        public static FloatType getType() {return type;}
-
-        @Override
-        public String toString() {return "float";}
-    }
-
 
 
     public boolean isNonType() {
@@ -118,5 +48,102 @@ public class Type {
 
     public boolean isBoolType() {
         return (this instanceof BoolType);
+    }
+
+    // NoneType
+    public static class NonType extends Type {
+        private static NonType type = new NonType();
+
+        private NonType() {
+        }
+
+        public static NonType getType() {
+            return type;
+        }
+    }
+
+    // VoidType
+    public static class VoidType extends Type {
+        private static VoidType type = new VoidType();
+
+        private VoidType() {
+        }
+
+        public static VoidType getType() {
+            return type;
+        }
+
+        @Override
+        public String toString() {
+            return "void";
+        }
+    }
+
+    // LabelType
+    public static class LabelType extends Type {
+        private static LabelType type = new LabelType();
+
+        private LabelType() {
+        }
+
+        public static LabelType getType() {
+            return type;
+        }
+
+        @Override
+        public String toString() {
+            return "label ";
+        }
+    }
+
+    // IntegerType
+    public static class IntegerType extends Type {
+        private static IntegerType type = new IntegerType();
+
+        private IntegerType() {
+        }
+
+        public static IntegerType getType() {
+            return type;
+        }
+
+        @Override
+        public String toString() {
+            return "i32";
+        }
+    }
+
+    // BoolType
+    public static class BoolType extends Type {
+        private static BoolType type = new BoolType();
+
+        private BoolType() {
+        }
+
+        public static BoolType getType() {
+            return type;
+        }
+
+        @Override
+        public String toString() {
+            return "i1";
+        }
+    }
+
+    // FloatType
+    public static class FloatType extends Type {
+        private static FloatType type = new FloatType();
+
+        private FloatType() {
+        }
+
+        public static FloatType getType() {
+            return type;
+        }
+
+        @Override
+        public String toString() {
+            return "float";
+        }
     }
 }

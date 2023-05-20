@@ -1,8 +1,10 @@
 package backend.operands;
 
-public class RealRegister extends Register{
+public class RealRegister extends Register {
+    public REGTYPE regType;
+
     public RealRegister(int r1) {
-        switch (r1){
+        switch (r1) {
             case 0 -> regType = REGTYPE.zero;
             case 1 -> regType = REGTYPE.s0;
             case 2 -> regType = REGTYPE.sp;
@@ -15,12 +17,13 @@ public class RealRegister extends Register{
             case 9 -> regType = REGTYPE.a0;
             case 10 -> regType = REGTYPE.a5;
 
-            default ->
-                throw new IllegalStateException("Unexpected value: " + r1);
+            default -> throw new IllegalStateException("Unexpected value: " + r1);
         }
     }
+
+
     public RealRegister(int r1, int offset) {
-        switch (r1 + offset){
+        switch (r1 + offset) {
             case 0 -> regType = REGTYPE.zero;
             case 1 -> regType = REGTYPE.s0;
             case 2 -> regType = REGTYPE.sp;
@@ -67,9 +70,12 @@ public class RealRegister extends Register{
             case 43 -> regType = REGTYPE.STACK;
             case 44 -> regType = REGTYPE.STACK2;
 
-            default ->
-                    throw new IllegalStateException("Unexpected value: " + r1);
+            default -> throw new IllegalStateException("Unexpected value: " + r1);
         }
+    }
+
+    public String emit() {
+        return regType.name();
     }
 
 
@@ -121,13 +127,5 @@ public class RealRegister extends Register{
         STACK,
         STACK2
 
-    }
-
-
-    public REGTYPE regType;
-
-
-    public String emit(){
-        return regType.name();
     }
 }

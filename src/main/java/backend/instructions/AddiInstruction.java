@@ -1,8 +1,8 @@
 package backend.instructions;
 
 import backend.RISCInstruction;
-import backend.operands.Immediate;
 import backend.RISCOperand;
+import backend.operands.Immediate;
 import backend.operands.Register;
 
 public class AddiInstruction extends RISCInstruction {

@@ -2,10 +2,7 @@ package ir.values;
 
 import ir.Type;
 import ir.User;
-import ir.Value;
 import ir.types.PointerType;
-
-import java.util.LinkedList;
 
 /**
  * 全局变量类 继承自User类
@@ -20,7 +17,9 @@ public class GlobalVariable extends User {
         this.setName(name);
     }
 
-    public void setConst() {this.isConst = true;}
+    public void setConst() {
+        this.isConst = true;
+    }
 
     public void setInit(Constant init) {
         this.init = init;
