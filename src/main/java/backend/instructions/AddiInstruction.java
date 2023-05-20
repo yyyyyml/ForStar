@@ -14,16 +14,17 @@ public class AddiInstruction extends RISCInstruction {
     public AddiInstruction(Register r1, Register r2, Immediate imm) {
         this.operandNum = 3;
         this.op1 = r1;
-        this.setOperand(op1, 0);
+        setOperand(op1, 0);
         this.op2 = r2;
-        this.setOperand(op2, 1);
+        setOperand(op2, 1);
         this.imm = imm;
-        this.setOperand(imm, 2);
+        setOperand(imm, 2);
         this.type = ITYPE.addi;
     }
 
 
     public String emit() {
-        return this.type.name()+" "+op1.emit()+","+op2.emit()+","+imm.val;
+//        return this.type.name()+" "+op1.emit()+","+op2.emit()+ ","  + imm.emit();
+        return this.type.name() + " " + getOperandAt(0).emit() + "," + getOperandAt(1).emit() + "," + getOperandAt(2).emit();
     }
 }

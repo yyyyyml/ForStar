@@ -5,9 +5,9 @@ import ir.Value;
 public class VirtualRegister extends Register{
     private int name;
     private Value value;
-    private int realReg;
+    private int realReg = -1;
     private int stackLocation;
-    private int spillTime;
+    private int spillTime = Integer.MAX_VALUE;
 
     public VirtualRegister(int i, Value value) {
         this.name = i;
