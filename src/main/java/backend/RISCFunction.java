@@ -1,5 +1,6 @@
 package backend;
 
+import backend.operands.Memory;
 import backend.operands.VirtualRegister;
 import ir.Value;
 import ir.values.BasicBlock;
@@ -19,6 +20,7 @@ public class RISCFunction {
     public int parameterSize;
     public int virtualRegisterIndex = 0;
     public HashMap<Value, VirtualRegister> valueVRMap;
+    public HashMap<Value, Memory> valueMemoryHashMap;
     public int localStackIndex = 20;
 
 
@@ -33,6 +35,7 @@ public class RISCFunction {
      */
     public RISCFunction(Function irFunc) {
         valueVRMap = new HashMap<>();
+        valueMemoryHashMap = new HashMap<>();
         BasicBlockList = new LinkedList<>();
         this.irFunction = irFunc;
         this.funcName = irFunc.getName();

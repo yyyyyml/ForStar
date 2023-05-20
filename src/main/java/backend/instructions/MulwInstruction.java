@@ -21,6 +21,7 @@ public class MulwInstruction extends RISCInstruction {
 
 
     public String emit() {
-        return this.type.name()+" "+op1.emit()+","+op2.emit()+","+op3.emit();
+//        return this.type.name()+" "+op1.emit()+","+op2.emit()+","+op3.emit();
+        return this.type.name() + " " + getOperandAt(0).emit() + "," + getOperandAt(1).emit() + "," + getOperandAt(2).emit();
     }
 }

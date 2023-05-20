@@ -16,6 +16,7 @@ public class JrInstruction extends RISCInstruction {
     }
 
     public String emit() {
-        return this.type.name()+" "+op.emit();
+//        return this.type.name()+" "+op.emit();
+        return this.type.name() + " " + getOperandAt(0).emit();
     }
 }

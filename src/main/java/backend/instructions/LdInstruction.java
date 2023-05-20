@@ -20,6 +20,7 @@ public class LdInstruction extends RISCInstruction {
     }
 
     public String emit() {
-        return this.type.name()+" "+op1.emit()+","+op2.emit();
+//        return this.type.name()+" "+op1.emit()+","+op2.emit();
+        return this.type.name() + " " + getOperandAt(0).emit() + "," + getOperandAt(1).emit();
     }
 }

@@ -17,6 +17,14 @@ int main() {
     h = 8;
     int ee;
     ee = h;
+    int i = h;
+    int j = g;
+    int k = f;
+    int l = e;
+    int m = d;
+    int n = c;
+    int o = b;
+    int p = a;
 
 	return 1;
 }

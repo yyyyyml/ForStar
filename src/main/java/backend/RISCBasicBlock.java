@@ -63,13 +63,14 @@ public class RISCBasicBlock {
     /**
      * 遍历BB中的指令
      * 转换为Risc-V
-     * @param iRbb
+     * @param irBB
      */
-    public RISCBasicBlock(BasicBlock iRbb,Function iRfunc,RISCFunction RiscFunction) {
-        this.riscFunction =RiscFunction;
-            this.irFunction =iRfunc;
-            for(IList.INode<Instruction, BasicBlock> Inode : iRbb.list){
-                Instruction curInst=Inode.getElement();
+    public RISCBasicBlock(BasicBlock irBB,Function irFunc,RISCFunction riscFunc) {
+        this.riscFunction = riscFunc;
+            this.irFunction = irFunc;
+            for(IList.INode<Instruction, BasicBlock> Inode : irBB.list){
+                
+                Instruction curInst = Inode.getElement();
                 switch (curInst.getTag()){
                     case RET ->  translateRet(curInst);
                     case ALLOCA -> translateAlloca(curInst);
@@ -140,17 +141,19 @@ public class RISCBasicBlock {
             instructionList.add(sw1);
 
         }
+        else if(op1.getType() == Type.IntegerType.getType()){
+            RISCOperand rOp1 = getOperand(op1);
+            RISCOperand rop2 = getOperand(op2);
+            SwInstruction sw1 = new SwInstruction(rOp1,rop2);
+            instructionList.add(sw1);
+        }
     }
 
     private void translateAlloca(Instruction curInst) {
         if(((PointerType) curInst.getType()).getPointedType() == Type.IntegerType.getType()) {
-            VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++,curInst );
-            riscFunction.valueVRMap.put(curInst,vr);
-            AddiInstruction add1 = new AddiInstruction(vr,new RealRegister(1),new Immediate(-riscFunction.localStackIndex));
-            instructionList.add(add1);
-            riscFunction.localStackIndex+=4;
-
-
+           Memory mem = new Memory(-riscFunction.localStackIndex,1);
+           riscFunction.localStackIndex += 4;
+           riscFunction.valueMemoryHashMap.put(curInst,mem);
         }
     }
 
@@ -158,15 +161,19 @@ public class RISCBasicBlock {
 
     private RISCOperand getOperand(Value value){
         if(value instanceof Constant){
-            int val=((Constant.ConstantInt)value).getVal();
-            RISCOperand temp=new Immediate(val);
+            int val = ((Constant.ConstantInt)value).getVal();
+            RISCOperand temp = new Immediate(val);
             return temp;
         }
-        else if(riscFunction.valueVRMap.containsValue(value)){
+        else if(riscFunction.valueVRMap.containsKey(value)){
+
             return riscFunction.valueVRMap.get(value);
         }
+        else if(riscFunction.valueMemoryHashMap.containsKey(value)){
+            return riscFunction.valueMemoryHashMap.get(value);
+        }
         else{
-            VirtualRegister vr=new VirtualRegister(riscFunction.virtualRegisterIndex++,value);
+            VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++,value);
             riscFunction.valueVRMap.put(value,vr);
             return vr;
         }
@@ -184,16 +191,23 @@ public class RISCBasicBlock {
      * @param curInst
      */
     private void translateRet(Instruction curInst) {
-            if(curInst.getNumOP()==0){
-                NopInstruction nop1=new NopInstruction();
+            if(curInst.getNumOP() == 0){
+                NopInstruction nop1 = new NopInstruction();
                 instructionList.add(nop1);
             }
 
             else if(curInst.getOperandAt(0).getType().isIntegerType()){
-                int imm=((Constant.ConstantInt)curInst.getOperandAt(0)).getVal();
-                LiInstruction li1=new LiInstruction(new RealRegister(10),new Immediate(imm));
-                instructionList.add(li1);
-                MvInstruction mv1=new MvInstruction(new RealRegister(9),new RealRegister(10));
+                RISCOperand op1 = getOperand(curInst.getOperandAt(0));
+                if(op1 instanceof Immediate)
+                {
+                    LiInstruction li1 = new LiInstruction(new RealRegister(10), op1);
+                    instructionList.add(li1);
+                }
+                else {
+                    LwInstruction lw1 = new LwInstruction(new RealRegister(10),op1);
+                    instructionList.add(lw1);
+                }
+                MvInstruction mv1 = new MvInstruction(new RealRegister(9),new RealRegister(10));
                 instructionList.add(mv1);
             }
             else{

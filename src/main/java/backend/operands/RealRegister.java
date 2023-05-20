@@ -64,6 +64,8 @@ public class RealRegister extends Register{
             case 40 -> regType = REGTYPE.x29;
             case 41 -> regType = REGTYPE.x30;
             case 42 -> regType = REGTYPE.x31;
+            case 43 -> regType = REGTYPE.STACK;
+            case 44 -> regType = REGTYPE.STACK2;
 
             default ->
                     throw new IllegalStateException("Unexpected value: " + r1);
@@ -116,6 +118,8 @@ public class RealRegister extends Register{
         x29,
         x30,
         x31,
+        STACK,
+        STACK2
 
     }
 

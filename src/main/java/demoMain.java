@@ -43,10 +43,13 @@ public class demoMain {
         mcBuilder.loadModule(module);
         RISCModule riscModule = mcBuilder.codeGeneration();
 
+        // 优化前
+        RISCEmitter mcEmitter = new RISCEmitter();
+        System.out.println(mcEmitter.emit(riscModule));
+
         passDriver.runBackend(riscModule);
 
         /* Write file */
-        RISCEmitter mcEmitter = new RISCEmitter();
         System.out.println(mcEmitter.emit(riscModule));
 
 

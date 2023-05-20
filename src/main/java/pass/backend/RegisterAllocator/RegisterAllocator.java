@@ -132,19 +132,22 @@ public class RegisterAllocator implements BaseBackendPass {
                                     riscInst.setOpLocal(tempReg, opIndex, opPosition);
                                     // 添加写回内存的指令 sw
                                     // TODO: 改成真正的栈地址
-                                    RISCInstruction swInst = new SwInstruction(tempReg, tempReg);
+                                    RealRegister stack = new RealRegister(32, 11);
+                                    RISCInstruction swInst = new SwInstruction(tempReg, stack);
                                     riscInstList.add(instIndex + 1, swInst);
 
                                 } else {
                                     // 没有空闲，需要临时替换一个，保存里面的值再替换回去
                                     // TODO: 处理临时替换寄存器的操作 改成真正的栈地址
                                     // 在同一指令中，直接从第一个寄存器开始递增
-                                    RealRegister tempReg = new RealRegister(tempRegId++, 11);
-                                    RISCInstruction inst1 = new SwInstruction(tempReg, tempReg); // 保存原值
-                                    RISCInstruction inst2 = new LwInstruction(tempReg, tempReg); // 存入临时值
+                                    var tempReg = new RealRegister(tempRegId++, 11);
+                                    var stack = new RealRegister(32, 11);
+                                    var stack2 = new RealRegister(33, 11);
+                                    RISCInstruction inst1 = new SwInstruction(tempReg, stack); // 保存原值
+                                    RISCInstruction inst2 = new LwInstruction(tempReg, stack2); // 存入临时值
 
-                                    RISCInstruction inst3 = new SwInstruction(tempReg, tempReg); // 写回临时值
-                                    RISCInstruction inst4 = new LwInstruction(tempReg, tempReg); // 恢复原值
+                                    RISCInstruction inst3 = new SwInstruction(tempReg, stack2); // 写回临时值
+                                    RISCInstruction inst4 = new LwInstruction(tempReg, stack); // 恢复原值
 
                                     riscInst.setOpLocal(tempReg, opIndex, opPosition); // 当前指令
 
@@ -156,11 +159,11 @@ public class RegisterAllocator implements BaseBackendPass {
                                 }
                             }
                         }
-                        for (RISCOperand op : operandList) {
-                            System.out.println(op.emit() + " " + op.getPosition());
-                        }
-                        System.out.println(opPosition);
-                        System.out.println("---------------------" + riscInst.emit());
+//                        for (RISCOperand op : operandList) {
+//                            System.out.println(op.emit() + " " + op.getPosition());
+//                        }
+//                        System.out.println(opPosition);
+//                        System.out.println("---------------------" + riscInst.emit());
                     }
                 }
             }

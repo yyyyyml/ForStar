@@ -7,9 +7,9 @@ import backend.operands.RealRegister;
 
 public class LiInstruction extends RISCInstruction {
     public RISCOperand op1;
-    public Immediate imm;
+    public RISCOperand imm;
 
-    public LiInstruction(RealRegister r1, Immediate imm) {
+    public LiInstruction(RISCOperand r1, RISCOperand imm) {
         this.operandNum = 2;
         this.op1=r1;
         this.setOperand(op1, 0);;
@@ -20,6 +20,7 @@ public class LiInstruction extends RISCInstruction {
 
 
     public String emit() {
-        return this.type.name()+" "+op1.emit()+','+imm.emit();
+//        return this.type.name()+" "+op1.emit()+','+imm.emit();
+        return this.type.name() + " " + getOperandAt(0).emit() + "," + getOperandAt(1).emit();
     }
 }
