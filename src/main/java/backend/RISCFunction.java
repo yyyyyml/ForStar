@@ -21,6 +21,9 @@ public class RISCFunction {
     public int localStackIndex = 20;
     private LinkedList<RISCBasicBlock> BasicBlockList;
     private Function irFunction;
+    public int stackSize;
+    public int stackIndex;
+
 
 
     /**

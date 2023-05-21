@@ -3,6 +3,8 @@ package pass.backend.RegisterAllocator;
 import backend.*;
 import backend.instructions.LwInstruction;
 import backend.instructions.SwInstruction;
+import backend.operands.Immediate;
+import backend.operands.Memory;
 import backend.operands.RealRegister;
 import backend.operands.VirtualRegister;
 import pass.backend.BaseBackendPass;
@@ -24,15 +26,21 @@ public class RegisterAllocator implements BaseBackendPass {
     private RegisterUsageTracker regUsageTracker;
     private int time = 0;
     private RegisterUsage curRegUsage;
-    private int stackSize;
-    private int stackIndex;
+//    private int curStackSize; // 栈大小
+//    private int curStackIndex; // 栈位置
+    private ArrayList<RISCFunction> time2Function; // 时间点对应的栈大小
+//    private HashMap<Integer, Integer> timeMapStackSize; // 时间点对应的栈大小
+//    private HashMap<Integer, Integer> timeMapStackIndex; // 时间点对应的栈位置
 
     public RegisterAllocator() {
         liveIntervalMapList = new HashMap<>();
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>();
-        regNum = 5;
+        regNum = 1;
         regUsageTracker = new RegisterUsageTracker(regNum);
+        time2Function = new ArrayList<>();
+//        timeMapStackSize = new HashMap<>();
+//        timeMapStackIndex = new HashMap<>();
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
@@ -116,14 +124,16 @@ public class RegisterAllocator implements BaseBackendPass {
 
         }
         for (RISCFunction riscFunc : funcList) {
-            stackSize = riscFunc.localStackIndex;
-            stackIndex = riscFunc.localStackIndex;
-            System.out.println(stackSize);
+            riscFunc.stackSize = riscFunc.localStackIndex;
+            riscFunc.stackIndex = riscFunc.localStackIndex;
+
+            System.out.println(riscFunc.stackSize);
             LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
             for (RISCBasicBlock riscBB : riscBBList) {
                 LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
                 for (RISCInstruction riscInst : riscInstList) {
-                    riscInst.setId(index);
+                    time2Function.add(index, riscFunc);
+                    riscInst.setId(index); // 记录每条指令的标号
                     LinkedList<RISCOperand> operandList = riscInst.getOperandList();
                     for (RISCOperand riscOp : operandList) {
                         if (riscOp.isVirtualRegister()) {
@@ -156,6 +166,7 @@ public class RegisterAllocator implements BaseBackendPass {
         for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
             // 更新time
             time = entry.getValue().getStart();
+
             curRegUsage = regUsageTracker.getRegisterUsage(time);
             // 把已经不需要的变量的寄存器释放
             expireOld(entry);
@@ -188,9 +199,10 @@ public class RegisterAllocator implements BaseBackendPass {
             // 换寄存器
             curVreg.setRealReg(spillVreg.getRealReg());
             // 分配栈地址
-            stackSize += 4;
-            stackIndex += 4;
-            spillVreg.setStackLocation(stackIndex);
+            var curFunc = time2Function.get(time);
+            spillVreg.setStackLocation(curFunc.stackIndex);
+            curFunc.stackSize += 4;
+            curFunc.stackIndex += 4;
             // 记录spillTime
             spillVreg.setSpillTime(time);
             // 从activeList移除spill
@@ -203,9 +215,11 @@ public class RegisterAllocator implements BaseBackendPass {
         } else {
             // 如果需要把当前的spill
             // 分配栈地址
-            stackSize += 4;
-            stackIndex += 4;
-            curVreg.setStackLocation(stackIndex);
+            var curFunc = time2Function.get(time);
+
+            curVreg.setStackLocation(curFunc.stackIndex);
+            curFunc.stackSize += 4;
+            curFunc.stackIndex += 4;
             // 记录spillTime
             curVreg.setSpillTime(time);
             System.out.println("Time: " + time + " Spilling: vr_" + curEntry.getKey() + " -> stack");
@@ -232,10 +246,13 @@ public class RegisterAllocator implements BaseBackendPass {
         for (RISCOperand variable : globalVars) {
 
         }
+
         for (RISCFunction riscFunc : funcList) {
             LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
+
             for (RISCBasicBlock riscBB : riscBBList) {
                 LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
+
                 // 这里用instIndex循环，因为后面要添加或修改指令
                 for (int instIndex = 0; instIndex < riscInstList.size(); instIndex++) {
                     RISCInstruction riscInst = riscInstList.get(instIndex);
@@ -247,6 +264,8 @@ public class RegisterAllocator implements BaseBackendPass {
                     }
                     LinkedList<RISCOperand> operandList = riscInst.getOperandList();
                     int tempRegId = 0;
+                    int tempStackIndex = riscFunc.stackIndex; // 保存这条指令分配临时栈空间之前的栈位置，用于恢复
+
                     for (int opIndex = 0; opIndex < operandList.size(); opIndex++) {
                         var riscOp = operandList.get(opIndex);
                         int opPosition = riscOp.getPosition();
@@ -281,14 +300,16 @@ public class RegisterAllocator implements BaseBackendPass {
                                     // TODO: 处理临时替换寄存器的操作 改成真正的栈地址
                                     // 在同一指令中，直接从第一个寄存器开始递增
                                     var tempReg = new RealRegister(tempRegId++, 11);
-                                    stackSize += 4;
-                                    var stack = new RealRegister(32, 11);
-                                    var stack2 = new RealRegister(33, 11);
-                                    RISCInstruction inst1 = new SwInstruction(tempReg, stack); // 保存原值
-                                    RISCInstruction inst2 = new LwInstruction(tempReg, stack2); // 存入临时值
 
-                                    RISCInstruction inst3 = new SwInstruction(tempReg, stack2); // 写回临时值
-                                    RISCInstruction inst4 = new LwInstruction(tempReg, stack); // 恢复原值
+                                    var tempStack = new Memory(riscFunc.stackIndex, 1); // 临时栈
+                                    riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
+                                    if (riscFunc.stackSize < riscFunc.stackIndex) riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
+                                    var spillStack = new Memory(vReg.getStackLocation(), 1); // 之前溢出保存的栈
+                                    RISCInstruction inst1 = new SwInstruction(tempReg, tempStack); // 保存原值
+                                    RISCInstruction inst2 = new LwInstruction(tempReg, spillStack); // 存入溢出的值
+
+                                    RISCInstruction inst3 = new SwInstruction(tempReg, spillStack); // 写回溢出值
+                                    RISCInstruction inst4 = new LwInstruction(tempReg, tempStack); // 恢复原值
 
                                     riscInst.setOpLocal(tempReg, opIndex, opPosition); // 当前指令
 
@@ -306,9 +327,49 @@ public class RegisterAllocator implements BaseBackendPass {
 //                        System.out.println(opPosition);
 //                        System.out.println("---------------------" + riscInst.emit());
                     }
+                    riscFunc.stackIndex = tempStackIndex; // 恢复栈的位置
+
+                    // 找return位置，修改return的上面3条有关栈空间的指令
+                    if (instIndex == riscInstList.size() - 1 && riscInst.type == RISCInstruction.ITYPE.jr) {
+                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
+                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
+                        raMemory.setOffset(riscFunc.stackSize - 8);
+
+                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
+                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
+                        s0Memory.setOffset(riscFunc.stackSize - 16);
+
+                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
+                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
+                        addiMemory.setVal(riscFunc.stackSize);
+
+
+                    }
                 }
             }
+
+            // 修改函数的前4条指令
+            var firstInstList = riscBBList.get(0).getInstructionList();
+
+            RISCInstruction addispInst = firstInstList.get(0);
+            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
+            addisp.setVal(-riscFunc.stackSize);
+
+            RISCInstruction ldraInst = firstInstList.get(1);
+            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
+            raMemory.setOffset(riscFunc.stackSize - 8);
+
+            RISCInstruction lds0Inst = firstInstList.get(2);
+            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
+            s0Memory.setOffset(riscFunc.stackSize - 16);
+
+            RISCInstruction addis0Inst = firstInstList.get(3);
+            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
+            addis0.setVal(riscFunc.stackSize);
         }
+
+
+
     }
 
 }
