@@ -188,11 +188,18 @@ public class RegisterAllocator implements BaseBackendPass {
 
     private void spill(Map.Entry<Integer, LiveInterval> curEntry) {
         // 取出最后一个，也是End最大的
-        var spillEntry = activeList.get(activeList.size() - 1);
+        boolean directSpill = false;
+        Map.Entry<Integer, LiveInterval> spillEntry = null;
+        if (activeList.size() == 0) {
+            directSpill = true;
+        } else {
+            spillEntry = activeList.get(activeList.size() - 1);
+        }
+
         // 找到当前对应的虚拟寄存器
         var curVreg = intMapVreg.get(curEntry.getKey());
 
-        if (spillEntry.getValue().getEnd() > curEntry.getValue().getEnd()) {
+        if (!directSpill && spillEntry.getValue().getEnd() > curEntry.getValue().getEnd()) {
             // 如果需要把activeList中的spill
             // 找到他们的虚拟寄存器
             var spillVreg = intMapVreg.get(spillEntry.getKey());
@@ -201,6 +208,8 @@ public class RegisterAllocator implements BaseBackendPass {
             // 分配栈地址
             var curFunc = time2Function.get(time);
             spillVreg.setStackLocation(curFunc.stackIndex);
+            System.out.println("Time: " + time + " Spilling: vr_" + spillEntry.getKey() + " -> stack " + curFunc.stackIndex);
+            System.out.println("Time: " + time + " Allocating register: vr_" + curEntry.getKey() + " -> " + spillVreg.getRealReg());
             curFunc.stackSize += 4;
             curFunc.stackIndex += 4;
             // 记录spillTime
@@ -210,19 +219,19 @@ public class RegisterAllocator implements BaseBackendPass {
             // 将curEntry加入activeList，并按End排序
             activeList.add(curEntry);
             Collections.sort(activeList, Comparator.comparingInt(e -> e.getValue().getEnd()));
-            System.out.println("Time: " + time + " Spilling: vr_" + spillEntry.getKey() + " -> stack");
-            System.out.println("Time: " + time + " Allocating register: vr_" + curEntry.getKey() + " -> " + spillVreg.getRealReg());
+
         } else {
             // 如果需要把当前的spill
             // 分配栈地址
             var curFunc = time2Function.get(time);
 
             curVreg.setStackLocation(curFunc.stackIndex);
+            System.out.println("Time: " + time + " Spilling: vr_" + curEntry.getKey() + " -> stack " + curFunc.stackIndex);
             curFunc.stackSize += 4;
             curFunc.stackIndex += 4;
             // 记录spillTime
             curVreg.setSpillTime(time);
-            System.out.println("Time: " + time + " Spilling: vr_" + curEntry.getKey() + " -> stack");
+
         }
     }
 
@@ -303,6 +312,7 @@ public class RegisterAllocator implements BaseBackendPass {
 
                                     var tempStack = new Memory(riscFunc.stackIndex, 1); // 临时栈
                                     riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
+                                    System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
                                     if (riscFunc.stackSize < riscFunc.stackIndex) riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
                                     var spillStack = new Memory(vReg.getStackLocation(), 1); // 之前溢出保存的栈
                                     RISCInstruction inst1 = new SwInstruction(tempReg, tempStack); // 保存原值

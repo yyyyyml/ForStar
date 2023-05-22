@@ -30,18 +30,15 @@ public class RealRegister extends Register {
             case 3 -> regType = REGTYPE.ra;
             case 4 -> regType = REGTYPE.gp;
             case 5 -> regType = REGTYPE.tp;
-            case 6 -> regType = REGTYPE.t0;
-            case 7 -> regType = REGTYPE.t1;
-            case 8 -> regType = REGTYPE.t2;
+            case 6, 11 -> regType = REGTYPE.t0;
+            case 7, 12 -> regType = REGTYPE.t1;
+            case 8, 13 -> regType = REGTYPE.t2;
             case 9 -> regType = REGTYPE.a0;
             case 10 -> regType = REGTYPE.a5;
-            case 11 -> regType = REGTYPE.x0;
-            case 12 -> regType = REGTYPE.x1;
-            case 13 -> regType = REGTYPE.x2;
-            case 14 -> regType = REGTYPE.x3;
-            case 15 -> regType = REGTYPE.x4;
-            case 16 -> regType = REGTYPE.x5;
-            case 17 -> regType = REGTYPE.x6;
+            case 14 -> regType = REGTYPE.t3;
+            case 15 -> regType = REGTYPE.t4;
+            case 16 -> regType = REGTYPE.t5;
+            case 17 -> regType = REGTYPE.t6;
             case 18 -> regType = REGTYPE.x7;
             case 19 -> regType = REGTYPE.x8;
             case 20 -> regType = REGTYPE.x9;
@@ -92,13 +89,10 @@ public class RealRegister extends Register {
         a0,
         a5,
 
-        x0,
-        x1,
-        x2,
-        x3,
-        x4,
-        x5,
-        x6,
+        t3,
+        t4,
+        t5,
+        t6,
         x7,
         x8,
         x9,

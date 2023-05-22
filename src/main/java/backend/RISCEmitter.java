@@ -1,10 +1,14 @@
 package backend;
 
+import java.io.FileWriter;
+
 public class RISCEmitter {
+    private String outputName;
+    public RISCEmitter(String outputName) {
+        this.outputName = outputName;
+    }
 
-    public static RISCEmitter emitter = new RISCEmitter();
-
-    public StringBuilder emit(RISCModule target) {
+    public void emit(RISCModule target) {
         StringBuilder out = new StringBuilder();
         out.append("\t.file\t" + target.inputFilename + '\n');
         out.append("\t.option\tpic\n");
@@ -23,7 +27,16 @@ public class RISCEmitter {
         }
         out.append("\t.ident\t" + "\"ForStar\"\n");
         out.append("\t.section\t" + ".note.GNU-stack,\"\",@progbits");
-        return out;
+
+        System.out.println(out);
+
+        try {
+            FileWriter fw = new FileWriter(outputName);
+            fw.append(out);
+            fw.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

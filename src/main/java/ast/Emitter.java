@@ -10,7 +10,7 @@ import util.IList;
 import java.io.FileWriter;
 
 public class Emitter {
-    private String outputName = "out.ll";
+    private String outputName = "testcase.ll";
     private StringBuilder sb;
     private int nameCounter = 0;
 

@@ -1,4 +1,4 @@
-//主函数
+//测试用主函数
 
 import ast.Emitter;
 import ast.Visitor;
@@ -17,7 +17,7 @@ import pass.PassDriver;
 
 public class demoMain {
     public static void main(String[] args) throws Exception {
-        CharStream inputFile = CharStreams.fromFileName("src/main/java/test.txt");
+        CharStream inputFile = CharStreams.fromFileName("src/main/java/testcase.sysy");
         System.out.println(inputFile.toString()); // Test content read in.
 
         // lexical analysis
@@ -36,7 +36,7 @@ public class demoMain {
         // Traversal the ast to build the IR.
         visitor.visit(ast);
 
-        Emitter emitter = new Emitter("out.ll");
+        Emitter emitter = new Emitter("testcase.ll");
         emitter.emit(module);
 
         PassDriver passDriver = new PassDriver();
@@ -47,13 +47,13 @@ public class demoMain {
         RISCModule riscModule = mcBuilder.codeGeneration();
 
         // 优化前
-        RISCEmitter mcEmitter = new RISCEmitter();
-        System.out.println(mcEmitter.emit(riscModule));
+        RISCEmitter mcEmitter = new RISCEmitter("testcase.s");
+        mcEmitter.emit(riscModule);
 
         passDriver.runBackend(riscModule);
 
         /* Write file */
-        System.out.println(mcEmitter.emit(riscModule));
+        mcEmitter.emit(riscModule);
 
 
     }
