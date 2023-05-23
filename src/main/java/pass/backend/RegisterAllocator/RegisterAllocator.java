@@ -26,21 +26,16 @@ public class RegisterAllocator implements BaseBackendPass {
     private RegisterUsageTracker regUsageTracker;
     private int time = 0;
     private RegisterUsage curRegUsage;
-//    private int curStackSize; // 栈大小
-//    private int curStackIndex; // 栈位置
     private ArrayList<RISCFunction> time2Function; // 时间点对应的栈大小
-//    private HashMap<Integer, Integer> timeMapStackSize; // 时间点对应的栈大小
-//    private HashMap<Integer, Integer> timeMapStackIndex; // 时间点对应的栈位置
+
 
     public RegisterAllocator() {
         liveIntervalMapList = new HashMap<>();
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>();
-        regNum = 1;
+        regNum = 0;
         regUsageTracker = new RegisterUsageTracker(regNum);
         time2Function = new ArrayList<>();
-//        timeMapStackSize = new HashMap<>();
-//        timeMapStackIndex = new HashMap<>();
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
@@ -71,7 +66,7 @@ public class RegisterAllocator implements BaseBackendPass {
     public List<Map.Entry<Integer, LiveInterval>> sortByStart() {
         List<Map.Entry<Integer, LiveInterval>> sortedIntervals = new ArrayList<>(liveIntervalMapList.entrySet());
 
-        Collections.sort(sortedIntervals, Comparator.comparingInt(e -> e.getValue().getStart()));
+        sortedIntervals.sort(Comparator.comparingInt(e -> e.getValue().getStart()));
 
         liveIntervalMapList.clear();
 
@@ -299,14 +294,16 @@ public class RegisterAllocator implements BaseBackendPass {
                                     // 替换操作数
                                     riscInst.setOpLocal(tempReg, opIndex, opPosition);
                                     // 添加写回内存的指令 sw
-                                    // TODO: 改成真正的栈地址
-                                    RealRegister stack = new RealRegister(32, 11);
-                                    RISCInstruction swInst = new SwInstruction(tempReg, stack);
+                                    var stack = new Memory(vReg.getStackLocation(), 1); // 临时栈
+                                    RISCInstruction lwInst = new LwInstruction(tempReg, stack); // 存入溢出的值
+                                    RISCInstruction swInst = new SwInstruction(tempReg, stack); // 写回溢出值
+                                    if (vReg.getSpillTime() < position)
+                                        riscInstList.add(instIndex, lwInst); // 之前存过才需要这个
                                     riscInstList.add(instIndex + 1, swInst);
+                                    System.out.println(swInst.emit());
 
                                 } else {
                                     // 没有空闲，需要临时替换一个，保存里面的值再替换回去
-                                    // TODO: 处理临时替换寄存器的操作 改成真正的栈地址
                                     // 在同一指令中，直接从第一个寄存器开始递增
                                     var tempReg = new RealRegister(tempRegId++, 11);
 
@@ -325,7 +322,8 @@ public class RegisterAllocator implements BaseBackendPass {
 
                                     riscInstList.add(instIndex + 1, inst4);
                                     riscInstList.add(instIndex + 1, inst3);
-                                    riscInstList.add(instIndex, inst2);
+                                    if (vReg.getSpillTime() < position)
+                                        riscInstList.add(instIndex, inst2); // 之前存过才需要这个
                                     riscInstList.add(instIndex, inst1);
 
                                 }

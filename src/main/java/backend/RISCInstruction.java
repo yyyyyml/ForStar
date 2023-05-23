@@ -113,6 +113,7 @@ public class RISCInstruction {
         addw,
         subw,
         mulw,
+        call,
         divw
     }
 }

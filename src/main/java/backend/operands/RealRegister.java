@@ -15,7 +15,13 @@ public class RealRegister extends Register {
             case 7 -> regType = REGTYPE.t1;
             case 8 -> regType = REGTYPE.t2;
             case 9 -> regType = REGTYPE.a0;
-            case 10 -> regType = REGTYPE.a5;
+            case 10 -> regType = REGTYPE.a1;
+            case 11 -> regType = REGTYPE.a2;
+            case 12 -> regType = REGTYPE.a3;
+            case 13 -> regType = REGTYPE.a4;
+            case 14 -> regType = REGTYPE.a5;
+            case 15 -> regType = REGTYPE.a6;
+            case 16 -> regType = REGTYPE.a7;
 
             default -> throw new IllegalStateException("Unexpected value: " + r1);
         }
@@ -119,7 +125,13 @@ public class RealRegister extends Register {
         x30,
         x31,
         STACK,
-        STACK2
+        STACK2,
+        a1,
+        a2,
+        a3,
+        a4,
+        a6,
+        a7
 
     }
 }

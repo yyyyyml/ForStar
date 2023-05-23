@@ -18,12 +18,14 @@ public class RISCFunction {
     public int virtualRegisterIndex = 0;
     public HashMap<Value, VirtualRegister> valueVRMap;
     public HashMap<Value, Memory> valueMemoryHashMap;
+    public HashMap<Value, RISCOperand> valueRISCOperandHashMap;
+    public HashMap<RISCOperand, Value> riscOperandValueHashMap;
     public int localStackIndex = 20;
+    public int operandStackCounts = 0;
     private LinkedList<RISCBasicBlock> BasicBlockList;
     private Function irFunction;
     public int stackSize;
     public int stackIndex;
-
 
 
     /**
@@ -33,12 +35,16 @@ public class RISCFunction {
      * @param irFunc
      */
     public RISCFunction(Function irFunc) {
+
         valueVRMap = new HashMap<>();
         valueMemoryHashMap = new HashMap<>();
+        valueRISCOperandHashMap = new HashMap<>();
+        riscOperandValueHashMap = new HashMap<>();
         BasicBlockList = new LinkedList<>();
         this.irFunction = irFunc;
         this.funcName = irFunc.getName();
         this.parameterSize = irFunc.getParamList().size();
+
 
         for (IList.INode<BasicBlock, Function> bbInode : irFunc.list) {
             RISCBasicBlock curBB = new RISCBasicBlock(bbInode.getElement(), irFunc, this);

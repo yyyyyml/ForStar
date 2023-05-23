@@ -2,14 +2,13 @@ package backend.instructions;
 
 import backend.RISCInstruction;
 import backend.RISCOperand;
-import backend.operands.RealRegister;
 
 public class MvInstruction extends RISCInstruction {
 
     public RISCOperand op1;
     public RISCOperand op2;
 
-    public MvInstruction(RealRegister reg1, RealRegister reg2) {
+    public MvInstruction(RISCOperand reg1, RISCOperand reg2) {
         this.operandNum = 2;
         this.op1 = reg1;
         this.setOperand(op1, 0);

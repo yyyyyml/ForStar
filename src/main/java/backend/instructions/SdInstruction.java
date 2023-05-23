@@ -2,14 +2,12 @@ package backend.instructions;
 
 import backend.RISCInstruction;
 import backend.RISCOperand;
-import backend.operands.Memory;
-import backend.operands.RealRegister;
 
 public class SdInstruction extends RISCInstruction {
     public RISCOperand op1;
     public RISCOperand op2;
 
-    public SdInstruction(RealRegister r1, Memory memory) {
+    public SdInstruction(RISCOperand r1, RISCOperand memory) {
         this.operandNum = 2;
         this.op1 = r1;
         this.setOperand(op1, 0);
