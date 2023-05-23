@@ -24,7 +24,8 @@ public class compiler {
         String inputFile = args[0];
         String midOutputFile = "testcase.ll";
         String outputFile = "testcase.s";
-        boolean emitAssembly = false;
+        boolean emitAssembly;
+        boolean isPass = false;
 
         // 处理命令行参数
         for (int i = 1; i < args.length; i++) {
@@ -38,6 +39,9 @@ public class compiler {
                     System.out.println("Error: Output file not specified");
                     return;
                 }
+            } else if (args[i].equals("-O1")) {
+                isPass = true;
+                System.out.println("加入优化");
             } else {
                 System.out.println("Error: Invalid argument: " + args[i]);
                 return;
