@@ -2,7 +2,6 @@ int main(){
     int a = 4;
     int c;
     c=5;
-    a = a*c*a;
-    a = a/c/a;
+    a = a*c;
     return 0;
 }

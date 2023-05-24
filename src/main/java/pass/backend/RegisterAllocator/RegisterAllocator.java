@@ -35,7 +35,7 @@ public class RegisterAllocator implements BaseBackendPass {
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>(); // 编号对应的虚拟寄存器对象
         time2Function = new ArrayList<>();
-        regNum = 2;
+        regNum = 6;
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
@@ -265,7 +265,7 @@ public class RegisterAllocator implements BaseBackendPass {
             // 这里用instIndex循环，因为后面要添加或修改指令
             for (int instIndex = 0; instIndex < riscInstList.size(); instIndex++) {
                 RISCInstruction riscInst = riscInstList.get(instIndex);
-                instIndex = riscInstList.indexOf(riscInst);
+
                 int position = riscInst.getId(); // 当前指令位置号
                 if (position == -1) {
                     // 新添加的指令，第一次没遍历过，不需要处理
@@ -274,13 +274,25 @@ public class RegisterAllocator implements BaseBackendPass {
                 LinkedList<RISCOperand> operandList = riscInst.getOperandList();
                 int tempIdFromZero = 0;
                 int tempStackIndex = riscFunc.stackIndex; // 保存这条指令分配临时栈空间之前的栈位置，用于恢复
+                boolean[] visitVReg = new boolean[5];
+                HashMap<Integer, RealRegister> nameMapReg = new HashMap<>();
 
                 for (int opIndex = 0; opIndex < operandList.size(); opIndex++) {
                     var riscOp = operandList.get(opIndex);
                     int opPosition = riscOp.getPosition();
                     if (riscOp.isVirtualRegister()) {
                         VirtualRegister vReg = (VirtualRegister) riscOp;
-                        var name = vReg.getName();
+                        int name = vReg.getName();
+                        if (visitVReg[name]) {
+                            //这个指令已经处理过这个虚拟寄存器，直接给它那个寄存器就可以
+                            var register = nameMapReg.get(name);
+                            // 替换操作数
+                            riscInst.setOpLocal(register, opIndex, opPosition);
+                            continue;
+                        } else {
+                            visitVReg[name] = true; // visit过
+                        }
+
 
                         // 判断这个时刻当前vReg要使用的寄存器是不是之前有别的vReg在用，如果是需要把之前的值溢出到栈中
                         var vRegReplaced = vReg.getvRegReplaced();
@@ -290,8 +302,9 @@ public class RegisterAllocator implements BaseBackendPass {
                             RealRegister realReg = new RealRegister(vRegReplaced.getRealReg(), 11);
                             // 添加写回内存的指令 sw
                             var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
-                            RISCInstruction swInst = new LwInstruction(realReg, stack); // 存入栈
+                            RISCInstruction swInst = new SwInstruction(realReg, stack); // 存入栈
                             riscInstList.add(instIndex, swInst); // 在当前这条指令之前，入栈
+                            instIndex++; // 跳过加的指令
 
                         }
 
@@ -301,6 +314,8 @@ public class RegisterAllocator implements BaseBackendPass {
                             var newReg = new RealRegister(id, 11);
                             // 替换操作数
                             riscInst.setOpLocal(newReg, opIndex, opPosition);
+                            // 记录替换成了哪个
+                            nameMapReg.put(name, newReg);
 
                         } else {
                             // 说明此时这个虚拟寄存器中的变量已经在栈中（spillTime < 当前位置）
@@ -314,18 +329,36 @@ public class RegisterAllocator implements BaseBackendPass {
                                 RealRegister tempReg = new RealRegister(tempRegID, 11);
                                 // 替换操作数
                                 riscInst.setOpLocal(tempReg, opIndex, opPosition);
+                                // 记录替换成了哪个
+                                nameMapReg.put(name, tempReg);
                                 // 添加写回内存的指令 sw
                                 var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
                                 RISCInstruction lwInst = new LwInstruction(tempReg, stack); // 存入溢出的值
                                 RISCInstruction swInst = new SwInstruction(tempReg, stack); // 写回溢出值
-                                if (vReg.getSpillTime() < position)
+                                if (vReg.getSpillTime() < position) {
+                                    riscInstList.add(instIndex + 1, swInst);
                                     riscInstList.add(instIndex, lwInst); // 之前存过才需要这个
-                                riscInstList.add(instIndex + 1, swInst);
+                                    instIndex += 1; // 跳过加的指令
+                                } else {
+                                    riscInstList.add(instIndex + 1, swInst);
+                                }
                                 System.out.println(swInst.emit());
 
                             } else {
                                 // 没有空闲，需要临时替换一个，保存里面的值再替换回去
                                 // 在同一指令中，直接从第一个寄存器开始递增
+                                // 但是，注意不能使用这个指令中要用的其他寄存器
+                                for (int opIndexIn = 0; opIndexIn < operandList.size(); opIndexIn++) {
+                                    var riscOpIn = operandList.get(opIndexIn);
+                                    if (riscOpIn.isVirtualRegister()) {
+                                        VirtualRegister vRegIn = (VirtualRegister) riscOpIn;
+                                        if (tempIdFromZero == vRegIn.getRealReg()) {
+                                            tempIdFromZero++;
+                                            opIndexIn = 0;
+                                        }
+                                    }
+                                }
+
                                 var tempReg = new RealRegister(tempIdFromZero++, 11);
                                 System.out.println(tempIdFromZero);
 
@@ -342,12 +375,19 @@ public class RegisterAllocator implements BaseBackendPass {
                                 RISCInstruction inst4 = new LwInstruction(tempReg, tempStack); // 恢复原值
 
                                 riscInst.setOpLocal(tempReg, opIndex, opPosition); // 当前指令
+                                nameMapReg.put(name, tempReg); // 记录替换成了哪个
 
                                 riscInstList.add(instIndex + 1, inst4);
                                 riscInstList.add(instIndex + 1, inst3);
-                                if (vReg.getSpillTime() < position)
+                                if (vReg.getSpillTime() < position) {
                                     riscInstList.add(instIndex, inst2); // 之前存过才需要这个
-                                riscInstList.add(instIndex, inst1);
+                                    riscInstList.add(instIndex, inst1);
+                                    instIndex += 2; // 跳过加在前面的指令
+                                } else {
+                                    riscInstList.add(instIndex, inst1);
+                                    instIndex += 1; // 跳过加在前面的指令
+                                }
+
 
                             }
                         }
