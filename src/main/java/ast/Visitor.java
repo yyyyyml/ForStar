@@ -22,37 +22,22 @@ import java.util.ArrayList;
 
 public class Visitor extends SysY2022BaseVisitor<Void> {
     private final Scope scope = new Scope();
-    //<editor-fold desc="Environment variables indicating the building status">
-    private final boolean ON = true;
-    private final boolean OFF = false;
     private Builder builder;
-    /**
-     * If the visitor is currently in a constant folding progression.
-     */
-    private boolean envConstFolding = OFF;
-
-
-    //判断visitor是否在在工作的一些参数
-    /**
-     * If the visitor is currently building a function call (invocation).
-     */
-    private boolean envBuildFCall = OFF;
-    /**
-     * Represents data type returned from the lower layer of visiting method.
-     * Only for passing data in primitive types int and float (by retInt_ and retFloat_)
-     */
-    private DataType envConveyedType = null;
-    //<editor-fold desc="Variables storing returned data from the lower layers of visiting.">
-    private Value retVal_;
-    private ArrayList<Value> retValList_;
-    private Type retType_;
-    private ArrayList<Type> retTypeList_;
-    private int retInt_;
-    private float retFloat_;
 
     public Visitor(Module module) {
         this.builder = new Builder(module);
     }
+
+    //<editor-fold desc="Environment variables indicating the building status">
+    private final boolean ON = true;
+    private final boolean OFF = false;
+
+
+    //判断visitor是否在在工作的一些参数
+    /**
+     * If the visitor is currently in a constant folding progression.
+     */
+    private boolean envConstFolding = OFF;
 
     /**
      * Set the environment variable of constant folding.
@@ -63,8 +48,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         envConstFolding = stat;
     }
 
-    //</editor-fold>
-
     /**
      * If the visitor is currently in a constant folding progression.
      *
@@ -73,6 +56,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     public boolean inConstFolding() {
         return envConstFolding;
     }
+
+    /**
+     * If the visitor is currently building a function call (invocation).
+     */
+    private boolean envBuildFCall = OFF;
 
     /**
      * Set the environment variable of building function call.
@@ -92,6 +80,18 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return envBuildFCall;
     }
 
+    /**
+     * The enum is for indicating which data type returned from the lower layer
+     * for visiting method. (INT -> read retInt_, FLT -> read retFlt_)
+     */
+    private enum DataType {FLT, INT}
+
+    /**
+     * Represents data type returned from the lower layer of visiting method.
+     * Only for passing data in primitive types int and float (by retInt_ and retFloat_)
+     */
+    private DataType envConveyedType = null;
+
     private DataType getConveyedType() {
         return envConveyedType;
     }
@@ -100,13 +100,24 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         envConveyedType = dataType;
     }
 
+    //</editor-fold>
+
+    //<editor-fold desc="Variables storing returned data from the lower layers of visiting.">
+    private Value retVal_;
+    private ArrayList<Value> retValList_;
+    private Type retType_;
+    private ArrayList<Type> retTypeList_;
+    private int retInt_;
+    private float retFloat_;
+    //</editor-fold>
+
     /*重写visitor -_-|| */
     @Override
     public Void visitCompUnit(SysY2022Parser.CompUnitContext ctx) {
         super.visitCompUnit(ctx);
         return null;
     }
-    //</editor-fold>
+
 
     @Override
     public Void visitScalarConstDef(SysY2022Parser.ScalarConstDefContext ctx) {
@@ -153,24 +164,32 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                         if (initVal.getType().isFloatType()) {
                             float numericVal = ((Constant.ConstantFloat) initVal).getVal();
                             initVal = builder.buildConstant((int) numericVal);
+
                         }
                     }
                     case "float" -> {
                         if (initVal.getType().isIntegerType()) {
                             int numericVal = ((Constant.ConstantInt) initVal).getVal();
                             initVal = builder.buildConstant((float) numericVal);
+
                         }
                     }
                 }
                 // Build the glb var.
-                glbVar = builder.buildGlobalVar(name, initVal.getType());
+                glbVar = builder.buildGlobalVar(name,  initVal.getType());
             }
 
             // W/o initialization.
             else {
                 switch (bType) {
-                    case "int" -> glbVar = builder.buildGlobalVar(name, IntegerType.getType());
-                    case "float" -> glbVar = builder.buildGlobalVar(name, FloatType.getType());
+                    case "int" -> {
+                        glbVar = builder.buildGlobalVar(name, IntegerType.getType());
+
+                    }
+                    case "float" -> {
+                        glbVar = builder.buildGlobalVar(name, FloatType.getType());
+
+                    }
                     default -> throw new RuntimeException("Unsupported type."); // Impossible case.
                 }
             }
@@ -185,8 +204,14 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         else {
             MemoryInst.Alloca addrAllocated;
             switch (bType) {
-                case "int" -> addrAllocated = builder.buildAlloca(IntegerType.getType());
-                case "float" -> addrAllocated = builder.buildAlloca(FloatType.getType());
+                case "int" -> {
+                    addrAllocated = builder.buildAlloca(IntegerType.getType());
+
+                }
+                case "float" -> {
+                    addrAllocated = builder.buildAlloca(FloatType.getType());
+
+                }
                 default -> throw new RuntimeException("Unsupported type."); // Impossible case.
             }
             scope.addSymbol(name, addrAllocated);
@@ -225,6 +250,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         }
         return null;
     }
+
 
     /**
      * initVal : expr # scalarInitVal
@@ -270,7 +296,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             }
 
             //先不着急写
-            //case "float" -> retType = FloatType.getType();
+            case "float" -> retType = FloatType.getType();
             case "void" -> retType = Type.VoidType.getType();
             default -> throw new RuntimeException("Unsupported function return type.");
         }
@@ -363,6 +389,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
+
+
     @Override
     public Void visitBlock(SysY2022Parser.BlockContext ctx) {
         scope.pushTable(); // Add a new layer of scope (a new symbol table).
@@ -429,6 +457,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
+
     @Override
     public Void visitAssignment(SysY2022Parser.AssignmentContext ctx) {
         // Retrieve left value (the address to store) by visiting child.
@@ -451,6 +480,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         builder.buildStore(val, addr);
         return null;
     }
+
 
     /**
      * stmt : 'return' (expr)? ';'
@@ -483,6 +513,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
+
     @Override
     public Void visitConstExp(SysY2022Parser.ConstExpContext ctx) {
         visit(ctx.addExp());
@@ -492,29 +523,129 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     }
 
     @Override
-    public Void visitAdd1(SysY2022Parser.Add1Context ctx) {
-        visit(ctx.mulExp());
-        Value lOp = retVal_;
-        retVal_ = lOp;
+    public Void visitAdd2(SysY2022Parser.Add2Context ctx) {
+        /*
+        Global expression: Compute value of the expr w/o instruction generation.
+         */
+        if (this.inConstFolding()) {
+        }
+
+        /*
+        Local expression: Instructions will be generated.
+         */
+        else {
+            // Retrieve the 1st mulExp (as the left operand) by visiting child.
+            visit(ctx.addExp());
+            Value lOp = retVal_;
+
+            // The 2nd and possibly more MulExp.
+            // Retrieve the next mulExp (as the right operand) by visiting child.
+            visit(ctx.mulExp());
+            Value rOp = retVal_;
+
+            // Check if the lOp/rOp is a pointer. if it is, load it up.
+            if (lOp.getType().isPointerType()) {
+                lOp = builder.buildLoad(((PointerType) lOp.getType()).getPointedType(), lOp);
+            }
+            if (rOp.getType().isPointerType()) {
+                rOp = builder.buildLoad(((PointerType) rOp.getType()).getPointedType(), rOp);
+            }
+
+
+            // Auto type promotion. (i1 -> i32, i32 -> float)
+           /* if (lOp.getType().isI1()) {
+                lOp = builder.buildZExt(lOp);
+            }
+            if (rOp.getType().isI1()) {
+                rOp = builder.buildZExt(rOp);
+            }*/
+            /*if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
+                lOp = builder.buildSitofp(lOp);
+            }
+            else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
+                rOp = builder.buildSitofp(rOp);
+            }*/
+
+            // Generate an instruction to compute result of left and right operands
+            // as the new left operand for the next round.
+            switch (ctx.getChild(1).getText()) {
+                case "+" -> lOp = builder.buildAdd(lOp, rOp);
+                case "-" -> lOp = builder.buildSub(lOp, rOp);
+                default -> {
+                }
+            }
+            retVal_ = lOp;
+        }
+
         return null;
     }
 
     @Override
-    public Void visitMul1(SysY2022Parser.Mul1Context ctx) {
-        visit(ctx.unaryExp());
-        Value lOp = retVal_;
-        retVal_ = lOp;
+    public Void visitMul2(SysY2022Parser.Mul2Context ctx) {
+        /*
+        Global expression: Compute value of the expr w/o instruction generation.
+         */
+        if (this.inConstFolding()) {
+        }
+
+        /*
+        Local expression: Instructions will be generated.
+         */
+        else {
+            // Retrieve the 1st mulExp (as the left operand) by visiting child.
+            visit(ctx.mulExp());
+            Value lOp = retVal_;
+
+            // The 2nd and possibly more MulExp.
+            // Retrieve the next mulExp (as the right operand) by visiting child.
+            visit(ctx.mulExp());
+            Value rOp = retVal_;
+
+            // Check if the lOp/rOp is a pointer. if it is, load it up.
+            if (lOp.getType().isPointerType()) {
+                lOp = builder.buildLoad(((PointerType) lOp.getType()).getPointedType(), lOp);
+            }
+            if (rOp.getType().isPointerType()) {
+                rOp = builder.buildLoad(((PointerType) rOp.getType()).getPointedType(), rOp);
+            }
+
+
+            // Auto type promotion. (i1 -> i32, i32 -> float)
+           /* if (lOp.getType().isI1()) {
+                lOp = builder.buildZExt(lOp);
+            }
+            if (rOp.getType().isI1()) {
+                rOp = builder.buildZExt(rOp);
+            }*/
+            /*if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
+                lOp = builder.buildSitofp(lOp);
+            }
+            else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
+                rOp = builder.buildSitofp(rOp);
+            }*/
+
+            // Generate an instruction to compute result of left and right operands
+            // as the new left operand for the next round.
+            switch (ctx.getChild(1).getText()) {
+                case "*" -> lOp = builder.buildMul(lOp, rOp);
+                case "/" -> lOp = builder.buildDiv(lOp, rOp);
+                default -> {
+                }
+            }
+            retVal_ = lOp;
+        }
+
         return null;
     }
 
-    @Override
+
+    /*@Override
     public Void visitUnaryExp1(SysY2022Parser.UnaryExp1Context ctx) {
         visit(ctx.primaryExp());
         Value lOp = retVal_;
         retVal_ = lOp;
         return null;
-    }
-
+    }*/
     @Override
     public Void visitPrimaryExp2(SysY2022Parser.PrimaryExp2Context ctx) {
 
@@ -529,40 +660,44 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
         return null;
     }
-
-    @Override
-    public Void visitPrimaryExp3(SysY2022Parser.PrimaryExp3Context ctx) {
+    /*@Override public Void visitPrimaryExp3(SysY2022Parser.PrimaryExp3Context ctx) {
         visit(ctx.number());
+
+        Type pointeeType = ((PointerType) retVal_.getType()).getPointedType();
+        retVal_ = builder.buildLoad(pointeeType, retVal_);
+
+
         Value lOp = retVal_;
         retVal_ = lOp;
         return null;
-    }
+    }*/
+
 
     @Override
     public Void visitNumber(SysY2022Parser.NumberContext ctx) {
-        int ret = 0;
+
         if (ctx.IntConst() != null) {
+            int ret = 0;
             ret = new BigInteger(ctx.IntConst().getText(), 10).intValue();
+            setConveyedType(DataType.INT);
+            retInt_ = ret;
+        } else {
+            float ret = Float.parseFloat(ctx.getChild(0).getText());
+            setConveyedType(DataType.FLT);
+            retFloat_ = ret;
         }
-        setConveyedType(DataType.INT);
-        retInt_ = ret;
+
         //我觉得这应该访问子节点 判断那个数是啥
         //然后把retInt_ set成那个数
         //然后这再build进去就行了
         if (!this.inConstFolding()) {
             switch (getConveyedType()) {
                 case INT -> retVal_ = builder.buildConstant(retInt_);
-                //case FLT -> retVal_ = builder.buildConstant(retFloat_);
+                case FLT -> retVal_ = builder.buildConstant(retFloat_);
             }
         }
 
 
         return null;
     }
-
-    /**
-     * The enum is for indicating which data type returned from the lower layer
-     * for visiting method. (INT -> read retInt_, FLT -> read retFlt_)
-     */
-    private enum DataType {FLT, INT}
 }

@@ -10,9 +10,16 @@ import util.IList;
 import java.io.FileWriter;
 
 public class Emitter {
-    private String outputName = "testcase.ll";
+    private String outputName = "out.ll";
     private StringBuilder sb;
-    private int nameCounter = 0;
+
+    public String getOutputName() {
+        return outputName;
+    }
+
+    public void setOutputName(String outputName) {
+        this.outputName = outputName;
+    }
 
     public Emitter() {
         sb = new StringBuilder();
@@ -23,13 +30,7 @@ public class Emitter {
         sb = new StringBuilder();
     }
 
-    public String getOutputName() {
-        return outputName;
-    }
-
-    public void setOutputName(String outputName) {
-        this.outputName = outputName;
-    }
+    private int nameCounter = 0;
 
     private String newName() {
         String name = String.valueOf(nameCounter);

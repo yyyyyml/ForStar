@@ -1,8 +1,11 @@
-int fun() {
-    int a = 7;
-	return a;
-}
-int main () {
-    int b = 5;
-    return b;
+int main(){
+    int a = 4;
+    float b = 5.5;
+    float e = 3.3;
+    float f = 4.4;
+    int c;
+    c=5;
+    a = a*c*a;
+    a = a/c/a;
+    return 0;
 }

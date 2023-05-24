@@ -1,5 +1,6 @@
 package ast;
 
+import ir.Instructions.BinaryInst;
 import ir.Instructions.MemoryInst;
 import ir.Instructions.TerminatorInst;
 import ir.Module;
@@ -25,28 +26,28 @@ public class Builder {
     public Builder() {
     }
 
-    public Module getCurModule() {
-        return curMdl;
-    }
-
     public void setCurModule(Module mod) {
         curMdl = mod;
-    }
-
-    public Function getCurFunc() {
-        return curFunc;
     }
 
     public void setCurFunc(Function func) {
         curFunc = func;
     }
 
-    public BasicBlock getCurBB() {
-        return curBB;
-    }
-
     public void setCurBB(BasicBlock bb) {
         curBB = bb;
+    }
+
+    public Module getCurModule() {
+        return curMdl;
+    }
+
+    public Function getCurFunc() {
+        return curFunc;
+    }
+
+    public BasicBlock getCurBB() {
+        return curBB;
     }
 
     public Constant.ConstantInt buildConstant(int i) {
@@ -80,7 +81,6 @@ public class Builder {
         getCurBB().list.addLast(inst.node);
         return inst;
     }
-
     public Function buildFunction(String name, FunctionType type, boolean isBuiltIn) {
         Function func = new Function(type, isBuiltIn);
         func.setName(name);
@@ -94,6 +94,94 @@ public class Builder {
         curFunc.list.addLast(bb.node);
         this.setCurBB(bb);
         return bb;
+    }
+
+    public BinaryInst buildAdd(Value lOp, Value rOp) {
+        // Security checks.
+        if (lOp.getType() != rOp.getType()) {
+            throw new RuntimeException("Unmatched types: [lOp] " + lOp.getType() + ", [rOp] " + rOp.getType());
+        }
+
+        // Constructor the Add instruction (for integers and floats respectively)
+        BinaryInst instAdd;
+        Type type = lOp.getType();
+        if (type.isIntegerType()) {
+            instAdd = new BinaryInst(Type.IntegerType.getType(), ir.Instruction.TAG.ADD, lOp, rOp);
+        } else if (type.isFloatType()) {
+            instAdd = new BinaryInst(Type.FloatType.getType(), ir.Instruction.TAG.FADD, lOp, rOp);
+        } else {
+            throw new RuntimeException("Unsupported type: " + type);
+        }
+
+        // Insert and return the inst.
+        curBB.list.addLast(instAdd.node);
+        return instAdd;
+    }
+
+    public BinaryInst buildSub(Value lOp, Value rOp) {
+        // Security checks.
+        if (lOp.getType() != rOp.getType()) {
+            throw new RuntimeException("Unmatched types: [lOp] " + lOp.getType() + ", [rOp] " + rOp.getType());
+        }
+
+        // Constructor the Sub instruction (for integers and floats respectively)
+        BinaryInst instSub;
+        Type type = lOp.getType();
+        if (type.isIntegerType()) {
+            instSub = new BinaryInst(Type.IntegerType.getType(), ir.Instruction.TAG.SUB, lOp, rOp);
+        } else if (type.isFloatType()) {
+            instSub = new BinaryInst(Type.FloatType.getType(), ir.Instruction.TAG.FSUB, lOp, rOp);
+        } else {
+            throw new RuntimeException("Unsupported type: " + type);
+        }
+
+        // Insert and return the inst.
+        curBB.list.addLast(instSub.node);
+        return instSub;
+    }
+
+    public BinaryInst buildMul(Value lOp, Value rOp) {
+        // Security checks.
+        if (lOp.getType() != rOp.getType()) {
+            throw new RuntimeException("Unmatched types: [lOp] " + lOp.getType() + ", [rOp] " + rOp.getType());
+        }
+
+        // Constructor the Sub instruction (for integers and floats respectively)
+        BinaryInst instMul;
+        Type type = lOp.getType();
+        if (type.isIntegerType()) {
+            instMul = new BinaryInst(Type.IntegerType.getType(), ir.Instruction.TAG.MUL, lOp, rOp);
+        } else if (type.isFloatType()) {
+            instMul = new BinaryInst(Type.FloatType.getType(), ir.Instruction.TAG.FMUL, lOp, rOp);
+        } else {
+            throw new RuntimeException("Unsupported type: " + type);
+        }
+
+        // Insert and return the inst.
+        curBB.list.addLast(instMul.node);
+        return instMul;
+    }
+
+    public BinaryInst buildDiv(Value lOp, Value rOp) {
+        // Security checks.
+        if (lOp.getType() != rOp.getType()) {
+            throw new RuntimeException("Unmatched types: [lOp] " + lOp.getType() + ", [rOp] " + rOp.getType());
+        }
+
+        // Constructor the Sub instruction (for integers and floats respectively)
+        BinaryInst instDiv;
+        Type type = lOp.getType();
+        if (type.isIntegerType()) {
+            instDiv = new BinaryInst(Type.IntegerType.getType(), ir.Instruction.TAG.DIV, lOp, rOp);
+        } else if (type.isFloatType()) {
+            instDiv = new BinaryInst(Type.FloatType.getType(), ir.Instruction.TAG.FDIV, lOp, rOp);
+        } else {
+            throw new RuntimeException("Unsupported type: " + type);
+        }
+
+        // Insert and return the inst.
+        curBB.list.addLast(instDiv.node);
+        return instDiv;
     }
 
     public TerminatorInst.Ret buildRet() {
