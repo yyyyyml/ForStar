@@ -4,6 +4,7 @@ import java.io.FileWriter;
 
 public class RISCEmitter {
     private String outputName;
+
     public RISCEmitter(String outputName) {
         this.outputName = outputName;
     }

@@ -14,6 +14,7 @@ import java.util.*;
 
 /**
  * 简单的线性扫描寄存器分配
+ * 目前改成了以函数为单位的
  */
 public class RegisterAllocator implements BaseBackendPass {
 
@@ -26,15 +27,14 @@ public class RegisterAllocator implements BaseBackendPass {
     private RegisterUsageTracker regUsageTracker;
     private int time = 0;
     private RegisterUsage curRegUsage;
-    private ArrayList<RISCFunction> time2Function; // 时间点对应的栈大小
+    private ArrayList<RISCFunction> time2Function; // 时间点对应的函数，其实现在这个没什么用了，因为以函数为单位了，但是不改了
 
 
     public RegisterAllocator() {
         liveIntervalMapList = new HashMap<>();
         activeList = new ArrayList<>();
-        intMapVreg = new HashMap<>();
-        regNum = 0;
-        regUsageTracker = new RegisterUsageTracker(regNum);
+        intMapVreg = new HashMap<>(); // 编号对应的虚拟寄存器对象
+        regNum = 1;
         time2Function = new ArrayList<>();
     }
 
@@ -52,8 +52,9 @@ public class RegisterAllocator implements BaseBackendPass {
 
     /**
      * 添加寄存器的LiveInterval到Map中
+     *
      * @param virtualRegister 虚拟寄存器
-     * @param interval 寄存器的LiveInterval
+     * @param interval        寄存器的LiveInterval
      */
     public void addLiveInterval(int virtualRegister, LiveInterval interval) {
         liveIntervalMapList.put(virtualRegister, interval);
@@ -61,6 +62,7 @@ public class RegisterAllocator implements BaseBackendPass {
 
     /**
      * 按照LiveInterval的Start值进行排序
+     *
      * @return 排序后的LiveInterval列表
      */
     public List<Map.Entry<Integer, LiveInterval>> sortByStart() {
@@ -84,67 +86,72 @@ public class RegisterAllocator implements BaseBackendPass {
         LinkedList<RISCOperand> globalVars = riscModule.getGlobalVars();
         LinkedList<RISCFunction> funcList = riscModule.getFunctionList();
 
-        // 初始化LiveInterval
-        initializeLiveInterval(globalVars, funcList);
+        for (RISCFunction riscFunc : funcList) {
+            // 先清空这些结构
+            liveIntervalMapList.clear();
+            activeList.clear();
+            intMapVreg.clear();
+            time2Function.clear();
+            regUsageTracker = new RegisterUsageTracker(regNum);
 
-        // 线性扫描
-        linearScan();
 
-        // 打印寄存器分配情况
-        for (Map.Entry<Integer, RegisterUsage> entry : regUsageTracker.getRegisterUsageMap().entrySet()) {
-            int timePoint = entry.getKey();
-            RegisterUsage registerUsage = entry.getValue();
+            // 初始化LiveInterval
+            initializeLiveInterval(riscFunc);
 
-            System.out.println("Time Point: " + timePoint);
-            for (int register = 0; register < registerUsage.getRegNum(); register++) {
-                boolean isUsed = registerUsage.isRegisterUsed(register);
-                System.out.println("Register " + register + ": " + (isUsed ? "Used" : "Free"));
+            // 线性扫描
+            linearScan();
+
+            // 打印寄存器分配情况
+            for (Map.Entry<Integer, RegisterUsage> entry : regUsageTracker.getRegisterUsageMap().entrySet()) {
+                int timePoint = entry.getKey();
+                RegisterUsage registerUsage = entry.getValue();
+
+                System.out.println("Time Point: " + timePoint);
+                for (int register = 0; register < registerUsage.getRegNum(); register++) {
+                    boolean isUsed = registerUsage.isRegisterUsed(register);
+                    System.out.println("Register " + register + ": " + (isUsed ? "Used" : "Free"));
+                }
+                System.out.println("-------------------");
             }
-            System.out.println("-------------------");
+
+            // 生成新的MIR
+            renameRegister(riscFunc);
         }
 
-        // 生成新的MIR
-        renameRegister(globalVars, funcList);
 
 
     }
 
 
-
-    private void initializeLiveInterval(LinkedList<RISCOperand> globalVars, LinkedList<RISCFunction> funcList) {
+    private void initializeLiveInterval(RISCFunction riscFunc) {
         int index = 0; // 用于记录位置，存到live interval中
 
         // 先遍历一遍 记录变量的live interval
-        for (RISCOperand variable : globalVars) {
+        riscFunc.stackSize = riscFunc.localStackIndex;
+        riscFunc.stackIndex = riscFunc.localStackIndex;
 
-        }
-        for (RISCFunction riscFunc : funcList) {
-            riscFunc.stackSize = riscFunc.localStackIndex;
-            riscFunc.stackIndex = riscFunc.localStackIndex;
-
-            System.out.println(riscFunc.stackSize);
-            LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
-            for (RISCBasicBlock riscBB : riscBBList) {
-                LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
-                for (RISCInstruction riscInst : riscInstList) {
-                    time2Function.add(index, riscFunc);
-                    riscInst.setId(index); // 记录每条指令的标号
-                    LinkedList<RISCOperand> operandList = riscInst.getOperandList();
-                    for (RISCOperand riscOp : operandList) {
-                        if (riscOp.isVirtualRegister()) {
-                            var name = ((VirtualRegister) riscOp).getName();
-                            intMapVreg.put(name, (VirtualRegister) riscOp);
-                            if (!liveIntervalMapList.containsKey(name)) {
-                                // 记录Start
-                                setLiveIntervalStart(name, index);
-                            } else {
-                                // 记录End
-                                setLiveIntervalEnd(name, index + 1);
-                            }
+        System.out.println(riscFunc.stackSize);
+        LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
+        for (RISCBasicBlock riscBB : riscBBList) {
+            LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
+            for (RISCInstruction riscInst : riscInstList) {
+                time2Function.add(index, riscFunc);
+                riscInst.setId(index); // 记录每条指令的标号
+                LinkedList<RISCOperand> operandList = riscInst.getOperandList();
+                for (RISCOperand riscOp : operandList) {
+                    if (riscOp.isVirtualRegister()) {
+                        var name = ((VirtualRegister) riscOp).getName();
+                        intMapVreg.put(name, (VirtualRegister) riscOp);
+                        if (!liveIntervalMapList.containsKey(name)) {
+                            // 记录Start
+                            setLiveIntervalStart(name, index);
+                        } else {
+                            // 记录End
+                            setLiveIntervalEnd(name, index + 1);
                         }
                     }
-                    index += 1;
                 }
+                index += 1;
             }
         }
 
@@ -200,6 +207,8 @@ public class RegisterAllocator implements BaseBackendPass {
             var spillVreg = intMapVreg.get(spillEntry.getKey());
             // 换寄存器
             curVreg.setRealReg(spillVreg.getRealReg());
+            //
+            curVreg.setvRegReplaced(spillVreg);
             // 分配栈地址
             var curFunc = time2Function.get(time);
             spillVreg.setStackLocation(curFunc.stackIndex);
@@ -246,138 +255,150 @@ public class RegisterAllocator implements BaseBackendPass {
         });
     }
 
-    private void renameRegister(LinkedList<RISCOperand> globalVars, LinkedList<RISCFunction> funcList) {
-        for (RISCOperand variable : globalVars) {
+    private void renameRegister(RISCFunction riscFunc) {
 
-        }
+        LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
 
-        for (RISCFunction riscFunc : funcList) {
-            LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
+        for (RISCBasicBlock riscBB : riscBBList) {
+            LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
 
-            for (RISCBasicBlock riscBB : riscBBList) {
-                LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
+            // 这里用instIndex循环，因为后面要添加或修改指令
+            for (int instIndex = 0; instIndex < riscInstList.size(); instIndex++) {
+                RISCInstruction riscInst = riscInstList.get(instIndex);
+                instIndex = riscInstList.indexOf(riscInst);
+                int position = riscInst.getId(); // 当前指令位置号
+                if (position == -1) {
+                    // 新添加的指令，第一次没遍历过，不需要处理
+                    continue;
+                }
+                LinkedList<RISCOperand> operandList = riscInst.getOperandList();
+                int tempRegId = 0;
+                int tempStackIndex = riscFunc.stackIndex; // 保存这条指令分配临时栈空间之前的栈位置，用于恢复
 
-                // 这里用instIndex循环，因为后面要添加或修改指令
-                for (int instIndex = 0; instIndex < riscInstList.size(); instIndex++) {
-                    RISCInstruction riscInst = riscInstList.get(instIndex);
-                    instIndex = riscInstList.indexOf(riscInst);
-                    int position = riscInst.getId(); // 当前指令位置号
-                    if (position == -1) {
-                        // 新添加的指令，第一次没遍历过，不需要处理
-                        continue;
-                    }
-                    LinkedList<RISCOperand> operandList = riscInst.getOperandList();
-                    int tempRegId = 0;
-                    int tempStackIndex = riscFunc.stackIndex; // 保存这条指令分配临时栈空间之前的栈位置，用于恢复
+                for (int opIndex = 0; opIndex < operandList.size(); opIndex++) {
+                    var riscOp = operandList.get(opIndex);
+                    int opPosition = riscOp.getPosition();
+                    if (riscOp.isVirtualRegister()) {
+                        VirtualRegister vReg = (VirtualRegister) riscOp;
+                        var name = vReg.getName();
 
-                    for (int opIndex = 0; opIndex < operandList.size(); opIndex++) {
-                        var riscOp = operandList.get(opIndex);
-                        int opPosition = riscOp.getPosition();
-                        if (riscOp.isVirtualRegister()) {
-                            VirtualRegister vReg = (VirtualRegister) riscOp;
-                            var name = vReg.getName();
-                            if (vReg.getSpillTime() > position) {
-                                // spillTime > 当前位置，说明分配过寄存器
-                                var id = vReg.getRealReg();
-                                var newReg = new RealRegister(id, 11);
+                        // 判断这个时刻当前vReg要使用的寄存器是不是之前有别的vReg在用，如果是需要把之前的值溢出到栈中
+                        var vRegReplaced = vReg.getvRegReplaced();
+                        if (vRegReplaced != null && vRegReplaced.getSpillTime() == position && vRegReplaced.getRealReg() != -1) {
+                            // 说明这时需要把那个被替换的寄存器溢出到相应栈中
+                            // 需要被换的寄存器
+                            RealRegister realReg = new RealRegister(vRegReplaced.getRealReg(), 11);
+                            // 添加写回内存的指令 sw
+                            var stack = new Memory(vRegReplaced.getStackLocation(), 1); // 临时栈
+                            RISCInstruction swInst = new LwInstruction(realReg, stack); // 存入栈
+                            riscInstList.add(instIndex, swInst); // 在当前这条指令之前，入栈
+
+                        }
+
+                        if (vReg.getSpillTime() > position) {
+                            // spillTime > 当前位置，说明分配过寄存器
+                            var id = vReg.getRealReg();
+                            var newReg = new RealRegister(id, 11);
+                            // 替换操作数
+                            riscInst.setOpLocal(newReg, opIndex, opPosition);
+
+                        } else {
+                            // 说明此时这个虚拟寄存器中的变量已经在栈中（spillTime < 当前位置）
+                            // 或是第一次出现就需要溢出到栈里，即没有分配过寄存器（spillTime == 当前位置）
+                            // 需要暂时替换一个寄存器，用完后再换回
+                            var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
+                            var tempRegID = curRegUsage.getNextFreeRegister();
+
+                            if (tempRegID != -1) {
+                                // 有空闲，分配成功
+                                RealRegister tempReg = new RealRegister(tempRegID, 11);
                                 // 替换操作数
-                                riscInst.setOpLocal(newReg, opIndex, opPosition);
+                                riscInst.setOpLocal(tempReg, opIndex, opPosition);
+                                // 添加写回内存的指令 sw
+                                var stack = new Memory(vReg.getStackLocation(), 1); // 临时栈
+                                RISCInstruction lwInst = new LwInstruction(tempReg, stack); // 存入溢出的值
+                                RISCInstruction swInst = new SwInstruction(tempReg, stack); // 写回溢出值
+                                if (vReg.getSpillTime() < position)
+                                    riscInstList.add(instIndex, lwInst); // 之前存过才需要这个
+                                riscInstList.add(instIndex + 1, swInst);
+                                System.out.println(swInst.emit());
 
                             } else {
-                                // spillTime <= 当前位置，说明此时这个虚拟寄存器中的变量在栈中，需要暂时替换一个寄存器，用完后再换回
-                                var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
-                                var tempRegID = curRegUsage.getNextFreeRegister();
+                                // 没有空闲，需要临时替换一个，保存里面的值再替换回去
+                                // 在同一指令中，直接从第一个寄存器开始递增
+                                var tempReg = new RealRegister(tempRegId++, 11);
 
-                                if (tempRegID != -1) {
-                                    // 有空闲，分配成功
-                                    RealRegister tempReg = new RealRegister(tempRegID, 11);
-                                    // 替换操作数
-                                    riscInst.setOpLocal(tempReg, opIndex, opPosition);
-                                    // 添加写回内存的指令 sw
-                                    var stack = new Memory(vReg.getStackLocation(), 1); // 临时栈
-                                    RISCInstruction lwInst = new LwInstruction(tempReg, stack); // 存入溢出的值
-                                    RISCInstruction swInst = new SwInstruction(tempReg, stack); // 写回溢出值
-                                    if (vReg.getSpillTime() < position)
-                                        riscInstList.add(instIndex, lwInst); // 之前存过才需要这个
-                                    riscInstList.add(instIndex + 1, swInst);
-                                    System.out.println(swInst.emit());
+                                var tempStack = new Memory(riscFunc.stackIndex, 1); // 临时栈
+                                riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
+                                System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
+                                if (riscFunc.stackSize < riscFunc.stackIndex)
+                                    riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
+                                var spillStack = new Memory(vReg.getStackLocation(), 1); // 之前溢出保存的栈
+                                RISCInstruction inst1 = new SwInstruction(tempReg, tempStack); // 保存原值
+                                RISCInstruction inst2 = new LwInstruction(tempReg, spillStack); // 存入溢出的值
 
-                                } else {
-                                    // 没有空闲，需要临时替换一个，保存里面的值再替换回去
-                                    // 在同一指令中，直接从第一个寄存器开始递增
-                                    var tempReg = new RealRegister(tempRegId++, 11);
+                                RISCInstruction inst3 = new SwInstruction(tempReg, spillStack); // 写回溢出值
+                                RISCInstruction inst4 = new LwInstruction(tempReg, tempStack); // 恢复原值
 
-                                    var tempStack = new Memory(riscFunc.stackIndex, 1); // 临时栈
-                                    riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
-                                    System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
-                                    if (riscFunc.stackSize < riscFunc.stackIndex) riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
-                                    var spillStack = new Memory(vReg.getStackLocation(), 1); // 之前溢出保存的栈
-                                    RISCInstruction inst1 = new SwInstruction(tempReg, tempStack); // 保存原值
-                                    RISCInstruction inst2 = new LwInstruction(tempReg, spillStack); // 存入溢出的值
+                                riscInst.setOpLocal(tempReg, opIndex, opPosition); // 当前指令
 
-                                    RISCInstruction inst3 = new SwInstruction(tempReg, spillStack); // 写回溢出值
-                                    RISCInstruction inst4 = new LwInstruction(tempReg, tempStack); // 恢复原值
+                                riscInstList.add(instIndex + 1, inst4);
+                                riscInstList.add(instIndex + 1, inst3);
+                                if (vReg.getSpillTime() < position)
+                                    riscInstList.add(instIndex, inst2); // 之前存过才需要这个
+                                riscInstList.add(instIndex, inst1);
 
-                                    riscInst.setOpLocal(tempReg, opIndex, opPosition); // 当前指令
-
-                                    riscInstList.add(instIndex + 1, inst4);
-                                    riscInstList.add(instIndex + 1, inst3);
-                                    if (vReg.getSpillTime() < position)
-                                        riscInstList.add(instIndex, inst2); // 之前存过才需要这个
-                                    riscInstList.add(instIndex, inst1);
-
-                                }
                             }
                         }
+                    }
 //                        for (RISCOperand op : operandList) {
 //                            System.out.println(op.emit() + " " + op.getPosition());
 //                        }
 //                        System.out.println(opPosition);
 //                        System.out.println("---------------------" + riscInst.emit());
-                    }
-                    riscFunc.stackIndex = tempStackIndex; // 恢复栈的位置
+                }
+                riscFunc.stackIndex = tempStackIndex; // 恢复栈的位置
 
-                    // 找return位置，修改return的上面3条有关栈空间的指令
-                    if (instIndex == riscInstList.size() - 1 && riscInst.type == RISCInstruction.ITYPE.jr) {
-                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
-                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-                        raMemory.setOffset(riscFunc.stackSize - 8);
+                // 找return位置，修改return的上面3条有关栈空间的指令
+                if (instIndex == riscInstList.size() - 1 && riscInst.type == RISCInstruction.ITYPE.jr) {
+                    RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
+                    Memory raMemory = (Memory) ldraInst.getOperandAt(1);
+                    raMemory.setOffset(riscFunc.stackSize - 8);
 
-                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
-                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-                        s0Memory.setOffset(riscFunc.stackSize - 16);
+                    RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
+                    Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
+                    s0Memory.setOffset(riscFunc.stackSize - 16);
 
-                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
-                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
-                        addiMemory.setVal(riscFunc.stackSize);
+                    RISCInstruction addiInst = riscInstList.get(instIndex - 1);
+                    Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
+                    addiMemory.setVal(riscFunc.stackSize);
 
 
-                    }
                 }
             }
-
-            // 修改函数的前4条指令
-            var firstInstList = riscBBList.get(0).getInstructionList();
-
-            RISCInstruction addispInst = firstInstList.get(0);
-            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
-            addisp.setVal(-riscFunc.stackSize);
-
-            RISCInstruction ldraInst = firstInstList.get(1);
-            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-            raMemory.setOffset(riscFunc.stackSize - 8);
-
-            RISCInstruction lds0Inst = firstInstList.get(2);
-            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-            s0Memory.setOffset(riscFunc.stackSize - 16);
-
-            RISCInstruction addis0Inst = firstInstList.get(3);
-            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-            addis0.setVal(riscFunc.stackSize);
         }
 
+        // 修改函数的前4条指令
+        var firstInstList = riscBBList.get(0).getInstructionList();
 
+        RISCInstruction addispInst = firstInstList.get(0);
+        Immediate addisp = (Immediate) addispInst.getOperandAt(2);
+        addisp.setVal(-riscFunc.stackSize);
 
+        RISCInstruction ldraInst = firstInstList.get(1);
+        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
+        raMemory.setOffset(riscFunc.stackSize - 8);
+
+        RISCInstruction lds0Inst = firstInstList.get(2);
+        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
+        s0Memory.setOffset(riscFunc.stackSize - 16);
+
+        RISCInstruction addis0Inst = firstInstList.get(3);
+        Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
+        addis0.setVal(riscFunc.stackSize);
     }
+
+
+
 
 }

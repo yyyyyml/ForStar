@@ -14,6 +14,7 @@ public class RISCBuilder {
     private Function curIRFunc;
     private RISCFunction curFunc;
     private RISCBasicBlock curMCBB;
+
     private RISCBuilder() {
     }
 

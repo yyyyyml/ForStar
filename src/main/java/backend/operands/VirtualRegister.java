@@ -9,6 +9,7 @@ public class VirtualRegister extends Register {
     private int realReg = -1;
     private int stackLocation;
     private int spillTime = Integer.MAX_VALUE;
+    private VirtualRegister vRegReplaced = null;
 
     public VirtualRegister(int i, Value value) {
         this.name = i;
@@ -55,5 +56,13 @@ public class VirtualRegister extends Register {
 
     public void setSpillTime(int spillTime) {
         this.spillTime = spillTime;
+    }
+
+    public VirtualRegister getvRegReplaced() {
+        return vRegReplaced;
+    }
+
+    public void setvRegReplaced(VirtualRegister vRegReplaced) {
+        this.vRegReplaced = vRegReplaced;
     }
 }

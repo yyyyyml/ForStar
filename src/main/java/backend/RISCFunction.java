@@ -22,10 +22,10 @@ public class RISCFunction {
     public HashMap<RISCOperand, Value> riscOperandValueHashMap;
     public int localStackIndex = 20;
     public int operandStackCounts = 0;
-    private LinkedList<RISCBasicBlock> BasicBlockList;
-    private Function irFunction;
     public int stackSize;
     public int stackIndex;
+    private LinkedList<RISCBasicBlock> BasicBlockList;
+    private Function irFunction;
 
 
     /**

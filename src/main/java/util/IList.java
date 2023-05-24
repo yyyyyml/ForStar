@@ -13,6 +13,7 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
     private final INode<T, P> tail;
     private int size;
     private P val;
+
     public IList(P val) {
         head = new INode<>(null, null, null);
         tail = new INode<>(null, head, null);

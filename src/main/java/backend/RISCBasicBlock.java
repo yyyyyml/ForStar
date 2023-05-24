@@ -14,10 +14,10 @@ import util.IList;
 import java.util.LinkedList;
 
 public class RISCBasicBlock {
+    public int operandIndex = 0;
     private LinkedList<RISCInstruction> instructionList = new LinkedList<>();
     private Function irFunction;
     private RISCFunction riscFunction;
-    public int operandIndex = 0;
 
     /**
      * 此构造函数为创建函数的初始块和结束块
