@@ -18,6 +18,8 @@ main:
 	mulw t0,t0,t1
 	sw t1,t0
 	sw t1,-24(s0)
+	lw t0,-20(s0)
+	sw t0,-24(s0)
 	li a0,0
 	ld ra,20(sp)
 	ld s0,12(sp)

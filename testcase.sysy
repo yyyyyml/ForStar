@@ -1,7 +1,8 @@
 int main(){
     int a = 4;
     int c;
-    c=5;
-    a = a*c;
+    c = 5;
+    a = a * c;
+    a = c;
     return 0;
 }

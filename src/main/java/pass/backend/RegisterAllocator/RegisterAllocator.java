@@ -274,7 +274,7 @@ public class RegisterAllocator implements BaseBackendPass {
                 LinkedList<RISCOperand> operandList = riscInst.getOperandList();
                 int tempIdFromZero = 0;
                 int tempStackIndex = riscFunc.stackIndex; // 保存这条指令分配临时栈空间之前的栈位置，用于恢复
-                boolean[] visitVReg = new boolean[5];
+                boolean[] visitVReg = new boolean[5]; // 这条指令中visit过哪些虚拟寄存器
                 HashMap<Integer, RealRegister> nameMapReg = new HashMap<>();
 
                 for (int opIndex = 0; opIndex < operandList.size(); opIndex++) {
@@ -283,14 +283,14 @@ public class RegisterAllocator implements BaseBackendPass {
                     if (riscOp.isVirtualRegister()) {
                         VirtualRegister vReg = (VirtualRegister) riscOp;
                         int name = vReg.getName();
-                        if (visitVReg[name]) {
+                        if (visitVReg[opPosition]) {
                             //这个指令已经处理过这个虚拟寄存器，直接给它那个寄存器就可以
                             var register = nameMapReg.get(name);
                             // 替换操作数
                             riscInst.setOpLocal(register, opIndex, opPosition);
                             continue;
                         } else {
-                            visitVReg[name] = true; // visit过
+                            visitVReg[opPosition] = true; // visit过
                         }
 
 
