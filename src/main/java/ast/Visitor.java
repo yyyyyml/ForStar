@@ -23,95 +23,44 @@ import java.util.ArrayList;
 public class Visitor extends SysY2022BaseVisitor<Void> {
     private final Scope scope = new Scope();
     private Builder builder;
-
     public Visitor(Module module) {
         this.builder = new Builder(module);
     }
-
-    //<editor-fold desc="Environment variables indicating the building status">
     private final boolean ON = true;
     private final boolean OFF = false;
-
-
-    //判断visitor是否在在工作的一些参数
-    /**
-     * If the visitor is currently in a constant folding progression.
-     */
     private boolean envConstFolding = OFF;
-
-    /**
-     * Set the environment variable of constant folding.
-     *
-     * @param stat ON / OFF
-     */
     private void setConstFolding(boolean stat) {
         envConstFolding = stat;
     }
-
-    /**
-     * If the visitor is currently in a constant folding progression.
-     *
-     * @return Yes or no.
-     */
     public boolean inConstFolding() {
         return envConstFolding;
     }
-
-    /**
-     * If the visitor is currently building a function call (invocation).
-     */
     private boolean envBuildFCall = OFF;
 
-    /**
-     * Set the environment variable of building function call.
-     *
-     * @param stat ON / OFF
-     */
     private void setBuildFCall(boolean stat) {
         envBuildFCall = stat;
     }
-
-    /**
-     * If the visitor is currently building a function call (invocation).
-     *
-     * @return Yes or no.
-     */
     private boolean inBuildFCall() {
         return envBuildFCall;
     }
-
-    /**
-     * The enum is for indicating which data type returned from the lower layer
-     * for visiting method. (INT -> read retInt_, FLT -> read retFlt_)
-     */
     private enum DataType {FLT, INT}
-
-    /**
-     * Represents data type returned from the lower layer of visiting method.
-     * Only for passing data in primitive types int and float (by retInt_ and retFloat_)
-     */
     private DataType envConveyedType = null;
-
     private DataType getConveyedType() {
         return envConveyedType;
     }
-
     private void setConveyedType(DataType dataType) {
         envConveyedType = dataType;
     }
 
-    //</editor-fold>
-
-    //<editor-fold desc="Variables storing returned data from the lower layers of visiting.">
     private Value retVal_;
     private ArrayList<Value> retValList_;
     private Type retType_;
     private ArrayList<Type> retTypeList_;
     private int retInt_;
     private float retFloat_;
-    //</editor-fold>
 
-    /*重写visitor -_-|| */
+
+
     @Override
     public Void visitCompUnit(SysY2022Parser.CompUnitContext ctx) {
         super.visitCompUnit(ctx);
@@ -252,11 +201,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     }
 
 
-    /**
-     * initVal : expr # scalarInitVal
-     * ------------------------------------
-     * expr : addExp
-     */
     @Override
     public Void visitScalarInitVal(SysY2022Parser.ScalarInitValContext ctx) {
         // Turn on constant folding switch.
@@ -279,14 +223,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     @Override
     public Void visitFuncDef(SysY2022Parser.FuncDefContext ctx) {
 
-        /*
-        Collect object info.
-         */
-
-        // Get the function name.
         String funcName = ctx.Ident().getText();
-
-        // Get the return type. (funcType identifier)
         Type retType;
         String strRetType = ctx.funcType().getText();
         switch (strRetType) {
@@ -295,13 +232,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 setConveyedType(DataType.INT);//我随便加了个地方set了一下，应该不太对，你后面再改
             }
 
-            //先不着急写
             case "float" -> retType = FloatType.getType();
             case "void" -> retType = Type.VoidType.getType();
             default -> throw new RuntimeException("Unsupported function return type.");
         }
 
-        // Get the argument list. (Visiting child)
         ArrayList<Type> argTypes = new ArrayList<>();
         if (ctx.funcFParams() != null) {
             visit(ctx.funcFParams());
@@ -309,15 +244,10 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         }
         retTypeList_ = new ArrayList<>(); // Clear the list for next func def.
 
-        /*
-        Build IR.
-         */
-        // Security check (allow no nested definition of functions)
         if (!scope.isGlobal()) {
             throw new RuntimeException("Nested definition of function: " + funcName);
         }
-        // Insert a function into the module and symbol table.
-        //FunctionType funcType = FunctionType.getType(retType, argTypes);
+
         FunctionType funcType = new FunctionType(retType, argTypes);
         Function function = builder.buildFunction(funcName, funcType, false);
         scope.addSymbol(funcName, function);
@@ -331,11 +261,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
          */
         for (int i = 0; i < function.getParamList().size(); i++) {
             Function.Param arg = function.getParamList().get(i);
-            // Allocate a local memory on the stack for the arg.
             //MemoryInst.Alloca localVar = builder.buildAlloca(arg.getType());
-            // Add the memory allocated to the symbol table.
-            // It's an ugly way to retrieve the name of the args
-            // since no elegant way is found so far.
+
             String argName = null;
             if (ctx.funcFParams().funcFParam(i) instanceof SysY2022Parser.ScalarFuncFParamContext) {
                 var ctxArg = (SysY2022Parser.ScalarFuncFParamContext) ctx.funcFParams().funcFParam(i);
@@ -468,13 +395,13 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         Value val = retVal_;
 
         // Type matching check and implicit type conversions.
-//        Type destType = ((PointerType) addr.getType()).getPointeType();
-//        if (destType.isFloatType() && val.getType().isIntegerType()) {
-//            val = builder.buildSitofp(val);
-//        }
-//        else if (destType.isIntegerType() && val.getType().isFloatType()) {
-//            val = builder.buildFptosi(val, (IntegerType) destType);
-//        }
+        Type destType = ((PointerType) addr.getType()).getPointedType();
+        if (destType.isFloatType() && val.getType().isIntegerType()) {
+            val = builder.buildSitofp(val);
+        }
+        else if (destType.isIntegerType() && val.getType().isFloatType()) {
+            val = builder.buildFptosi(val);
+        }
 
         // Build the Store instruction.
         builder.buildStore(val, addr);
@@ -494,13 +421,13 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
             // Return type matching check and conversion.
             Value retVal = retVal_;
-            //Type retType = ((FunctionType)builder.getCurFunc().getType()).getRetType(); // The return type defined in the prototype.builder.getCurFunc().getType().getRetType()
-            //if (retVal.getType().isIntegerType() && retType.isFloatType()) {
-            //retVal = builder.buildSitofp(retVal);
-            //}
-            //else if (retVal.getType().isFloatType() && retType.isIntegerType()) {
-            //retVal = builder.buildFptosi(retVal, (IntegerType) retType);
-            //}
+            Type retType = ((FunctionType)builder.getCurFunc().getType()).getRetType(); // The return type defined in the prototype.builder.getCurFunc().getType().getRetType()
+            if (retVal.getType().isIntegerType() && retType.isFloatType()) {
+            retVal = builder.buildSitofp(retVal);
+            }
+            else if (retVal.getType().isFloatType() && retType.isIntegerType()) {
+            retVal = builder.buildFptosi(retVal);
+            }
 
             builder.buildRet(retVal);
         }
@@ -559,12 +486,12 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             if (rOp.getType().isI1()) {
                 rOp = builder.buildZExt(rOp);
             }*/
-            /*if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
+            if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
                 lOp = builder.buildSitofp(lOp);
             }
             else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
                 rOp = builder.buildSitofp(rOp);
-            }*/
+            }
 
             // Generate an instruction to compute result of left and right operands
             // as the new left operand for the next round.
@@ -598,7 +525,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
             // The 2nd and possibly more MulExp.
             // Retrieve the next mulExp (as the right operand) by visiting child.
-            visit(ctx.mulExp());
+            visit(ctx.unaryExp());
             Value rOp = retVal_;
 
             // Check if the lOp/rOp is a pointer. if it is, load it up.
@@ -617,18 +544,19 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             if (rOp.getType().isI1()) {
                 rOp = builder.buildZExt(rOp);
             }*/
-            /*if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
+            if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
                 lOp = builder.buildSitofp(lOp);
             }
             else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
                 rOp = builder.buildSitofp(rOp);
-            }*/
+            }
 
             // Generate an instruction to compute result of left and right operands
             // as the new left operand for the next round.
             switch (ctx.getChild(1).getText()) {
                 case "*" -> lOp = builder.buildMul(lOp, rOp);
                 case "/" -> lOp = builder.buildDiv(lOp, rOp);
+                //还差一个%运算
                 default -> {
                 }
             }
@@ -639,13 +567,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     }
 
 
-    /*@Override
-    public Void visitUnaryExp1(SysY2022Parser.UnaryExp1Context ctx) {
-        visit(ctx.primaryExp());
-        Value lOp = retVal_;
-        retVal_ = lOp;
-        return null;
-    }*/
+
     @Override
     public Void visitPrimaryExp2(SysY2022Parser.PrimaryExp2Context ctx) {
 
@@ -660,17 +582,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
         return null;
     }
-    /*@Override public Void visitPrimaryExp3(SysY2022Parser.PrimaryExp3Context ctx) {
-        visit(ctx.number());
-
-        Type pointeeType = ((PointerType) retVal_.getType()).getPointedType();
-        retVal_ = builder.buildLoad(pointeeType, retVal_);
-
-
-        Value lOp = retVal_;
-        retVal_ = lOp;
-        return null;
-    }*/
 
 
     @Override

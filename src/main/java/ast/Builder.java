@@ -3,6 +3,7 @@ package ast;
 import ir.Instructions.BinaryInst;
 import ir.Instructions.MemoryInst;
 import ir.Instructions.TerminatorInst;
+import ir.Instructions.ConversionInst;
 import ir.Module;
 import ir.Type;
 import ir.Value;
@@ -94,6 +95,28 @@ public class Builder {
         curFunc.list.addLast(bb.node);
         this.setCurBB(bb);
         return bb;
+    }
+
+    public ConversionInst.Fptosi buildFptosi(Value preVal) {
+        // Security checks.
+        if (!preVal.getType().isFloatType()) {
+            throw new RuntimeException("A non-floatingPoint src Value is given.");
+        }
+        // Construct, insert, and return.
+        ConversionInst.Fptosi inst = new ConversionInst.Fptosi(preVal);
+        getCurBB().list.addLast(inst.node);
+        return inst;
+    }
+
+    public ConversionInst.Sitofp buildSitofp(Value preVal) {
+        // Security checks.
+        if (!preVal.getType().isIntegerType()) {
+            throw new RuntimeException("A non-floatingPoint src Value is given.");
+        }
+        // Construct, insert, and return.
+        ConversionInst.Sitofp inst = new ConversionInst.Sitofp(preVal);
+        getCurBB().list.addLast(inst.node);
+        return inst;
     }
 
     public BinaryInst buildAdd(Value lOp, Value rOp) {

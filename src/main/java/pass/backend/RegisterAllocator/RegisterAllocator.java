@@ -283,14 +283,14 @@ public class RegisterAllocator implements BaseBackendPass {
                     if (riscOp.isVirtualRegister()) {
                         VirtualRegister vReg = (VirtualRegister) riscOp;
                         int name = vReg.getName();
-                        if (visitVReg[name]) {
+                        if (visitVReg[opPosition]) {
                             //这个指令已经处理过这个虚拟寄存器，直接给它那个寄存器就可以
                             var register = nameMapReg.get(name);
                             // 替换操作数
                             riscInst.setOpLocal(register, opIndex, opPosition);
                             continue;
                         } else {
-                            visitVReg[name] = true; // visit过
+                            visitVReg[opPosition] = true; // visit过
                         }
 
 
