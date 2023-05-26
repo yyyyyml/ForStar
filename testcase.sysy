@@ -1,8 +1,10 @@
+
+int r = 4;
 int main(){
-    int a = 4;
-    int c;
-    c = 5;
-    a = a * c;
-    a = c;
+    int a = 4+3;
+    int b = 3;
+    a = 2+5;
+    r = 6+3;
+    a = r+3;
     return 0;
 }
