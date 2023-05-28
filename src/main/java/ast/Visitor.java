@@ -22,36 +22,12 @@ import java.util.ArrayList;
 
 public class Visitor extends SysY2022BaseVisitor<Void> {
     private final Scope scope = new Scope();
-    private Builder builder;
-    public Visitor(Module module) {
-        this.builder = new Builder(module);
-    }
     private final boolean ON = true;
     private final boolean OFF = false;
+    private Builder builder;
     private boolean envConstFolding = OFF;
-    private void setConstFolding(boolean stat) {
-        envConstFolding = stat;
-    }
-    public boolean inConstFolding() {
-        return envConstFolding;
-    }
     private boolean envBuildFCall = OFF;
-
-    private void setBuildFCall(boolean stat) {
-        envBuildFCall = stat;
-    }
-    private boolean inBuildFCall() {
-        return envBuildFCall;
-    }
-    private enum DataType {FLT, INT}
     private DataType envConveyedType = null;
-    private DataType getConveyedType() {
-        return envConveyedType;
-    }
-    private void setConveyedType(DataType dataType) {
-        envConveyedType = dataType;
-    }
-
     private Value retVal_;
     private ArrayList<Value> retValList_;
     private Type retType_;
@@ -59,14 +35,39 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     private int retInt_;
     private float retFloat_;
 
+    public Visitor(Module module) {
+        this.builder = new Builder(module);
+    }
 
+    private void setConstFolding(boolean stat) {
+        envConstFolding = stat;
+    }
+
+    public boolean inConstFolding() {
+        return envConstFolding;
+    }
+
+    private void setBuildFCall(boolean stat) {
+        envBuildFCall = stat;
+    }
+
+    private boolean inBuildFCall() {
+        return envBuildFCall;
+    }
+
+    private DataType getConveyedType() {
+        return envConveyedType;
+    }
+
+    private void setConveyedType(DataType dataType) {
+        envConveyedType = dataType;
+    }
 
     @Override
     public Void visitCompUnit(SysY2022Parser.CompUnitContext ctx) {
         super.visitCompUnit(ctx);
         return null;
     }
-
 
     @Override
     public Void visitScalarConstDef(SysY2022Parser.ScalarConstDefContext ctx) {
@@ -125,7 +126,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     }
                 }
                 // Build the glb var.
-                glbVar = builder.buildGlobalVar(name,  initVal.getType());
+                glbVar = builder.buildGlobalVar(name, initVal.getType());
             }
 
             // W/o initialization.
@@ -199,7 +200,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         }
         return null;
     }
-
 
     @Override
     public Void visitScalarInitVal(SysY2022Parser.ScalarInitValContext ctx) {
@@ -316,8 +316,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
-
-
     @Override
     public Void visitBlock(SysY2022Parser.BlockContext ctx) {
         scope.pushTable(); // Add a new layer of scope (a new symbol table).
@@ -384,7 +382,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
-
     @Override
     public Void visitAssignment(SysY2022Parser.AssignmentContext ctx) {
         // Retrieve left value (the address to store) by visiting child.
@@ -398,8 +395,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         Type destType = ((PointerType) addr.getType()).getPointedType();
         if (destType.isFloatType() && val.getType().isIntegerType()) {
             val = builder.buildSitofp(val);
-        }
-        else if (destType.isIntegerType() && val.getType().isFloatType()) {
+        } else if (destType.isIntegerType() && val.getType().isFloatType()) {
             val = builder.buildFptosi(val);
         }
 
@@ -407,7 +403,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         builder.buildStore(val, addr);
         return null;
     }
-
 
     /**
      * stmt : 'return' (expr)? ';'
@@ -421,12 +416,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
             // Return type matching check and conversion.
             Value retVal = retVal_;
-            Type retType = ((FunctionType)builder.getCurFunc().getType()).getRetType(); // The return type defined in the prototype.builder.getCurFunc().getType().getRetType()
+            Type retType = ((FunctionType) builder.getCurFunc().getType()).getRetType(); // The return type defined in the prototype.builder.getCurFunc().getType().getRetType()
             if (retVal.getType().isIntegerType() && retType.isFloatType()) {
-            retVal = builder.buildSitofp(retVal);
-            }
-            else if (retVal.getType().isFloatType() && retType.isIntegerType()) {
-            retVal = builder.buildFptosi(retVal);
+                retVal = builder.buildSitofp(retVal);
+            } else if (retVal.getType().isFloatType() && retType.isIntegerType()) {
+                retVal = builder.buildFptosi(retVal);
             }
 
             builder.buildRet(retVal);
@@ -439,7 +433,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 //        builder.buildBB("_FOLLOWING_BLK");
         return null;
     }
-
 
     @Override
     public Void visitConstExp(SysY2022Parser.ConstExpContext ctx) {
@@ -488,8 +481,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             }*/
             if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
                 lOp = builder.buildSitofp(lOp);
-            }
-            else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
+            } else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
                 rOp = builder.buildSitofp(rOp);
             }
 
@@ -546,8 +538,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             }*/
             if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
                 lOp = builder.buildSitofp(lOp);
-            }
-            else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
+            } else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
                 rOp = builder.buildSitofp(rOp);
             }
 
@@ -566,8 +557,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
-
-
     @Override
     public Void visitPrimaryExp2(SysY2022Parser.PrimaryExp2Context ctx) {
 
@@ -582,7 +571,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
         return null;
     }
-
 
     @Override
     public Void visitNumber(SysY2022Parser.NumberContext ctx) {
@@ -611,4 +599,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
         return null;
     }
+
+
+    private enum DataType {FLT, INT}
 }

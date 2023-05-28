@@ -105,6 +105,9 @@ public class RISCBasicBlock {
     }
 
     private void translateCaculate(Instruction curInst) {
+
+        boolean needVr = false;
+
         Value vop1 = curInst.getOperandAt(0);
         RISCOperand op1 = getOperand(vop1);
         RISCOperand temp1 = null;
@@ -116,6 +119,11 @@ public class RISCBasicBlock {
             temp1 = op1;
             //if(riscFunction.valueVRMap.get(vop1) == (VirtualRegister) op1) {riscFunction.valueVRMap.remove(vop1);}
 
+        } else if (op1 instanceof Immediate) {
+            VirtualRegister vr = getNewVr();
+            LiInstruction li = new LiInstruction(vr, op1);
+            instructionList.add(li);
+            temp1 = vr;
         }
 
         Value vop2 = curInst.getOperandAt(1);
@@ -128,6 +136,11 @@ public class RISCBasicBlock {
             instructionList.add(lw2);
         } else if (op2 instanceof Register) {
             temp2 = op2;
+        } else if (op2 instanceof Immediate) {
+            VirtualRegister vr = getNewVr();
+            LiInstruction li = new LiInstruction(vr, op2);
+            instructionList.add(li);
+            temp2 = vr;
         }
 
         switch (curInst.getTag()) {
@@ -149,8 +162,8 @@ public class RISCBasicBlock {
             }
         }
         RISCOperand dst = getOperand(curInst);
-        SwInstruction sw1 = new SwInstruction(dst, temp1);
-        instructionList.add(sw1);
+        MvInstruction mv1 = new MvInstruction(temp1, dst);
+        instructionList.add(mv1);
 
     }
 
@@ -299,5 +312,9 @@ public class RISCBasicBlock {
         return 9 + vname;
     }
 
+    private VirtualRegister getNewVr() {
+        VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++);
+        return vr;
+    }
 
 }

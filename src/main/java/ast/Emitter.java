@@ -12,14 +12,7 @@ import java.io.FileWriter;
 public class Emitter {
     private String outputName = "out.ll";
     private StringBuilder sb;
-
-    public String getOutputName() {
-        return outputName;
-    }
-
-    public void setOutputName(String outputName) {
-        this.outputName = outputName;
-    }
+    private int nameCounter = 0;
 
     public Emitter() {
         sb = new StringBuilder();
@@ -30,7 +23,13 @@ public class Emitter {
         sb = new StringBuilder();
     }
 
-    private int nameCounter = 0;
+    public String getOutputName() {
+        return outputName;
+    }
+
+    public void setOutputName(String outputName) {
+        this.outputName = outputName;
+    }
 
     private String newName() {
         String name = String.valueOf(nameCounter);
@@ -96,7 +95,7 @@ public class Emitter {
                 }
                 sb.append("}\n");
             } else {
-                // do something else
+                // TODO: 外部函数？
             }
         }
 

@@ -16,26 +16,32 @@ import java.util.HashMap;
 public class Scope {
 
     private final ArrayList<HashMap<String, Value>> symbolTables = new ArrayList<>();
+
     public Scope() {
         //每一个HashMap代表一层，最外层代表全局区域，初始化时添加一个新的空的当前层符号表。
         symbolTables.add(new HashMap<>());
     }
+
     //返回当前层的符号表
     private HashMap<String, Value> curTable() {
         return symbolTables.get(symbolTables.size() - 1);
     }
+
     //判断当前的符号表层是否是全局的
     public boolean isGlobal() {
         return symbolTables.size() == 1;
     }
+
     //向符号表中添加新的一层符号表
     public void pushTable() {
         symbolTables.add(new HashMap<>());
     }
+
     //弹出当前符号表
     public void popTable() {
-            symbolTables.remove(symbolTables.size() - 1);
+        symbolTables.remove(symbolTables.size() - 1);
     }
+
     //添加新符号键值对
     public void addSymbol(String name, Value value) {
         //先检查是否重名
@@ -46,6 +52,7 @@ public class Scope {
         }
         curTable().put(name, value);
     }
+
     public boolean isDuplicateSymbol(String name) {
         return curTable().get(name) != null;
     }

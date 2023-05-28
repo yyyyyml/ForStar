@@ -1,9 +1,9 @@
 package ast;
 
 import ir.Instructions.BinaryInst;
+import ir.Instructions.ConversionInst;
 import ir.Instructions.MemoryInst;
 import ir.Instructions.TerminatorInst;
-import ir.Instructions.ConversionInst;
 import ir.Module;
 import ir.Type;
 import ir.Value;
@@ -27,28 +27,28 @@ public class Builder {
     public Builder() {
     }
 
-    public void setCurModule(Module mod) {
-        curMdl = mod;
-    }
-
-    public void setCurFunc(Function func) {
-        curFunc = func;
-    }
-
-    public void setCurBB(BasicBlock bb) {
-        curBB = bb;
-    }
-
     public Module getCurModule() {
         return curMdl;
+    }
+
+    public void setCurModule(Module mod) {
+        curMdl = mod;
     }
 
     public Function getCurFunc() {
         return curFunc;
     }
 
+    public void setCurFunc(Function func) {
+        curFunc = func;
+    }
+
     public BasicBlock getCurBB() {
         return curBB;
+    }
+
+    public void setCurBB(BasicBlock bb) {
+        curBB = bb;
     }
 
     public Constant.ConstantInt buildConstant(int i) {
@@ -82,6 +82,7 @@ public class Builder {
         getCurBB().list.addLast(inst.node);
         return inst;
     }
+
     public Function buildFunction(String name, FunctionType type, boolean isBuiltIn) {
         Function func = new Function(type, isBuiltIn);
         func.setName(name);
