@@ -3,10 +3,10 @@ package pass.backend.RegisterAllocator;
 import backend.*;
 import backend.instructions.LwInstruction;
 import backend.instructions.SwInstruction;
+import backend.operands.FloatRealRegister;
+import backend.operands.FloatVirtualRegister;
 import backend.operands.Immediate;
 import backend.operands.Memory;
-import backend.operands.RealRegister;
-import backend.operands.VirtualRegister;
 import pass.backend.BaseBackendPass;
 
 import java.util.*;
@@ -16,12 +16,12 @@ import java.util.*;
  * 简单的线性扫描寄存器分配
  * 目前改成了以函数为单位的
  */
-public class RegisterAllocator implements BaseBackendPass {
+public class FloatRegisterAllocator implements BaseBackendPass {
 
     private HashMap<Integer, LiveInterval> liveIntervalMapList;
     private List<Map.Entry<Integer, LiveInterval>> sortedLiveIntervalList;
     private List<Map.Entry<Integer, LiveInterval>> activeList;
-    private HashMap<Integer, VirtualRegister> intMapVreg;
+    private HashMap<Integer, FloatVirtualRegister> intMapVreg;
     private final int regNum;
 
     private RegisterUsageTracker regUsageTracker;
@@ -30,7 +30,7 @@ public class RegisterAllocator implements BaseBackendPass {
     private ArrayList<RISCFunction> time2Function; // 时间点对应的函数，其实现在这个没什么用了，因为以函数为单位了，但是不改了
 
 
-    public RegisterAllocator() {
+    public FloatRegisterAllocator() {
         liveIntervalMapList = new HashMap<>();
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>(); // 编号对应的虚拟寄存器对象
@@ -39,25 +39,25 @@ public class RegisterAllocator implements BaseBackendPass {
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
-    public void setLiveIntervalStart(int virtualRegister, int start) {
+    public void setLiveIntervalStart(int FloatVirtualRegister, int start) {
         LiveInterval interval = new LiveInterval(start, start + 10);
-        addLiveInterval(virtualRegister, interval);
+        addLiveInterval(FloatVirtualRegister, interval);
     }
 
     // Map中已有这个寄存器，直接修改它的End
-    public void setLiveIntervalEnd(int virtualRegister, int end) {
-        LiveInterval interval = liveIntervalMapList.get(virtualRegister);
+    public void setLiveIntervalEnd(int FloatVirtualRegister, int end) {
+        LiveInterval interval = liveIntervalMapList.get(FloatVirtualRegister);
         interval.setEnd(end);
     }
 
     /**
      * 添加寄存器的LiveInterval到Map中
      *
-     * @param virtualRegister 虚拟寄存器
-     * @param interval        寄存器的LiveInterval
+     * @param FloatVirtualRegister 虚拟寄存器
+     * @param interval             寄存器的LiveInterval
      */
-    public void addLiveInterval(int virtualRegister, LiveInterval interval) {
-        liveIntervalMapList.put(virtualRegister, interval);
+    public void addLiveInterval(int FloatVirtualRegister, LiveInterval interval) {
+        liveIntervalMapList.put(FloatVirtualRegister, interval);
     }
 
     /**
@@ -119,16 +119,14 @@ public class RegisterAllocator implements BaseBackendPass {
         }
 
 
-
     }
 
 
     private void initializeLiveInterval(RISCFunction riscFunc) {
         int index = 0; // 用于记录位置，存到live interval中
 
-        // 先遍历一遍 记录变量的live interval
-        riscFunc.stackSize = riscFunc.localStackIndex;
-        riscFunc.stackIndex = riscFunc.localStackIndex;
+        // 先遍历一遍 记录变量的live interval 这里用的是寄存器分配后新的stackSize
+        riscFunc.stackIndex = riscFunc.stackSize;
 
         System.out.println(riscFunc.stackSize);
         LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
@@ -139,9 +137,9 @@ public class RegisterAllocator implements BaseBackendPass {
                 riscInst.setId(index); // 记录每条指令的标号
                 LinkedList<RISCOperand> operandList = riscInst.getOperandList();
                 for (RISCOperand riscOp : operandList) {
-                    if (riscOp.isVirtualRegister()) {
-                        var name = ((VirtualRegister) riscOp).getName();
-                        intMapVreg.put(name, (VirtualRegister) riscOp);
+                    if (riscOp.isFloatVirtualRegister()) {
+                        var name = ((FloatVirtualRegister) riscOp).getName();
+                        intMapVreg.put(name, (FloatVirtualRegister) riscOp);
                         if (!liveIntervalMapList.containsKey(name)) {
                             // 记录Start
                             setLiveIntervalStart(name, index);
@@ -151,9 +149,9 @@ public class RegisterAllocator implements BaseBackendPass {
                         }
                     } else if (riscOp.isMemory()) {
                         var mem = (Memory) riscOp;
-                        if (mem.basicAddress.isVirtualRegister()) {
-                            var name = ((VirtualRegister) mem.basicAddress).getName();
-                            intMapVreg.put(name, (VirtualRegister) mem.basicAddress);
+                        if (mem.basicAddress.isFloatVirtualRegister()) {
+                            var name = ((FloatVirtualRegister) mem.basicAddress).getName();
+                            intMapVreg.put(name, (FloatVirtualRegister) mem.basicAddress);
                             if (!liveIntervalMapList.containsKey(name)) {
                                 // 记录Start
                                 setLiveIntervalStart(name, index);
@@ -170,7 +168,7 @@ public class RegisterAllocator implements BaseBackendPass {
 
         sortedLiveIntervalList = sortByStart();
         for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
-            System.out.println("Register: vr_" + entry.getKey().toString());
+            System.out.println("Register: vr_f" + entry.getKey().toString());
             System.out.println("Start: " + entry.getValue().getStart());
             System.out.println("End: " + entry.getValue().getEnd());
             System.out.println();
@@ -192,7 +190,7 @@ public class RegisterAllocator implements BaseBackendPass {
                 // 分配一个寄存器
                 var curVreg = intMapVreg.get(entry.getKey());
                 int freeRegister = curRegUsage.getNextFreeRegister();
-                System.out.println("Time: " + time + " Allocating register: vr_" + entry.getKey() + " -> " + freeRegister);
+                System.out.println("Time: " + time + " Allocating register: vr_f" + entry.getKey() + " -> " + freeRegister);
                 curVreg.setRealReg(freeRegister);
                 // 加入activeList，并按End排序
                 activeList.add(entry);
@@ -225,8 +223,8 @@ public class RegisterAllocator implements BaseBackendPass {
             // 分配栈地址
             var curFunc = time2Function.get(time);
             spillVreg.setStackLocation(curFunc.stackIndex);
-            System.out.println("Time: " + time + " Spilling: vr_" + spillEntry.getKey() + " -> stack " + curFunc.stackIndex);
-            System.out.println("Time: " + time + " Allocating register: vr_" + curEntry.getKey() + " -> " + spillVreg.getRealReg());
+            System.out.println("Time: " + time + " Spilling: vr_f" + spillEntry.getKey() + " -> stack " + curFunc.stackIndex);
+            System.out.println("Time: " + time + " Allocating register: vr_f" + curEntry.getKey() + " -> " + spillVreg.getRealReg());
             curFunc.stackSize += 4;
             curFunc.stackIndex += 4;
             // 记录spillTime
@@ -243,7 +241,7 @@ public class RegisterAllocator implements BaseBackendPass {
             var curFunc = time2Function.get(time);
 
             curVreg.setStackLocation(curFunc.stackIndex);
-            System.out.println("Time: " + time + " Spilling: vr_" + curEntry.getKey() + " -> stack " + curFunc.stackIndex);
+            System.out.println("Time: " + time + " Spilling: vr_f" + curEntry.getKey() + " -> stack " + curFunc.stackIndex);
             curFunc.stackSize += 4;
             curFunc.stackIndex += 4;
             // 记录spillTime
@@ -289,7 +287,7 @@ public class RegisterAllocator implements BaseBackendPass {
                 int tempIdFromZero = 0;
                 int tempStackIndex = riscFunc.stackIndex; // 保存这条指令分配临时栈空间之前的栈位置，用于恢复
                 boolean[] visitVReg = new boolean[10010]; // 这条指令中visit过哪些虚拟寄存器
-                HashMap<Integer, RealRegister> nameMapReg = new HashMap<>();
+                HashMap<Integer, FloatRealRegister> nameMapReg = new HashMap<>();
 
                 for (int opIndex = 0; opIndex < operandList.size(); opIndex++) {
                     var riscOp = operandList.get(opIndex);
@@ -297,8 +295,8 @@ public class RegisterAllocator implements BaseBackendPass {
 
                     if (riscOp.isMemory()) {
                         var mem = (Memory) riscOp;
-                        if (mem.basicAddress.isVirtualRegister()) {
-                            var vReg = (VirtualRegister) mem.basicAddress;
+                        if (mem.basicAddress.isFloatVirtualRegister()) {
+                            var vReg = (FloatVirtualRegister) mem.basicAddress;
                             int name = vReg.getName();
                             if (visitVReg[name]) {
                                 //这个指令已经处理过这个虚拟寄存器，直接给它那个寄存器就可以
@@ -317,7 +315,7 @@ public class RegisterAllocator implements BaseBackendPass {
                             if (vRegReplaced != null && vRegReplaced.getSpillTime() == position && vRegReplaced.getRealReg() != -1) {
                                 // 说明这时需要把那个被替换的寄存器溢出到相应栈中
                                 // 需要被换的寄存器
-                                RealRegister realReg = new RealRegister(vRegReplaced.getRealReg(), 11);
+                                FloatRealRegister realReg = new FloatRealRegister(vRegReplaced.getRealReg());
                                 // 添加写回内存的指令 sw
                                 var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
                                 RISCInstruction swInst = new SwInstruction(realReg, stack); // 存入栈
@@ -329,7 +327,7 @@ public class RegisterAllocator implements BaseBackendPass {
                             if (vReg.getSpillTime() > position) {
                                 // spillTime > 当前位置，说明分配过寄存器
                                 var id = vReg.getRealReg();
-                                var newReg = new RealRegister(id, 11);
+                                var newReg = new FloatRealRegister(id);
                                 // 替换内存的basicAddress
                                 mem.basicAddress = newReg;
                                 // 记录替换成了哪个
@@ -345,7 +343,7 @@ public class RegisterAllocator implements BaseBackendPass {
 
                                 if (tempRegID != -1) {
                                     // 有空闲，分配成功
-                                    RealRegister tempReg = new RealRegister(tempRegID, 11);
+                                    FloatRealRegister tempReg = new FloatRealRegister(tempRegID);
                                     // 替换内存的basicAddress
                                     mem.basicAddress = tempReg;
                                     // 记录替换成了哪个
@@ -371,8 +369,8 @@ public class RegisterAllocator implements BaseBackendPass {
                                     // 应该不会有其他内存，所以不判断内存中的虚拟寄存器了，有bug再改
                                     for (int opIndexIn = 0; opIndexIn < operandList.size(); opIndexIn++) {
                                         var riscOpIn = operandList.get(opIndexIn);
-                                        if (riscOpIn.isVirtualRegister()) {
-                                            VirtualRegister vRegIn = (VirtualRegister) riscOpIn;
+                                        if (riscOpIn.isFloatVirtualRegister()) {
+                                            FloatVirtualRegister vRegIn = (FloatVirtualRegister) riscOpIn;
                                             if (tempIdFromZero == vRegIn.getRealReg()) {
                                                 tempIdFromZero++;
                                                 opIndexIn = 0;
@@ -380,7 +378,7 @@ public class RegisterAllocator implements BaseBackendPass {
                                         }
                                     }
 
-                                    var tempReg = new RealRegister(tempIdFromZero++, 11);
+                                    var tempReg = new FloatRealRegister(tempIdFromZero++);
                                     System.out.println(tempIdFromZero);
 
                                     var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
@@ -414,8 +412,8 @@ public class RegisterAllocator implements BaseBackendPass {
                                 }
                             }
                         }
-                    } else if (riscOp.isVirtualRegister()) {
-                        var vReg = (VirtualRegister) riscOp;
+                    } else if (riscOp.isFloatVirtualRegister()) {
+                        var vReg = (FloatVirtualRegister) riscOp;
                         int name = vReg.getName();
                         if (visitVReg[name]) {
                             //这个指令已经处理过这个虚拟寄存器，直接给它那个寄存器就可以
@@ -435,7 +433,7 @@ public class RegisterAllocator implements BaseBackendPass {
                         if (vRegReplaced != null && vRegReplaced.getSpillTime() == position && vRegReplaced.getRealReg() != -1) {
                             // 说明这时需要把那个被替换的寄存器溢出到相应栈中
                             // 需要被换的寄存器
-                            RealRegister realReg = new RealRegister(vRegReplaced.getRealReg(), 11);
+                            FloatRealRegister realReg = new FloatRealRegister(vRegReplaced.getRealReg());
                             // 添加写回内存的指令 sw
                             var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
                             RISCInstruction swInst = new SwInstruction(realReg, stack); // 存入栈
@@ -447,7 +445,7 @@ public class RegisterAllocator implements BaseBackendPass {
                         if (vReg.getSpillTime() > position) {
                             // spillTime > 当前位置，说明分配过寄存器
                             var id = vReg.getRealReg();
-                            var newReg = new RealRegister(id, 11);
+                            var newReg = new FloatRealRegister(id);
                             // 替换操作数
                             riscInst.setOpLocal(newReg, opIndex, opPosition);
                             // 记录替换成了哪个
@@ -463,7 +461,7 @@ public class RegisterAllocator implements BaseBackendPass {
 
                             if (tempRegID != -1) {
                                 // 有空闲，分配成功
-                                RealRegister tempReg = new RealRegister(tempRegID, 11);
+                                FloatRealRegister tempReg = new FloatRealRegister(tempRegID);
                                 // 替换操作数
                                 riscInst.setOpLocal(tempReg, opIndex, opPosition);
                                 // 记录替换成了哪个
@@ -489,8 +487,8 @@ public class RegisterAllocator implements BaseBackendPass {
                                 // TODO:没判断内存中是否存在虚拟寄存器的情况，先当作没有，有再debug
                                 for (int opIndexIn = 0; opIndexIn < operandList.size(); opIndexIn++) {
                                     var riscOpIn = operandList.get(opIndexIn);
-                                    if (riscOpIn.isVirtualRegister()) {
-                                        VirtualRegister vRegIn = (VirtualRegister) riscOpIn;
+                                    if (riscOpIn.isFloatVirtualRegister()) {
+                                        FloatVirtualRegister vRegIn = (FloatVirtualRegister) riscOpIn;
                                         if (tempIdFromZero == vRegIn.getRealReg()) {
                                             tempIdFromZero++;
                                             opIndexIn = 0;
@@ -498,7 +496,7 @@ public class RegisterAllocator implements BaseBackendPass {
                                     }
                                 }
 
-                                var tempReg = new RealRegister(tempIdFromZero++, 11);
+                                var tempReg = new FloatRealRegister(tempIdFromZero++);
                                 System.out.println(tempIdFromZero);
 
                                 var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
@@ -578,8 +576,6 @@ public class RegisterAllocator implements BaseBackendPass {
         Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
         addis0.setVal(riscFunc.stackSize);
     }
-
-
 
 
 }
