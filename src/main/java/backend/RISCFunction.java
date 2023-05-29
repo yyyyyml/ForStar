@@ -1,5 +1,6 @@
 package backend;
 
+import backend.operands.FloatVirtualRegister;
 import backend.operands.Memory;
 import backend.operands.VirtualRegister;
 import ir.Value;
@@ -16,6 +17,8 @@ public class RISCFunction {
     public String funcName;
     public int parameterSize;
     public int virtualRegisterIndex = 0;
+    public int floatVirtualRegisterIndex = 0;
+    public HashMap<Value, FloatVirtualRegister> valueFloatVrMap;
     public HashMap<Value, VirtualRegister> valueVRMap;
     public HashMap<Value, Memory> valueMemoryHashMap;
     public HashMap<Value, RISCOperand> valueRISCOperandHashMap;
@@ -26,7 +29,7 @@ public class RISCFunction {
     public int stackIndex;
     private LinkedList<RISCBasicBlock> BasicBlockList;
     private Function irFunction;
-
+    public RISCModule riscModule;
 
     /**
      * Function生成函数
@@ -34,8 +37,10 @@ public class RISCFunction {
      *
      * @param irFunc
      */
-    public RISCFunction(Function irFunc) {
+    public RISCFunction(Function irFunc, RISCModule riscModule) {
 
+
+        valueFloatVrMap = new HashMap<>();
         valueVRMap = new HashMap<>();
         valueMemoryHashMap = new HashMap<>();
         valueRISCOperandHashMap = new HashMap<>();
@@ -44,6 +49,7 @@ public class RISCFunction {
         this.irFunction = irFunc;
         this.funcName = irFunc.getName();
         this.parameterSize = irFunc.getParamList().size();
+        this.riscModule = riscModule;
 
 
         for (IList.INode<BasicBlock, Function> bbInode : irFunc.list) {
