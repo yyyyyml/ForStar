@@ -2,6 +2,9 @@
 int main(){
     int a = 4;
     int b = 3;
-    a = 2+3+b;
+    a = 2 + 3 + b;
+    float c = 5.0;
+    float d = 5.7;
+    float e = c + d;
     return 0;
 }
