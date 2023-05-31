@@ -114,6 +114,6 @@ public class RISCInstruction {
         subw,
         mulw,
         call,
-        lla, flw, fsw, divw
+        lla, flw, fsw, fadd, fmul, fdiv, fsub, divw
     }
 }

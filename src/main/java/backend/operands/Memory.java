@@ -6,9 +6,9 @@ public class Memory extends RISCOperand {
     public Register basicAddress;
     private int offset;
 
-    public Memory(int offset, int basicAddressNum) {
+    public Memory(int offset, int basicAddress) {
         this.offset = offset;
-        this.basicAddress = new RealRegister(basicAddressNum);
+        this.basicAddress = new RealRegister(basicAddress);
     }
 
     public Memory(int offset, Register basicAddress) {

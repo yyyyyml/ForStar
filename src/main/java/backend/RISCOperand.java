@@ -39,13 +39,5 @@ public abstract class RISCOperand {
         return this instanceof Memory;
     }
 
-    public boolean isFloatRealRegister() {
-        return this instanceof FloatRealRegister;
-    }
-
-    public boolean isFloatVirtualRegister() {
-        return this instanceof FloatVirtualRegister;
-    }
-
     public abstract String emit();
 }

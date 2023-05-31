@@ -7,7 +7,7 @@ import ir.User;
  * 常量类 继承自User类
  * 整型常量、浮点常量、数组常量定义在内部
  * <p>
- * 浮点、数组待实现
+ * TODO:数组待实现
  */
 public class Constant extends User {
     public Constant(Type type) {

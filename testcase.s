@@ -22,14 +22,14 @@ main:
 	mv t1,t0
 	sw t0,-36(s0)
 	lla t0,.F0
-	flw vr_f0,0(vr_7)
-	fsw vr_f0,-28(s0)
-	lla t1,.F1
-	flw vr_f1,0(vr_8)
-	fsw vr_f1,-24(s0)
-	flw vr_f2,-28(s0)
-	flw vr_f3,-24(s0)
-	fsw vr_f4,-20(s0)
+	flw f0,0(t0)
+	fsw f0,-28(s0)
+	lla t0,.F1
+	flw f0,0(t0)
+	fsw f0,-24(s0)
+	flw f0,-28(s0)
+	flw f1,-24(s0)
+	fsw f2,-20(s0)
 	li a0,0
 	ld ra,32(sp)
 	ld s0,24(sp)

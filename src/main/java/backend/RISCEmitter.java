@@ -26,8 +26,11 @@ public class RISCEmitter {
             }
             out.append("\t.size\t" + riscFunc.funcName + ", -" + riscFunc.funcName + "\n");
         }
-        for (RiscFloatBlock FB : target.floatBlockLinkedList) {
+        for (RISCFloatBlock FB : target.floatBlockLinkedList) {
             out.append(FB.emit() + "\n");
+        }
+        for (RISCGlobalvarBlock GVB : target.GlobalVarList) {
+            out.append(GVB.emit() + "\n");
         }
         out.append("\t.ident\t" + "\"ForStar\"\n");
         out.append("\t.section\t" + ".note.GNU-stack,\"\",@progbits");

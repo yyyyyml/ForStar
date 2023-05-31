@@ -1,6 +1,7 @@
 package backend;
 
 
+import ir.values.Constant;
 import ir.values.Function;
 import ir.values.GlobalVariable;
 
@@ -11,9 +12,11 @@ public class RISCModule {
     public String inputFilename;
     private LinkedList<RISCFunction> functionList = new LinkedList<>();
     private LinkedList<RISCOperand> globalVars = new LinkedList<>();
-    public HashMap<Float, RiscFloatBlock> floatMap = new HashMap<>();
-    public LinkedList<RiscFloatBlock> floatBlockLinkedList = new LinkedList<>();
+    public HashMap<Float, RISCFloatBlock> floatMap = new HashMap<>();
+    public LinkedList<RISCFloatBlock> floatBlockLinkedList = new LinkedList<>();
     private int FBindex = 0;
+    public HashMap<GlobalVariable, RISCGlobalvarBlock> GlobalVarMap = new HashMap<>();
+    public LinkedList<RISCGlobalvarBlock> GlobalVarList = new LinkedList<>();
 
     public LinkedList<RISCFunction> getFunctionList() {
         return functionList;
@@ -24,7 +27,21 @@ public class RISCModule {
     }
 
     public void addGlobalvar(GlobalVariable gv) {
-        ;
+        if (gv.init == null) {
+            RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(0, gv.getName().substring(1));
+            GlobalVarMap.put(gv, GVB);
+            GlobalVarList.add(GVB);
+        } else if (gv.init.getType().isIntegerType()) {
+            RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(((Constant.ConstantInt) gv.init).getVal(), gv.getName().substring(1));
+            GlobalVarMap.put(gv, GVB);
+            GlobalVarList.add(GVB);
+        } else if (gv.init.getType().isFloatType()) {
+            RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(((Constant.ConstantFloat) gv.init).getVal(), gv.getName().substring(1));
+            GlobalVarMap.put(gv, GVB);
+            GlobalVarList.add(GVB);
+
+        }
+
     }
 
     /**
@@ -42,7 +59,7 @@ public class RISCModule {
         if (floatMap.containsKey(f)) {
             return floatMap.get(f).getName();
         } else {
-            RiscFloatBlock FB = new RiscFloatBlock(f, FBindex++);
+            RISCFloatBlock FB = new RISCFloatBlock(f, FBindex++);
             floatMap.put(f, FB);
             floatBlockLinkedList.add(FB);
             return FB.getName();

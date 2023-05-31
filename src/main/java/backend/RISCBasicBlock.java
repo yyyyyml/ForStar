@@ -8,6 +8,7 @@ import ir.Value;
 import ir.values.BasicBlock;
 import ir.values.Constant;
 import ir.values.Function;
+import ir.values.GlobalVariable;
 import util.IList;
 
 import java.util.LinkedList;
@@ -75,6 +76,10 @@ public class RISCBasicBlock {
                 case SUB -> translateCaculate(curInst);
                 case MUL -> translateCaculate(curInst);
                 case DIV -> translateCaculate(curInst);
+                case FADD -> translateCaculate(curInst);
+                case FSUB -> translateCaculate(curInst);
+                case FMUL -> translateCaculate(curInst);
+                case FDIV -> translateCaculate(curInst);
                 case CALL -> translateCall(curInst);
             }
 
@@ -159,12 +164,32 @@ public class RISCBasicBlock {
                 DivwInstruction cal = new DivwInstruction(temp1, temp1, temp2);
                 instructionList.add(cal);
             }
+            case FADD -> {
+                FaddInstruction cal = new FaddInstruction(temp1, temp1, temp2);
+                instructionList.add(cal);
+            }
+            case FSUB -> {
+                FsubInstruction cal = new FsubInstruction(temp1, temp1, temp2);
+                instructionList.add(cal);
+            }
+            case FMUL -> {
+                FmulInstruction cal = new FmulInstruction(temp1, temp1, temp2);
+                instructionList.add(cal);
+            }
+            case FDIV -> {
+                FdivInstruction cal = new FdivInstruction(temp1, temp1, temp2);
+                instructionList.add(cal);
+            }
         }
         RISCOperand dst = getOperand(curInst);
-        MvInstruction mv1 = new MvInstruction(temp1, dst);
-        instructionList.add(mv1);
+        if (temp1 instanceof VirtualRegister) {
+            riscFunction.valueVRMap.put(curInst, (VirtualRegister) temp1);
+        } else if (temp1 instanceof FloatVirtualRegister) {
+            riscFunction.valueFloatVrMap.put(curInst, (FloatVirtualRegister) temp1);
+        }
 
     }
+
 
 
     private void translateLoad(Instruction curInst) {
@@ -289,9 +314,22 @@ public class RISCBasicBlock {
         StringBuffer vName = new StringBuffer(value.getName());
         vName.deleteCharAt(0);
         String valueName = new String(vName);
-        if (value.getType().isFloatType()) {
+        if (value instanceof GlobalVariable) {
+            if (riscFunction.riscModule.GlobalVarMap.containsKey((GlobalVariable) value)) {
+                VirtualRegister vr = getNewVr();
+                MyString ms = new MyString(value.getName().substring(1));
+                LlaInstruction lla = new LlaInstruction(vr, ms);
+                instructionList.add(lla);
+                return new Memory(0, vr);
+            } else {
+                throw new RuntimeException("哈哈哈哈哈，你又出BUG了\n");
+
+
+            }
+        } else if (value.getType().isFloatType()) {
             if (value instanceof Constant) {
                 Float f = ((Constant.ConstantFloat) value).getVal();
+                //进下面这个函数找浮点数，没有会生成
                 String fbName = riscFunction.riscModule.getFloatBlockName(f);
                 VirtualRegister vr = getNewVr();
                 MyString ms = new MyString(fbName);

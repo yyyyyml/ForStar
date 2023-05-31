@@ -1,12 +1,17 @@
 package backend;
 
-public class RISCFloatBlock {
+public class RISCGlobalvarBlock {
     private int value;
     private String name;
 
-    public RISCFloatBlock(Float f, int index) {
+    public RISCGlobalvarBlock(Float f, String name) {
         value = Float.floatToIntBits(f);
-        name = ".F" + index;
+        this.name = name;
+    }
+
+    public RISCGlobalvarBlock(int val, String name) {
+        value = val;
+        this.name = name;
     }
 
     public String emit() {
