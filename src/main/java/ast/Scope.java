@@ -16,10 +16,12 @@ import java.util.HashMap;
 public class Scope {
 
     private final ArrayList<HashMap<String, Value>> symbolTables = new ArrayList<>();
+    private final ArrayList<HashMap<String, String>> symbolTypes = new ArrayList<>();
 
     public Scope() {
         //每一个HashMap代表一层，最外层代表全局区域，初始化时添加一个新的空的当前层符号表。
         symbolTables.add(new HashMap<>());
+        symbolTypes.add(new HashMap<>());
     }
 
     //返回当前层的符号表
@@ -43,12 +45,22 @@ public class Scope {
     }
 
     //添加新符号键值对
+    public void addSymbol(String name, Value value,String symbolType) {
+        //先检查是否重名
+        if (this.isDuplicateSymbol(name)) {
+            throw new RuntimeException("Name" + "'"+name+"'"+"has already benn used!");
+        }
+        if(symbolType == "const")
+        {
+            (this.symbolTypes.get(0)).put(name,symbolType);
+        }
+        curTable().put(name, value);
+    }
+
     public void addSymbol(String name, Value value) {
         //先检查是否重名
         if (this.isDuplicateSymbol(name)) {
-            throw new RuntimeException(String.format(
-                    "Try to add an declaration with an existing name \"%s\" into current symbol table.",
-                    name));
+            throw new RuntimeException("Name" + "'"+name+"'"+"has already benn used!");
         }
         curTable().put(name, value);
     }
@@ -56,12 +68,20 @@ public class Scope {
     public boolean isDuplicateSymbol(String name) {
         return curTable().get(name) != null;
     }
-
+    public boolean checkVarType(String name){
+        String symType = symbolTypes.get(0).get(name);
+        if(symType=="const") {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
     public Value getVal(String name) {
         //要从当前层开始搜索
         for (int i = symbolTables.size() - 1; i >= 0; i--) {
-
             Value val = symbolTables.get(i).get(name);
+
             if (val != null) return val;
         }
         return null;

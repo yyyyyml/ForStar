@@ -15,8 +15,14 @@ public class GlobalVariable extends User {
     public GlobalVariable(String name, Type type) {
         super(new PointerType(type));
         this.setName(name);
+        this.init = Constant.ConstantInt.getConstantInt(0);
     }
 
+    public GlobalVariable(String name, Constant initval) {
+        super(new PointerType(initval.getType()));
+        this.setName(name);
+        this.init = initval;
+    }
     public void setConst() {
         this.isConst = true;
     }

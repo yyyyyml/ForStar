@@ -212,5 +212,7 @@ public class Instruction extends User {
         PTRCAST, //指针转换
         GEP,
         PHI,// 用于mem2reg
+        //unary
+        FNEG,
     }
 }

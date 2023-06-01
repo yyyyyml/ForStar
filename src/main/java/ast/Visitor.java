@@ -27,6 +27,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     private Builder builder;
     private boolean envConstFolding = OFF;
     private boolean envBuildFCall = OFF;
+    private boolean isConstantVar = false;
+    private enum DataType {FLT,INT}
     private DataType envConveyedType = null;
     private Value retVal_;
     private ArrayList<Value> retValList_;
@@ -64,136 +66,98 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     }
 
     @Override
-    public Void visitCompUnit(SysY2022Parser.CompUnitContext ctx) {
-        super.visitCompUnit(ctx);
-        return null;
-    }
-
-    @Override
     public Void visitScalarConstDef(SysY2022Parser.ScalarConstDefContext ctx) {
-        // Retrieve the name of the variable defined and check for duplication.//把identifier改成了Ident（)
-        String name = ctx.Ident().getText();
-        if (scope.isDuplicateSymbol(name)) {
-            throw new RuntimeException("Duplicate definition of constant name: " + name);
-        }
         visit(ctx.constInitVal());
-        Value initVal = retVal_;
-        String bType = ctx.getParent().getChild(1).getText();
-        if (bType == "int") {
-            builder.buildConstant(((Constant.ConstantInt) initVal).getVal());
+        switch(ctx.getParent().getChild(1).getText()){
+            case "int" -> {
+                if(getConveyedType() == DataType.FLT){
+                    float tmp = ((Constant.ConstantFloat)retVal_).getVal();
+                    retVal_ = builder.buildConstant((int)tmp);
+                }
+            }
+            case "float" -> {
+                if(getConveyedType() == DataType.INT){
+                    int tmp = ((Constant.ConstantInt)retVal_).getVal();
+                    retVal_ = builder.buildConstant((float)tmp);
+                }
+            }
+            default->{
+                throw new RuntimeException("Datatype"+"'"+ctx.getParent().getChild(1).getText()+"'"+"is not supported");
+            }
         }
-        scope.addSymbol(name, initVal);
-
+        scope.addSymbol(ctx.Ident().getText(), retVal_,"const");
         return null;
     }
 
     @Override
     public Void visitScalarVarDef(SysY2022Parser.ScalarVarDefContext ctx) {
-        // The text of the grammar symbol bType ("int" / "float")
-        String bType = ctx.getParent().getChild(0).getText();
-
-        // Retrieve the name of the variable defined and check for duplication.
-        String name = ctx.Ident().getText();
-        if (scope.isDuplicateSymbol(name)) {
-            throw new RuntimeException("Duplicate definition of variable name: " + name);
-        }
-
-        /*
-        A global variable.
-         */
         if (scope.isGlobal()) {
             GlobalVariable glbVar;
-
-            // With initialization.
             if (ctx.initVal() != null) {
                 visit(ctx.initVal());
-                Value initVal = retVal_;
-                // Type matching check and conversion.
-                switch (bType) {
+                switch(ctx.getParent().getChild(0).getText()){
                     case "int" -> {
-                        if (initVal.getType().isFloatType()) {
-                            float numericVal = ((Constant.ConstantFloat) initVal).getVal();
-                            initVal = builder.buildConstant((int) numericVal);
-
+                        if(getConveyedType() == DataType.FLT){
+                            float tmp = ((Constant.ConstantFloat)retVal_).getVal();
+                            retVal_ = builder.buildConstant((int)tmp);
                         }
                     }
                     case "float" -> {
-                        if (initVal.getType().isIntegerType()) {
-                            int numericVal = ((Constant.ConstantInt) initVal).getVal();
-                            initVal = builder.buildConstant((float) numericVal);
-
+                        if(getConveyedType() == DataType.INT){
+                            int tmp = ((Constant.ConstantInt)retVal_).getVal();
+                            retVal_ = builder.buildConstant((float)tmp);
                         }
                     }
+                    default->{
+                        throw new RuntimeException("Datatype"+"'"+ctx.getParent().getChild(0).getText()+"'"+"is not supported");
+                    }
                 }
-                // Build the glb var.
-                glbVar = builder.buildGlobalVar(name, initVal.getType());
+                glbVar = builder.buildGlobalVar(ctx.Ident().getText(), (Constant)retVal_);
             }
-
-            // W/o initialization.
             else {
-                switch (bType) {
+                switch (ctx.getParent().getChild(0).getText()) {
                     case "int" -> {
-                        glbVar = builder.buildGlobalVar(name, IntegerType.getType());
-
+                        glbVar = builder.buildGlobalVar(ctx.Ident().getText(), IntegerType.getType());
                     }
                     case "float" -> {
-                        glbVar = builder.buildGlobalVar(name, FloatType.getType());
-
+                        glbVar = builder.buildGlobalVar(ctx.Ident().getText(), FloatType.getType());
                     }
-                    default -> throw new RuntimeException("Unsupported type."); // Impossible case.
+                    default -> throw new RuntimeException("Datatype"+"'"+ctx.getParent().getChild(0).getText()+"'"+"is not supported"); // Impossible case.
                 }
             }
-
-            // Update the symbol table.
-            scope.addSymbol(name, glbVar);
+            scope.addSymbol(ctx.Ident().getText(), glbVar);
         }
-
-        /*
-        A local variable.
-         */
         else {
             MemoryInst.Alloca addrAllocated;
-            switch (bType) {
+            switch (ctx.getParent().getChild(0).getText()) {
                 case "int" -> {
                     addrAllocated = builder.buildAlloca(IntegerType.getType());
-
                 }
                 case "float" -> {
                     addrAllocated = builder.buildAlloca(FloatType.getType());
-
                 }
-                default -> throw new RuntimeException("Unsupported type."); // Impossible case.
+                default -> throw new RuntimeException("Datatype"+"'"+ctx.getParent().getChild(0).getText()+"'"+"is not supported");
             }
-            scope.addSymbol(name, addrAllocated);
-            // If it's a definition with initialization.
+            scope.addSymbol(ctx.Ident().getText(), addrAllocated);
             if (ctx.initVal() != null) {
-                // Retrieve the Value for initialization.
                 visit(ctx.initVal());
-                Value initVal = retVal_;
-                // Implicit type conversion.
-//                if (initVal.getType().isIntegerType() && addrAllocated.allocatedType.isFloatType()) {
-//                    initVal = builder.buildSitofp(initVal);
-//                }
-//                else if(initVal.getType().isFloatType() && addrAllocated.allocatedType.isIntegerType()) {
-//                    initVal = builder.buildFptosi(initVal, (IntegerType) addrAllocated.allocatedType);
-//                }
-                // Assignment by building a Store inst.
-                builder.buildStore(initVal, addrAllocated);
+                if (retVal_.getType().isIntegerType() && addrAllocated.allocatedType.isFloatType()) {
+                    retVal_ = builder.buildSitofp(retVal_);
+                }
+                else if(retVal_.getType().isFloatType() && addrAllocated.allocatedType.isIntegerType()) {
+                    retVal_ = builder.buildFptosi(retVal_);
+                }
+                builder.buildStore(retVal_, addrAllocated);
             }
         }
-
         return null;
     }
 
     @Override
     public Void visitScalarConstInitVal(SysY2022Parser.ScalarConstInitValContext ctx) {
         this.setConstFolding(ON);
-
         super.visitScalarConstInitVal(ctx);
-
         this.setConstFolding(OFF);
-
-        // Convert the constant value aft folding as a Constant IR Value.
         switch (getConveyedType()) {
             case INT -> retVal_ = builder.buildConstant(retInt_);
             case FLT -> retVal_ = builder.buildConstant(retFloat_);
@@ -203,12 +167,10 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitScalarInitVal(SysY2022Parser.ScalarInitValContext ctx) {
-        // Turn on constant folding switch.
         if (scope.isGlobal()) {
             this.setConstFolding(ON);
         }
         super.visitScalarInitVal(ctx);
-        // Turn off constant folding switch.
         if (scope.isGlobal()) {
             switch (getConveyedType()) {
                 case INT -> retVal_ = builder.buildConstant(retInt_);
@@ -222,16 +184,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitFuncDef(SysY2022Parser.FuncDefContext ctx) {
-
         String funcName = ctx.Ident().getText();
         Type retType;
         String strRetType = ctx.funcType().getText();
         switch (strRetType) {
-            case "int" -> {
-                retType = ir.Type.IntegerType.getType();
-                setConveyedType(DataType.INT);//我随便加了个地方set了一下，应该不太对，你后面再改
-            }
-
+            case "int" -> retType = ir.Type.IntegerType.getType();
             case "float" -> retType = FloatType.getType();
             case "void" -> retType = Type.VoidType.getType();
             default -> throw new RuntimeException("Unsupported function return type.");
@@ -242,7 +199,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             visit(ctx.funcFParams());
             argTypes.addAll(retTypeList_);
         }
-        retTypeList_ = new ArrayList<>(); // Clear the list for next func def.
+        retTypeList_ = new ArrayList<>();
 
         if (!scope.isGlobal()) {
             throw new RuntimeException("Nested definition of function: " + funcName);
@@ -251,17 +208,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         FunctionType funcType = new FunctionType(retType, argTypes);
         Function function = builder.buildFunction(funcName, funcType, false);
         scope.addSymbol(funcName, function);
-
-        // Insert a basic block. Then scope in.
         BasicBlock bb = builder.buildBB(funcName + "_ENTRY");
         scope.pushTable();
-
-        /*
-        Allocate all the formal arguments INSIDE the scope of the function.
-         */
         for (int i = 0; i < function.getParamList().size(); i++) {
             Function.Param arg = function.getParamList().get(i);
-            //MemoryInst.Alloca localVar = builder.buildAlloca(arg.getType());
+            MemoryInst.Alloca localVar = builder.buildAlloca(arg.getType());
 
             String argName = null;
             if (ctx.funcFParams().funcFParam(i) instanceof SysY2022Parser.ScalarFuncFParamContext) {
@@ -271,222 +222,307 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 var ctxArg = (SysY2022Parser.ArrFuncFParamContext) ctx.funcFParams().funcFParam(i);
                 argName = ctxArg.Ident().getText();
             }
-            //scope.addDecl(argName, localVar);
-            // Copy the value to the local memory.
-            //builder.buildStore(arg, localVar);
+            scope.addSymbol(argName, localVar);
+//             Copy the value to the local memory.
+            builder.buildStore(arg, localVar);
         }
-
-        /*
-        Process function body. (Visiting child)
-         */
         visit(ctx.block());
-
-        /*
-        Check the last basic block of the function to see if there is a
-        return statement given in the source.
-        If not, insert a terminator to the end of it.
-         */
         Instruction tailInst = builder.getCurBB().getLastInst();
-        // If no instruction in the bb, or the last instruction is not a terminator.
         if (tailInst == null || !tailInst.isTerminator()) {
-            //function.getType().getRetType().isFloatType()这下面三个在Function类完善后可能要把type分成paramtype和returntype
-//            System.out.println("要判断类型");
+
             if (((FunctionType) function.getType()).getRetType().isVoidType()) {
                 builder.buildRet();
-//                System.out.println("类型为空");
+
             } else if (((FunctionType) function.getType()).getRetType().isIntegerType()) {
-                builder.buildRet(builder.buildConstant(0)); // Return 0 by default.
-//                System.out.println("类型为整数");
+                builder.buildRet(builder.buildConstant(0));
+
             }
-            /*else if (function.getType().getRetType().isFloatType()) {
-                builder.buildRet(builder.buildConstant(.0f)); // Return 0.0f by default.
-            }*/
+            else if (((FunctionType) function.getType()).getRetType().isFloatType()) {
+                builder.buildRet(builder.buildConstant(.0f));
+            }
+        }
+        scope.popTable();
+        return null;
+    }
+
+    @Override
+    public Void visitUnaryExp2(SysY2022Parser.UnaryExp2Context ctx) {
+        setBuildFCall(ON);
+        String funcName = ctx.Ident().getText();
+        Value val = scope.getVal(funcName);
+        if (val == null) {
+            throw new RuntimeException("Undefined name: " + funcName + ".");
+        }
+        if (!val.getType().isFunctionType()) {
+            throw new RuntimeException(funcName + " is not a function and cannot be invoked.");
+        }
+        Function func = (Function) val;
+        ArrayList<Value> args = new ArrayList<>();
+        if (ctx.funcRParams() != null) {
+            var argCtxs = ctx.funcRParams().funcRParam();
+            ArrayList<Type> argTypes = ((FunctionType)func.getType()).getParamTypeList();
+            for (int i = 0; i < argCtxs.size(); i++) {
+                var argCtx = argCtxs.get(i);
+                Type typeRequired = argTypes.get(i);
+                visit(argCtx);
+                Value realArg = retVal_;
+                if (!typeRequired.isPointerType() && realArg.getType().isPointerType()) {
+                    realArg = builder.buildLoad(typeRequired, realArg);
+                }
+                if (typeRequired.isPointerType() && realArg.getType().isPointerType()) {
+                    while (realArg.getType() != typeRequired) {
+                        realArg = builder.buildGEP(realArg, new ArrayList<>() {{
+                            add(builder.buildConstant(0) );
+                            add(builder.buildConstant(0));
+                        }});
+                        if (!((PointerType) realArg.getType()).getPointedType().isPointerType()) {
+                            break;
+                        }
+                    }
+                }
+                //需要I1吗？
+                if (typeRequired.isIntegerType() && realArg.getType().isFloatType()) {
+                    realArg = builder.buildFptosi(realArg);
+                }
+                else if (typeRequired.isFloatType() && realArg.getType().isIntegerType()) {
+                    realArg = builder.buildSitofp(realArg);
+                }
+                args.add(realArg);
+            }
         }
 
-        /*
-        Scope out.
-         */
-        scope.popTable();
+        // starttime和stoptime函数？
+        retVal_ = builder.buildCall(func, args);
+        setBuildFCall(OFF);
+        return null;
+    }
 
-        /*
-        Check the function just built.
-         */
-        //先不管checkFunc(builder.getCurFunc());
+    @Override
+    public Void visitUnaryExp3(SysY2022Parser.UnaryExp3Context ctx) {
+        if (this.inConstFolding()) {
+            visit(ctx.unaryExp());
+            switch (getConveyedType()) {
+                case INT -> {
+                    switch (ctx.unaryOp().getText()) {
+                        case "-" -> retInt_ = -retInt_;
+                        case "!" -> retInt_ = (retInt_ == 0) ? 0 : 1;
+                        case "+" -> {}
+                    }
+                }
+                case FLT -> {
+                    switch (ctx.unaryOp().getText()) {
+                        case "-" -> retFloat_ = -retFloat_;
+                        case "!" -> retFloat_ = (retFloat_ == .0f) ? 0 : 1;
+                        case "+" -> {}
+                    }
+                }
+                default -> {}
+            }
+        }
+        else {
+            visit(ctx.unaryExp());
+            if (retVal_.getType().isIntegerType()) {
+                //I1的转换还没写
+                switch (ctx.unaryOp().getText()) {
+                    case "-" -> retVal_ = builder.buildSub(builder.buildConstant(0), retVal_);
+                    //!还没写
+                    case "+" -> {}
+                }
+            }
+            // Float.
+            else {
+                switch (ctx.unaryOp().getText()) {
+                    case "-" -> retVal_ = builder.buildFneg(Instruction.TAG.FNEG, retVal_);
+                    //!还没写
+                    case "+" -> {}
+                }
+            }
+        }
+        return null;
+    }
 
+    @Override
+    public Void visitFuncFParams(SysY2022Parser.FuncFParamsContext ctx) {
+        retTypeList_ = new ArrayList<>();
+        for (SysY2022Parser.FuncFParamContext funcFParamContext : ctx.funcFParam()) {
+            visit(funcFParamContext);
+            retTypeList_.add(retType_);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitScalarFuncFParam(SysY2022Parser.ScalarFuncFParamContext ctx) {
+        switch (ctx.bType().getText()) {
+            case "int" -> retType_ = IntegerType.getType();
+            case "float" -> retType_ = FloatType.getType();
+            default -> throw new RuntimeException("Supported function argument type.");
+        }
         return null;
     }
 
     @Override
     public Void visitBlock(SysY2022Parser.BlockContext ctx) {
-        scope.pushTable(); // Add a new layer of scope (a new symbol table).
+        scope.pushTable();
         ctx.blockItem().forEach(this::visit);
-        scope.popTable(); // Pop it out before exiting the scope.
+        scope.popTable();
         return null;
     }
 
     @Override
     public Void visitScalarLVal(SysY2022Parser.ScalarLValContext ctx) {
-        /*
-        Retrieve the value defined previously from the symbol table.
-         */
         String name = ctx.Ident().getText();
+        isConstantVar = scope.checkVarType(name);
         Value val = scope.getVal(name);
-
-        /*
-        If the value does not exist, report the semantic error.
-         */
         if (val == null) {
             throw new RuntimeException("Undefined value: " + name);
         }
 
-        /*
-        There are two cases for lVal as a grammar symbol:
-        1.  If a lVal can be reduced to a primaryExp,
-            in this case it is a scalar value (IntegerType or FloatType)
-            thus the value can be returned directly, which will then
-            be handled by visitPrimExpr2().
-        2.  Otherwise, a lVal represents a left value,
-            which generates an address (PointerType Value)
-            designating a memory block for assignment.
-         */
-        // Case 1, return directly.
+        //如果这个lval能被表达成primaryexp就直接返回值
         if (val.getType().isIntegerType() || val.getType().isFloatType()) {
             retVal_ = val;
-            return null;
         }
-        // Case 2, return a PointerType Value.
-        if (val.getType().isPointerType()) {
+        //否则返回变量的地址，即一个指针变量
+        else if (val.getType().isPointerType()) {
             Type pointedType = ((PointerType) val.getType()).getPointedType();
-            // i32**: Return i32*.
             if (pointedType.isPointerType()) {
                 retVal_ = builder.buildLoad(pointedType, val);
             }
-            // [2 x i32]*: Return i32*
-//            else if (pointedType.isArrayType()) {
-//                retVal_ = builder.buildGEP(val, new ArrayList<>(){{
-//                    add(builder.buildConstant(0));
-//                    add(builder.buildConstant(0));
-//                }});
-//            }
-            // i32* / float*.
+            //数组的情况先不写
+            //函数的情况？？？？
             else {
-                // Load it up when being a real argument of a function call.
-                // Otherwise, return directly for being a left value.
                 if (inBuildFCall()) {
                     val = builder.buildLoad(pointedType, val);
                 }
                 retVal_ = val;
             }
-            return null;
         }
         return null;
     }
 
     @Override
     public Void visitAssignment(SysY2022Parser.AssignmentContext ctx) {
-        // Retrieve left value (the address to store) by visiting child.
-        // Retrieve the value to be stored by visiting child.
         visit(ctx.lVal());
         Value addr = retVal_;
+        if(isConstantVar){
+            this.isConstantVar = false;
+            throw new RuntimeException("Constant variable "+ctx.getChild(0).getText() +"'s"+" value can not be changed!");
+        }
         visit(ctx.exp());
         Value val = retVal_;
-
-        // Type matching check and implicit type conversions.
         Type destType = ((PointerType) addr.getType()).getPointedType();
         if (destType.isFloatType() && val.getType().isIntegerType()) {
             val = builder.buildSitofp(val);
         } else if (destType.isIntegerType() && val.getType().isFloatType()) {
             val = builder.buildFptosi(val);
         }
-
-        // Build the Store instruction.
         builder.buildStore(val, addr);
         return null;
     }
 
-    /**
-     * stmt : 'return' (expr)? ';'
-     */
     @Override
     public Void visitReturnStmt(ReturnStmtContext ctx) {
-        // If there is an expression component to be returned,
-        // visit child to retrieve it.
         if (ctx.exp() != null) {
             visit(ctx.exp());
-
-            // Return type matching check and conversion.
             Value retVal = retVal_;
-            Type retType = ((FunctionType) builder.getCurFunc().getType()).getRetType(); // The return type defined in the prototype.builder.getCurFunc().getType().getRetType()
+            Type retType = ((FunctionType) builder.getCurFunc().getType()).getRetType();
             if (retVal.getType().isIntegerType() && retType.isFloatType()) {
                 retVal = builder.buildSitofp(retVal);
             } else if (retVal.getType().isFloatType() && retType.isIntegerType()) {
                 retVal = builder.buildFptosi(retVal);
             }
-
             builder.buildRet(retVal);
         }
-        // If not, return void.
         else {
             builder.buildRet();
         }
-        // Add a dead block for possible remaining dead code.
-//        builder.buildBB("_FOLLOWING_BLK");
         return null;
     }
 
-    @Override
-    public Void visitConstExp(SysY2022Parser.ConstExpContext ctx) {
-        visit(ctx.addExp());
-        Value lOp = retVal_;
-        retVal_ = lOp;
-        return null;
-    }
 
     @Override
     public Void visitAdd2(SysY2022Parser.Add2Context ctx) {
-        /*
-        Global expression: Compute value of the expr w/o instruction generation.
-         */
         if (this.inConstFolding()) {
+            visit(ctx.addExp());
+            switch(getConveyedType()){
+                case INT->{
+                    int lop = retInt_;
+                    visit(ctx.mulExp());
+                    switch(getConveyedType()){
+                        case INT->{
+                            int rop = retInt_;
+                            if(ctx.getChild(1).getText() =="+") {
+                                retInt_ = lop + rop;
+                                setConveyedType(DataType.INT);
+                            }
+                            else if(ctx.getChild(1).getText() =="-") {
+                                retInt_ = lop - rop;
+                                setConveyedType(DataType.INT);
+                            }
+                        }
+                        case FLT->{
+                            float rop = retFloat_;
+                            if(ctx.getChild(1).getText() =="+") {
+                                retFloat_ = (float)lop + rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                            else if(ctx.getChild(1).getText() =="-") {
+                                retFloat_ = (float)lop - rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                        }
+                    }
+                }
+                case FLT->{
+                    float lop = retFloat_;
+                    visit(ctx.mulExp());
+                    switch(getConveyedType()){
+                        case INT->{
+                            int rop = retInt_;
+                            if(ctx.getChild(1).getText() =="+") {
+                                retFloat_ = lop + (float)rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                            else if(ctx.getChild(1).getText() =="-") {
+                                retFloat_ = lop - (float)rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                        }
+                        case FLT->{
+                            float rop = retFloat_;
+                            if(ctx.getChild(1).getText() =="+") {
+                                retFloat_ = lop + rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                            else if(ctx.getChild(1).getText() =="-") {
+                                retFloat_ = lop - rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        /*
-        Local expression: Instructions will be generated.
-         */
         else {
-            // Retrieve the 1st mulExp (as the left operand) by visiting child.
             visit(ctx.addExp());
             Value lOp = retVal_;
-
-            // The 2nd and possibly more MulExp.
-            // Retrieve the next mulExp (as the right operand) by visiting child.
             visit(ctx.mulExp());
             Value rOp = retVal_;
-
-            // Check if the lOp/rOp is a pointer. if it is, load it up.
+            //如果是指针类型先load出来；
             if (lOp.getType().isPointerType()) {
                 lOp = builder.buildLoad(((PointerType) lOp.getType()).getPointedType(), lOp);
             }
             if (rOp.getType().isPointerType()) {
                 rOp = builder.buildLoad(((PointerType) rOp.getType()).getPointedType(), rOp);
             }
-
-
-            // Auto type promotion. (i1 -> i32, i32 -> float)
-           /* if (lOp.getType().isI1()) {
-                lOp = builder.buildZExt(lOp);
-            }
-            if (rOp.getType().isI1()) {
-                rOp = builder.buildZExt(rOp);
-            }*/
+            //类型转换
+            //I1的转换暂时没写
             if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
                 lOp = builder.buildSitofp(lOp);
             } else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
                 rOp = builder.buildSitofp(rOp);
             }
-
-            // Generate an instruction to compute result of left and right operands
-            // as the new left operand for the next round.
             switch (ctx.getChild(1).getText()) {
                 case "+" -> lOp = builder.buildAdd(lOp, rOp);
                 case "-" -> lOp = builder.buildSub(lOp, rOp);
@@ -495,111 +531,174 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             }
             retVal_ = lOp;
         }
-
         return null;
     }
 
+
+
+
     @Override
     public Void visitMul2(SysY2022Parser.Mul2Context ctx) {
-        /*
-        Global expression: Compute value of the expr w/o instruction generation.
-         */
         if (this.inConstFolding()) {
+            visit(ctx.mulExp());
+            switch(getConveyedType()){
+                case INT->{
+                    int lop = retInt_;
+                    visit(ctx.unaryExp());
+                    switch(getConveyedType()){
+                        case INT->{
+                            int rop = retInt_;
+                            if(ctx.getChild(1).getText() =="*") {
+                                retInt_ = lop * rop;
+                                setConveyedType(DataType.INT);
+                            }
+                            else if(ctx.getChild(1).getText() =="/") {
+                                retInt_ = lop / rop;
+                                setConveyedType(DataType.INT);
+                            }
+                            else if(ctx.getChild(1).getText() =="%") {
+                                retInt_ = lop % rop;
+                                setConveyedType(DataType.INT);
+                            }
+                        }
+                        case FLT->{
+                            float rop = retFloat_;
+                            if(ctx.getChild(1).getText() =="*") {
+                                retFloat_ = (float)lop * rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                            else if(ctx.getChild(1).getText() =="/") {
+                                retFloat_ = (float)lop / rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                            else if(ctx.getChild(1).getText() =="%"){
+                                throw new RuntimeException("Float number can not use operator %!!");
+                            }
+                        }
+                    }
+                }
+                case FLT->{
+                    float lop = retFloat_;
+                    visit(ctx.unaryExp());
+                    switch(getConveyedType()){
+                        case INT->{
+                            int rop = retInt_;
+                            if(ctx.getChild(1).getText() =="*") {
+                                retFloat_ = lop * (float)rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                            else if(ctx.getChild(1).getText() =="/") {
+                                retFloat_ = lop / (float)rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                            else if(ctx.getChild(1).getText() =="%"){
+                                throw new RuntimeException("Float number can not use operator %!!");
+                            }
+                        }
+                        case FLT->{
+                            float rop = retFloat_;
+                            if(ctx.getChild(1).getText() =="*") {
+                                retFloat_ = lop * rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                            else if(ctx.getChild(1).getText() =="/") {
+                                retFloat_ = lop / rop;
+                                setConveyedType(DataType.FLT);
+                            }
+                            else if(ctx.getChild(1).getText() =="%"){
+                                throw new RuntimeException("Float number can not use operator %!!");
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        /*
-        Local expression: Instructions will be generated.
-         */
         else {
-            // Retrieve the 1st mulExp (as the left operand) by visiting child.
             visit(ctx.mulExp());
-            Value lOp = retVal_;
-
-            // The 2nd and possibly more MulExp.
-            // Retrieve the next mulExp (as the right operand) by visiting child.
+            Value lop = retVal_;
             visit(ctx.unaryExp());
-            Value rOp = retVal_;
-
-            // Check if the lOp/rOp is a pointer. if it is, load it up.
-            if (lOp.getType().isPointerType()) {
-                lOp = builder.buildLoad(((PointerType) lOp.getType()).getPointedType(), lOp);
+            Value rop = retVal_;
+            if (lop.getType().isPointerType()) {
+                lop = builder.buildLoad(((PointerType) lop.getType()).getPointedType(), lop);
             }
-            if (rOp.getType().isPointerType()) {
-                rOp = builder.buildLoad(((PointerType) rOp.getType()).getPointedType(), rOp);
+            if (rop.getType().isPointerType()) {
+                rop = builder.buildLoad(((PointerType) rop.getType()).getPointedType(), rop);
             }
-
-
-            // Auto type promotion. (i1 -> i32, i32 -> float)
-           /* if (lOp.getType().isI1()) {
-                lOp = builder.buildZExt(lOp);
+            //I1的转换还没写。
+            if (lop.getType().isIntegerType() && rop.getType().isFloatType()) {
+                lop = builder.buildSitofp(lop);
+            } else if (lop.getType().isFloatType() && rop.getType().isIntegerType()) {
+                rop = builder.buildSitofp(rop);
             }
-            if (rOp.getType().isI1()) {
-                rOp = builder.buildZExt(rOp);
-            }*/
-            if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
-                lOp = builder.buildSitofp(lOp);
-            } else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
-                rOp = builder.buildSitofp(rOp);
-            }
-
-            // Generate an instruction to compute result of left and right operands
-            // as the new left operand for the next round.
             switch (ctx.getChild(1).getText()) {
-                case "*" -> lOp = builder.buildMul(lOp, rOp);
-                case "/" -> lOp = builder.buildDiv(lOp, rOp);
-                //还差一个%运算
+                case "*" -> lop = builder.buildMul(lop, rop);
+                case "/" -> lop = builder.buildDiv(lop, rop);
+                case "%" -> {
+                    if(lop.getType().isIntegerType()&&rop.getType().isIntegerType()) {
+                        Value tmp = lop;
+                        lop = builder.buildDiv(lop, rop);
+                        lop = builder.buildMul(lop, rop);
+                        lop = builder.buildSub(tmp, rop);
+                    }
+                    else {
+                        throw new RuntimeException("Float number can not use operator %!!");
+                    }
+                }
                 default -> {
                 }
             }
-            retVal_ = lOp;
+            retVal_ = lop;
         }
-
         return null;
     }
 
     @Override
     public Void visitPrimaryExp2(SysY2022Parser.PrimaryExp2Context ctx) {
-
-        visit(ctx.lVal());
-        // If it's not in a function call,
-        // load the memory block pointed by the PointerType Value retrieved from lVal.
-        if (!inBuildFCall() && retVal_.getType().isPointerType()) {
-            Type pointedType = ((PointerType) retVal_.getType()).getPointedType();
-            retVal_ = builder.buildLoad(pointedType, retVal_);
+        if (this.inConstFolding()) {
+            visit(ctx.lVal());
+            if (retVal_.getType().isIntegerType()) {
+                retInt_ = ((Constant.ConstantInt) retVal_).getVal();
+                setConveyedType(DataType.INT);
+            }
+            else if (retVal_.getType().isFloatType()) {
+                retFloat_ = ((Constant.ConstantFloat) retVal_).getVal();
+                setConveyedType(DataType.FLT);
+            }
+            else {
+                throw new RuntimeException("Unsupported folding type: " + retVal_.getType());
+            }
         }
+        else{
+            visit(ctx.lVal());
+            if (!inBuildFCall() && retVal_.getType().isPointerType()) {
+                Type pointedType = ((PointerType) retVal_.getType()).getPointedType();
+                retVal_ = builder.buildLoad(pointedType, retVal_);
+            }
 
-
+        }
         return null;
     }
 
     @Override
     public Void visitNumber(SysY2022Parser.NumberContext ctx) {
-
         if (ctx.IntConst() != null) {
             int ret = 0;
             ret = new BigInteger(ctx.IntConst().getText(), 10).intValue();
             setConveyedType(DataType.INT);
             retInt_ = ret;
+            if (!this.inConstFolding()) {
+                retVal_ = builder.buildConstant(retInt_);
+            }
         } else {
             float ret = Float.parseFloat(ctx.getChild(0).getText());
             setConveyedType(DataType.FLT);
             retFloat_ = ret;
-        }
-
-        //我觉得这应该访问子节点 判断那个数是啥
-        //然后把retInt_ set成那个数
-        //然后这再build进去就行了
-        if (!this.inConstFolding()) {
-            switch (getConveyedType()) {
-                case INT -> retVal_ = builder.buildConstant(retInt_);
-                case FLT -> retVal_ = builder.buildConstant(retFloat_);
+            if (!this.inConstFolding()) {
+                retVal_ = builder.buildConstant(retFloat_);
             }
         }
-
-
         return null;
     }
 
-
-    private enum DataType {FLT, INT}
 }
