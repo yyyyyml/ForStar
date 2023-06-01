@@ -1,4 +1,3 @@
-import ast.Emitter;
 import ast.Visitor;
 import backend.RISCBuilder;
 import backend.RISCEmitter;
@@ -70,9 +69,9 @@ public class Compiler {
         Visitor visitor = new Visitor(module);
         visitor.visit(ast);
 
-        // 生成LLVM IR
-        Emitter emitter = new Emitter(midOutputFile);
-        emitter.emit(module);
+//        // 生成LLVM IR
+//        Emitter emitter = new Emitter(midOutputFile);
+//        emitter.emit(module);
 
         // 运行IR优化
         PassDriver passDriver = new PassDriver();
