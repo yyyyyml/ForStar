@@ -1,4 +1,3 @@
-import ast.Emitter;
 import ast.Visitor;
 import backend.RISCBuilder;
 import backend.RISCEmitter;
@@ -14,7 +13,7 @@ import pass.PassDriver;
 
 import java.io.IOException;
 
-public class compiler {
+public class Compiler {
     public static void main(String[] args) {
         if (args.length < 2) {
             System.out.println("Usage: compiler <inputFile> [-S] [-o <outputFile>]");
@@ -70,9 +69,9 @@ public class compiler {
         Visitor visitor = new Visitor(module);
         visitor.visit(ast);
 
-        // 生成LLVM IR
-        Emitter emitter = new Emitter(midOutputFile);
-        emitter.emit(module);
+//        // 生成LLVM IR
+//        Emitter emitter = new Emitter(midOutputFile);
+//        emitter.emit(module);
 
         // 运行IR优化
         PassDriver passDriver = new PassDriver();
