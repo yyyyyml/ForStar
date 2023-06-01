@@ -17,7 +17,7 @@ import pass.PassDriver;
 
 public class demoMain {
     public static void main(String[] args) throws Exception {
-        CharStream inputFile = CharStreams.fromFileName("src/main/java/testcase.sysy");
+        CharStream inputFile = CharStreams.fromFileName("src/main/java/testcase.sy");
         System.out.println(inputFile.toString()); // Test content read in.
 
         // lexical analysis
