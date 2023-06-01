@@ -1,6 +1,6 @@
-@g = dso_local global i32 0 
-@h = dso_local global float 0.0 
-@i = dso_local global i32 0 
+@g = dso_local global i32 9
+@h = dso_local global float 8.7
+@i = dso_local global i32 0
 define dso_local i32 @main(){
 	%1 = alloca float
 	%2 = alloca float

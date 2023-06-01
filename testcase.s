@@ -42,9 +42,9 @@ main:
 .F1
 	.word	1085695590
 g
-	.word	0
+	.word	9
 h
-	.word	0
+	.word	1091253043
 i
 	.word	0
 	.ident	"ForStar"
