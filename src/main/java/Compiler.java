@@ -21,14 +21,18 @@ public class Compiler {
             return;
         }
 
-        String inputFile = args[0];
+        String inputFile = args[3];
         String midOutputFile = "testcase.ll";
         String outputFile = "testcase.s";
         boolean emitAssembly;
         boolean isPass = false;
 
         // 处理命令行参数
-        for (int i = 1; i < args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
+            if (i == 3) {
+                inputFile = args[i];
+                continue;
+            }
             if (args[i].equals("-S")) {
                 emitAssembly = true;
             } else if (args[i].equals("-o")) {
@@ -39,7 +43,7 @@ public class Compiler {
                     System.out.println("Error: Output file not specified");
                     return;
                 }
-            } else if (args[i].equals("-O1")) {
+            } else if (args[i].equals("-O2")) {
                 isPass = true;
                 System.out.println("加入优化");
             } else {
