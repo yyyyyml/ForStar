@@ -37,13 +37,16 @@ public class RISCEmitter {
 
         System.out.println(out);
 
-        try {
-            FileWriter fw = new FileWriter(outputName);
-            fw.append(out);
-            fw.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (outputName != null) {
+            try {
+                FileWriter fw = new FileWriter(outputName);
+                fw.append(out);
+                fw.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+
     }
 
 }

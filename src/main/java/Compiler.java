@@ -16,41 +16,54 @@ import java.io.IOException;
 
 public class Compiler {
     public static void main(String[] args) {
-        if (args.length < 2) {
-            System.out.println("Usage: compiler <inputFile> [-S] [-o <outputFile>]");
-            return;
-        }
+        // -emit-llvm testcase.ll testcase.sy
+        // -S -o testcase.s testcase.sy
 
-        String inputFile = args[3];
-        String midOutputFile = "testcase.ll";
+        String inputFile = "";
+        String midOutputFile = "";
         String outputFile = "testcase.s";
         boolean emitAssembly;
         boolean isPass = false;
 
         // 处理命令行参数
-        for (int i = 0; i < args.length; i++) {
-            if (i == 3) {
-                inputFile = args[i];
-                continue;
-            }
-            if (args[i].equals("-S")) {
-                emitAssembly = true;
-            } else if (args[i].equals("-o")) {
-                if (i + 1 < args.length) {
-                    outputFile = args[i + 1];
-                    i++; // 跳过下一个参数
+        if (args[0].equals("-S")) {
+            for (int i = 0; i < args.length; i++) {
+                if (i == 3) {
+                    inputFile = args[i];
+                    continue;
+                }
+                if (args[i].equals("-S")) {
+                    emitAssembly = true;
+                } else if (args[i].equals("-o")) {
+                    if (i + 1 < args.length) {
+                        outputFile = args[i + 1];
+                        i++; // 跳过下一个参数
+                    } else {
+                        System.out.println("Error: Output file not specified");
+                        return;
+                    }
+                } else if (args[i].equals("-O2")) {
+                    isPass = true;
+                    System.out.println("加入优化");
                 } else {
-                    System.out.println("Error: Output file not specified");
+                    System.out.println("Error: Invalid argument: " + args[i]);
                     return;
                 }
-            } else if (args[i].equals("-O2")) {
-                isPass = true;
-                System.out.println("加入优化");
-            } else {
-                System.out.println("Error: Invalid argument: " + args[i]);
-                return;
             }
+
+            // 将midOutputFile设置为输入文件名的基础上加上.ll扩展名
+            String baseName = inputFile.substring(0, inputFile.lastIndexOf('.'));
+            midOutputFile = baseName + ".ll";
+
+        } else if (args[0].equals("-emit-llvm")) {
+            midOutputFile = args[1];
+            inputFile = args[2];
+            outputFile = null;
+        } else {
+            System.out.println("Error: Invalid argument in -emit-llvm");
+            return;
         }
+
 
         // 读取输入文件
         CharStream input;
