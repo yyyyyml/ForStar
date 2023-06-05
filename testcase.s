@@ -5,21 +5,25 @@
 	.global	fun1
 	.type	fun1	@function
 fun1:
-	addi sp,sp,-56
-	sd ra,48(sp)
-	sd s0,40(sp)
-	addi s0,sp,56
-	sw a0,-52(s0)
-	sw a1,-48(s0)
-	sw a2,-44(s0)
-	sw a3,-40(s0)
-	sw a4,-36(s0)
-	sw a5,-32(s0)
-	sw a6,-28(s0)
-	sw a7,-24(s0)
+	addi sp,sp,-60
+	sd ra,52(sp)
+	sd s0,44(sp)
+	addi s0,sp,60
+	sw a0,-56(s0)
+	sw a1,-52(s0)
+	sw a2,-48(s0)
+	sw a3,-44(s0)
+	sw a4,-40(s0)
+	sw a5,-36(s0)
+	sw a6,-32(s0)
+	sw a7,-28(s0)
 	lw t0,0(sp)
+	sw t0,-24(s0)
+	lw t0,8(sp)
 	sw t0,-20(s0)
-	lw t0,-52(s0)
+	lw t0,-56(s0)
+	lw t1,-52(s0)
+	addw t0,t0,t1
 	lw t1,-48(s0)
 	addw t0,t0,t1
 	lw t1,-44(s0)
@@ -34,33 +38,35 @@ fun1:
 	addw t0,t0,t1
 	lw t1,-24(s0)
 	addw t0,t0,t1
-	lw t1,-20(s0)
-	addw t0,t0,t1
 	mv a0,t0
-	ld ra,48(sp)
-	ld s0,40(sp)
-	addi sp,sp,56
+	ld ra,52(sp)
+	ld s0,44(sp)
+	addi sp,sp,60
 	jr ra
 	.size	fun1, -fun1
 	.align	1
 	.global	fun2
 	.type	fun2	@function
 fun2:
-	addi sp,sp,-56
-	sd ra,48(sp)
-	sd s0,40(sp)
-	addi s0,sp,56
-	fsw f10,-52(s0)
-	fsw f11,-48(s0)
-	fsw f12,-44(s0)
-	fsw f13,-40(s0)
-	fsw f14,-36(s0)
-	fsw f15,-32(s0)
-	fsw f16,-28(s0)
-	fsw f17,-24(s0)
+	addi sp,sp,-60
+	sd ra,52(sp)
+	sd s0,44(sp)
+	addi s0,sp,60
+	fsw f10,-56(s0)
+	fsw f11,-52(s0)
+	fsw f12,-48(s0)
+	fsw f13,-44(s0)
+	fsw f14,-40(s0)
+	fsw f15,-36(s0)
+	fsw f16,-32(s0)
+	fsw f17,-28(s0)
 	flw f0,0(sp)
+	fsw f0,-24(s0)
+	flw f0,8(sp)
 	fsw f0,-20(s0)
-	flw f0,-52(s0)
+	flw f0,-56(s0)
+	flw f1,-52(s0)
+	fadd.s f0,f0,f1
 	flw f1,-48(s0)
 	fadd.s f0,f0,f1
 	flw f1,-44(s0)
@@ -75,22 +81,24 @@ fun2:
 	fadd.s f0,f0,f1
 	flw f1,-24(s0)
 	fadd.s f0,f0,f1
-	flw f1,-20(s0)
-	fadd.s f0,f0,f1
 	mv a0,f0
-	ld ra,48(sp)
-	ld s0,40(sp)
-	addi sp,sp,56
+	ld ra,52(sp)
+	ld s0,44(sp)
+	addi sp,sp,60
 	jr ra
 	.size	fun2, -fun2
 	.align	1
 	.global	main
 	.type	main	@function
 main:
-	addi sp,sp,-108
-	sd ra,100(sp)
-	sd s0,92(sp)
-	addi s0,sp,108
+	addi sp,sp,-116
+	sd ra,108(sp)
+	sd s0,100(sp)
+	addi s0,sp,116
+	li t0,4
+	sw t0,-112(s0)
+	li t0,3
+	sw t0,-108(s0)
 	li t0,4
 	sw t0,-104(s0)
 	li t0,3
@@ -103,44 +111,45 @@ main:
 	sw t0,-88(s0)
 	li t0,3
 	sw t0,-84(s0)
-	li t0,4
+	li t0,3
 	sw t0,-80(s0)
 	li t0,3
 	sw t0,-76(s0)
-	li t0,3
-	sw t0,-72(s0)
 	lla t0,g
 	lw t1,0(t0)
-	lw t0,-100(s0)
+	lw t0,-108(s0)
 	mulw t1,t1,t0
 	li t0,2
 	addw t0,t0,t1
 	lla t1,i
 	lw t2,0(t1)
 	addw t0,t0,t2
-	sw t0,-68(s0)
+	sw t0,-72(s0)
 	lla t0,.F0
+	flw f0,0(t0)
+	fsw f0,-68(s0)
+	lla t0,.F1
 	flw f0,0(t0)
 	fsw f0,-64(s0)
-	lla t0,.F1
+	lla t0,.F0
 	flw f0,0(t0)
 	fsw f0,-60(s0)
-	lla t0,.F0
+	lla t0,.F1
 	flw f0,0(t0)
 	fsw f0,-56(s0)
-	lla t0,.F1
+	lla t0,.F0
 	flw f0,0(t0)
 	fsw f0,-52(s0)
-	lla t0,.F0
+	lla t0,.F1
 	flw f0,0(t0)
 	fsw f0,-48(s0)
-	lla t0,.F1
-	flw f0,0(t0)
-	fsw f0,-44(s0)
 	lla t0,.F0
 	flw f0,0(t0)
-	fsw f0,-40(s0)
+	fsw f0,-44(s0)
 	lla t0,.F1
+	flw f0,0(t0)
+	fsw f0,-40(s0)
+	lla t0,.F2
 	flw f0,0(t0)
 	fsw f0,-36(s0)
 	lla t0,.F2
@@ -152,32 +161,34 @@ main:
 	lw t1,0(t0)
 	fadd.s f0,f0,f1
 	fsw f0,-28(s0)
-	lw a0,-104(s0)
-	lw a1,-100(s0)
-	lw a2,-96(s0)
-	lw a3,-92(s0)
-	lw a4,-88(s0)
-	lw a5,-84(s0)
-	lw a6,-80(s0)
-	lw a7,-76(s0)
-	lw 0(sp),-72(s0)
+	lw a0,-112(s0)
+	lw a1,-108(s0)
+	lw a2,-104(s0)
+	lw a3,-100(s0)
+	lw a4,-96(s0)
+	lw a5,-92(s0)
+	lw a6,-88(s0)
+	lw a7,-84(s0)
+	lw 0(sp),-80(s0)
+	lw 8(sp),-76(s0)
 	call fun1
 	sw a0,-24(s0)
-	flw f10,-64(s0)
-	flw f11,-60(s0)
-	flw f12,-56(s0)
-	flw f13,-52(s0)
-	flw f14,-48(s0)
-	flw f15,-44(s0)
-	flw f16,-40(s0)
-	flw f17,-36(s0)
-	flw 0(sp),-32(s0)
+	flw f10,-68(s0)
+	flw f11,-64(s0)
+	flw f12,-60(s0)
+	flw f13,-56(s0)
+	flw f14,-52(s0)
+	flw f15,-48(s0)
+	flw f16,-44(s0)
+	flw f17,-40(s0)
+	flw 0(sp),-36(s0)
+	flw 8(sp),-32(s0)
 	call fun2
 	fsw f0,-20(s0)
 	li a0,0
-	ld ra,100(sp)
-	ld s0,92(sp)
-	addi sp,sp,108
+	ld ra,108(sp)
+	ld s0,100(sp)
+	addi sp,sp,116
 	jr ra
 	.size	main, -main
 .F0

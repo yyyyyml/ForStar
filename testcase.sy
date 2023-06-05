@@ -1,10 +1,10 @@
 int g = 1;
 float h = 8.7;
 int i;
-int fun1(int a, int b, int c, int d, int e, int f, int g, int h, int i) {
+int fun1(int a, int b, int c, int d, int e, int f, int g, int h, int i, int j) {
     return a+b+c+d+e+f+g+h+i;
 }
-float fun2(float a, float b, float c, float d, float e, float f, float g, float h, float i) {
+float fun2(float a, float b, float c, float d, float e, float f, float g, float h, float i, float j) {
     return a+b+c+d+e+f+g+h+i;
 }
 int main(){
@@ -17,6 +17,7 @@ int main(){
     int g1 = 4;
     int h1 = 3;
     int i1 = 3;
+    int j1 = 3;
     int a = 2 + g * b1 + i;
     float a2 = 5.0;
     float b2 = 5.7;
@@ -27,8 +28,9 @@ int main(){
     float g2 = 5.0;
     float h2 = 5.7;
     float i2 = 5.2;
+    float j2 = 5.2;
     float e = h + g;
-    int result1 = fun1(a1, b1, c1, d1, e1, f1, g1, h1, i1);
-    float result2 = fun2(a2, b2, c2, d2, e2, f2, g2, h2, i2);
+    int result1 = fun1(a1, b1, c1, d1, e1, f1, g1, h1, i1, j1);
+    float result2 = fun2(a2, b2, c2, d2, e2, f2, g2, h2, i2, j2);
     return 0;
 }
