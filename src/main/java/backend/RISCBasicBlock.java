@@ -14,7 +14,7 @@ import util.IList;
 import java.util.LinkedList;
 
 public class RISCBasicBlock {
-    public int operandIndex = 0;
+    public int parameterStackCount = 0;
     private LinkedList<RISCInstruction> instructionList = new LinkedList<>();
     private Function irFunction;
     private RISCFunction riscFunction;
@@ -87,7 +87,47 @@ public class RISCBasicBlock {
     }
 
     private void translateCall(Instruction curInst) {
-        operandIndex = 0;
+        int paraCount = curInst.getNumOP() - 1;
+        for (int i = 0; i <= paraCount; i++) {
+            Value v = curInst.getOperandAt(i);
+            if (v instanceof Constant) {
+                RISCOperand dst = getOperand(v);
+                if (v.getType().isIntegerType()) {
+                    int val = ((Constant.ConstantInt) v).getVal();
+                    RISCOperand temp = new Immediate(val);
+                    if (dst instanceof Register) {
+                        LiInstruction li = new LiInstruction(dst, temp);
+                        instructionList.add(li);
+                    } else if (dst instanceof Memory) {
+                        VirtualRegister vr = getNewVr();
+                        LiInstruction li = new LiInstruction(vr, temp);
+                        instructionList.add(li);
+                        SwInstruction sw = new SwInstruction(vr, dst);
+                        instructionList.add(sw);
+                    }
+
+                } else if (v.getType().isFloatType()) {
+                    Float f = ((Constant.ConstantFloat) v).getVal();
+                    //进下面这个函数找浮点数，没有会生成
+                    String fbName = riscFunction.riscModule.getFloatBlockName(f);
+                    VirtualRegister vr = getNewVr();
+                    MyString ms = new MyString(fbName);
+                    LlaInstruction lla = new LlaInstruction(vr, ms);
+                    instructionList.add(lla);
+                    Memory mem = new Memory(0, vr);
+                    FloatVirtualRegister fvr = getNewFvr();
+                    FlwInstruction flw = new FlwInstruction(fvr, mem);
+                    instructionList.add(flw);
+                    if (dst instanceof Register) {
+                        FmvInstruction fmv = new FmvInstruction(dst, fvr);
+                        instructionList.add(fmv);
+                    } else if (dst instanceof Memory) {
+                        FsdInstruction fsd = new FsdInstruction(fvr, dst);
+                        instructionList.add(fsd);
+                    }
+                }
+            }
+        }
         String funcName = curInst.getOperandAt(0).getName();
         CallInstruction call1 = new CallInstruction(funcName);
         instructionList.add(call1);
@@ -187,14 +227,17 @@ public class RISCBasicBlock {
         } else if (temp1 instanceof FloatVirtualRegister) {
             riscFunction.valueFloatVrMap.put(curInst, (FloatVirtualRegister) temp1);
         }
+        if (riscFunction.funcParameters.containsKey(curInst)) {
+            MvInstruction mv = new MvInstruction(dst, temp1);
+            instructionList.add(mv);
+        }
 
     }
 
 
 
     private void translateLoad(Instruction curInst) {
-        // 判断为正常的load
-        if (true) {
+
             if (curInst.getType() == Type.IntegerType.getType()) {
                 Value op1 = curInst.getOperandAt(0);
                 RISCOperand src = getOperand(op1);
@@ -217,56 +260,68 @@ public class RISCBasicBlock {
                     ;
                 }
             }
-        }
-        //判断为传递参数的load
-        else if (false) {
-            Value op1 = curInst.getOperandAt(0);
-            RISCOperand src = getOperand(op1);
-            if (operandIndex < 8) {
-                RISCOperand dst = new RealRegister(allocAReg(operandIndex++));
-                if (src instanceof Memory) {
-                    LwInstruction lw1 = new LwInstruction(dst, src);
-                    instructionList.add(lw1);
-                } else if (src instanceof Register) {
-                    MvInstruction mv1 = new MvInstruction(dst, src);
-                    instructionList.add(mv1);
-                }
 
-            } else {
-                RISCOperand dst = new Memory((operandIndex - 8) * 8, 2);
 
-                SdInstruction sd1 = new SdInstruction(src, dst);
-                instructionList.add(sd1);
-                riscFunction.operandStackCounts = Math.max(operandIndex - 8, riscFunction.operandStackCounts);
-                operandIndex++;
-            }
-
-        }
+        //弃用
+//        //判断为传递参数的load
+//        else if (false) {
+//            Value op1 = curInst.getOperandAt(0);
+//            RISCOperand src = getOperand(op1);
+//            if (operandIndex < 8) {
+//                RISCOperand dst = new RealRegister(allocAReg(operandIndex++));
+//                if (src instanceof Memory) {
+//                    LwInstruction lw1 = new LwInstruction(dst, src);
+//                    instructionList.add(lw1);
+//                } else if (src instanceof Register) {
+//                    MvInstruction mv1 = new MvInstruction(dst, src);
+//                    instructionList.add(mv1);
+//                }
+//
+//            } else {
+//                RISCOperand dst = new Memory((operandIndex - 8) * 8, 2);
+//
+//                SdInstruction sd1 = new SdInstruction(src, dst);
+//                instructionList.add(sd1);
+//                riscFunction.operandStackCounts = Math.max(operandIndex - 8, riscFunction.operandStackCounts);
+//                operandIndex++;
+//            }
+//
+//        }
     }
 
     private void translateStore(Instruction curInst) {
         Value op1 = curInst.getOperandAt(0);
         Value op2 = curInst.getOperandAt(1);
+        RISCOperand rop1 = getOperand(op1);
+        RISCOperand rop2 = getOperand(op2);
         if (op1 instanceof Constant.ConstantInt) {
-            RISCOperand rop1 = getOperand(op1);
-            RISCOperand rop2 = getOperand(op2);
             VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++);
             LiInstruction li1 = new LiInstruction(vr, rop1);
             instructionList.add(li1);
             SwInstruction sw1 = new SwInstruction(vr, rop2);
             instructionList.add(sw1);
-
-
-        } else if (op1.getType() == Type.IntegerType.getType()) {
-            RISCOperand rOp1 = getOperand(op1);
-            RISCOperand rop2 = getOperand(op2);
-            SwInstruction sw1 = new SwInstruction(rOp1, rop2);
-            instructionList.add(sw1);
-        } else if (op1.getType() == Type.FloatType.getType()) {
-            RISCOperand rOp1 = getOperand(op1);
-            RISCOperand rop2 = getOperand(op2);
-            FswInstruction fsw = new FswInstruction(rOp1, rop2);
-            instructionList.add(fsw);
+        } else if (rop1 instanceof Register) {
+            if (op1.getType() == Type.IntegerType.getType()) {
+                SwInstruction sw1 = new SwInstruction(rop1, rop2);
+                instructionList.add(sw1);
+            } else if (op1.getType() == Type.FloatType.getType()) {
+                FswInstruction fsw = new FswInstruction(rop1, rop2);
+                instructionList.add(fsw);
+            }
+        } else if (rop1 instanceof Memory) {
+            if (op1.getType() == Type.IntegerType.getType()) {
+                VirtualRegister vr = getNewVr();
+                LwInstruction lw1 = new LwInstruction(vr, rop1);
+                instructionList.add(lw1);
+                SwInstruction sw = new SwInstruction(vr, rop2);
+                instructionList.add(sw);
+            } else if (op1.getType() == Type.FloatType.getType()) {
+                FloatVirtualRegister fvr = getNewFvr();
+                FlwInstruction flw = new FlwInstruction(fvr, rop1);
+                instructionList.add(flw);
+                FswInstruction fsw = new FswInstruction(fvr, rop2);
+                instructionList.add(fsw);
+            }
         }
     }
 
@@ -314,6 +369,7 @@ public class RISCBasicBlock {
         StringBuffer vName = new StringBuffer(value.getName());
         vName.deleteCharAt(0);
         String valueName = new String(vName);
+        //判断为全局变量
         if (value instanceof GlobalVariable) {
             if (riscFunction.riscModule.GlobalVarMap.containsKey((GlobalVariable) value)) {
                 VirtualRegister vr = getNewVr();
@@ -323,8 +379,42 @@ public class RISCBasicBlock {
                 return new Memory(0, vr);
             } else {
                 throw new RuntimeException("哈哈哈哈哈，你又出BUG了\n");
-
-
+            }
+        }
+        //判断为call中的参数
+        else if (riscFunction.funcParameters.containsKey(value)) {
+            int opeIndex = riscFunction.funcParameters.get(value);
+            if (opeIndex < 8) {
+                if (value.getType().isIntegerType()) {
+                    RISCOperand reg = new RealRegister(allocAReg(opeIndex));
+                    return reg;
+                } else {
+                    //fa0 = f10
+                    RISCOperand reg = new FloatRealRegister(opeIndex + 10);
+                    return reg;
+                }
+            }
+            //超出部分放栈里
+            else {
+                RISCOperand mem = new Memory((opeIndex - 8) * 8, 2);
+                return mem;
+            }
+        } else if (riscFunction.myfuncParameters.containsKey(value)) {
+            int myPIndex = riscFunction.myfuncParameters.get(value);
+            if (myPIndex < 8) {
+                if (value.getType().isIntegerType()) {
+                    RISCOperand reg = new RealRegister(allocAReg(myPIndex));
+                    return reg;
+                } else {
+                    //fa0 = f10
+                    RISCOperand reg = new FloatRealRegister(myPIndex + 10);
+                    return reg;
+                }
+            }
+            //超出部分放栈里
+            else {
+                RISCOperand mem = new Memory((myPIndex - 8) * 8, 2);
+                return mem;
             }
         } else if (value.getType().isFloatType()) {
             if (value instanceof Constant) {
@@ -359,21 +449,23 @@ public class RISCBasicBlock {
                 return riscFunction.valueMemoryHashMap.get(value);
             } else if (riscFunction.valueRISCOperandHashMap.containsKey(value)) {
                 return riscFunction.valueRISCOperandHashMap.get(value);
-            } else if (Integer.parseInt(valueName) < riscFunction.parameterSize) {
-
-                int vname = Integer.parseInt(valueName);
-                System.out.println(vname);
-                if (vname <= 8) {
-                    RealRegister reg = new RealRegister(allocAReg(vname));
-                    return reg;
-                } else {
-                    VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++);
-                    LdInstruction ld1 = new LdInstruction(vr, new Memory(((8 - vname) * 8), 2));
-                    instructionList.add(ld1);
-                    riscFunction.valueVRMap.put(value, vr);
-                    return vr;
-                }
-            } else {
+            }
+//            else if (Integer.parseInt(valueName) < riscFunction.parameterSize) {
+//
+//                int vname = Integer.parseInt(valueName);
+//                System.out.println(vname);
+//                if (vname <= 8) {
+//                    RealRegister reg = new RealRegister(allocAReg(vname));
+//                    return reg;
+//                } else {
+//                    VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++);
+//                    LdInstruction ld1 = new LdInstruction(vr, new Memory(((8 - vname) * 8), 2));
+//                    instructionList.add(ld1);
+//                    riscFunction.valueVRMap.put(value, vr);
+//                    return vr;
+//                }
+//            }
+            else {
                 VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++, value);
                 riscFunction.valueVRMap.put(value, vr);
                 return vr;

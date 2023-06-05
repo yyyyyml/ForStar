@@ -3,6 +3,7 @@ package backend;
 import backend.operands.FloatVirtualRegister;
 import backend.operands.Memory;
 import backend.operands.VirtualRegister;
+import ir.Instruction;
 import ir.Value;
 import ir.values.BasicBlock;
 import ir.values.Function;
@@ -23,6 +24,8 @@ public class RISCFunction {
     public HashMap<Value, Memory> valueMemoryHashMap;
     public HashMap<Value, RISCOperand> valueRISCOperandHashMap;
     public HashMap<RISCOperand, Value> riscOperandValueHashMap;
+    public HashMap<Value, Integer> funcParameters;
+    public HashMap<Value, Integer> myfuncParameters;
     public int localStackIndex = 20;
     public int operandStackCounts = 0;
     public int stackSize;
@@ -39,7 +42,8 @@ public class RISCFunction {
      */
     public RISCFunction(Function irFunc, RISCModule riscModule) {
 
-
+        myfuncParameters = new HashMap<>();
+        funcParameters = new HashMap<>();
         valueFloatVrMap = new HashMap<>();
         valueVRMap = new HashMap<>();
         valueMemoryHashMap = new HashMap<>();
@@ -51,6 +55,59 @@ public class RISCFunction {
         this.parameterSize = irFunc.getParamList().size();
         this.riscModule = riscModule;
 
+        //为函数本身参数建立map
+        if (irFunc.getParamList().size() != 0) {
+            int intCount = 0;
+            int floatCount = 0;
+            int stackIndex = 8;
+            for (Value v : irFunc.getParamList()) {
+                if (v.getType().isIntegerType()) {
+                    if (intCount < 8) {
+                        myfuncParameters.put(v, intCount++);
+                    } else {
+                        myfuncParameters.put(v, stackIndex++);
+                    }
+                } else if (v.getType().isFloatType()) {
+                    if (floatCount < 8) {
+                        myfuncParameters.put(v, floatCount++);
+                    } else {
+                        myfuncParameters.put(v, stackIndex++);
+                    }
+                }
+            }
+        }
+
+
+        //寻找函数参数
+        for (IList.INode<BasicBlock, Function> bbInode : irFunc.list) {
+            BasicBlock irBB = bbInode.getElement();
+            for (IList.INode<Instruction, BasicBlock> Inode : irBB.list) {
+                Instruction curInst = Inode.getElement();
+                if (curInst.getTag() == Instruction.TAG.CALL) {
+                    int paraCount = curInst.getNumOP() - 1;
+                    int intCount = 0;
+                    int floatCount = 0;
+                    int stackIndex = 8;
+                    for (int i = 0; i <= paraCount; i++) {
+                        Value v = curInst.getOperandAt(i);
+                        if (v.getType().isIntegerType()) {
+                            if (intCount < 8) {
+                                funcParameters.put(v, intCount++);
+                            } else {
+                                funcParameters.put(v, stackIndex++);
+                            }
+                        } else if (v.getType().isFloatType()) {
+                            if (floatCount < 8) {
+                                funcParameters.put(v, floatCount++);
+                            } else {
+                                funcParameters.put(v, stackIndex++);
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
 
         for (IList.INode<BasicBlock, Function> bbInode : irFunc.list) {
             RISCBasicBlock curBB = new RISCBasicBlock(bbInode.getElement(), irFunc, this);

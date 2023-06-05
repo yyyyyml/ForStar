@@ -22,6 +22,22 @@ public class FloatRealRegister extends Register {
             case 14 -> regType = REGTYPE.f14;
             case 15 -> regType = REGTYPE.f15;
             case 16 -> regType = REGTYPE.f16;
+            case 17 -> regType = REGTYPE.f17;
+            case 18 -> regType = REGTYPE.f18;
+            case 19 -> regType = REGTYPE.f19;
+            case 20 -> regType = REGTYPE.f20;
+            case 21 -> regType = REGTYPE.f21;
+            case 22 -> regType = REGTYPE.f22;
+            case 23 -> regType = REGTYPE.f23;
+            case 24 -> regType = REGTYPE.f24;
+            case 25 -> regType = REGTYPE.f25;
+            case 26 -> regType = REGTYPE.f26;
+            case 27 -> regType = REGTYPE.f27;
+            case 28 -> regType = REGTYPE.f28;
+            case 29 -> regType = REGTYPE.f29;
+            case 30 -> regType = REGTYPE.f30;
+            case 31 -> regType = REGTYPE.f31;
+
 
             default -> throw new IllegalStateException("Unexpected value: " + r1);
         }
