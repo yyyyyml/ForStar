@@ -46,10 +46,16 @@ public class Function extends Value {
 
         sb.append("(");
         for (int i = 0; i < paramList.size(); i++) {
-            sb.append(paramList.get(i));
-            if (i != paramList.size() - 1) {
-                sb.append(",");
+            if (this.isBuiltin()) {
+                // 库函数不需要变量名
+                sb.append(getParamList().get(i).getType());
+            } else {
+                sb.append(paramList.get(i));
             }
+            if (i != paramList.size() - 1) {
+                sb.append(", ");
+            }
+
         }
         sb.append(")");
 

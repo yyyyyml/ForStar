@@ -49,7 +49,7 @@ public class BinaryInst extends Instruction {
             // Error.
             default -> "";
         });
-        sb.append(this.getOperandAt(0).getName()).append(",").append(this.getOperandAt(1).getName());
+        sb.append(this.getOperandAt(0).getName()).append(", ").append(this.getOperandAt(1).getName());
         return sb.toString();
     }
 }

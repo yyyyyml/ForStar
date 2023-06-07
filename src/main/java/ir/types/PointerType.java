@@ -23,6 +23,6 @@ public class PointerType extends Type {
 
     @Override
     public String toString() {
-        return pointedType.toString() + "* ";
+        return pointedType.toString() + "*";
     }
 }
