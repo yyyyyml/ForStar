@@ -19,6 +19,8 @@ import ir.values.GlobalVariable;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Visitor extends SysY2022BaseVisitor<Void> {
     private final Scope scope = new Scope();
@@ -29,6 +31,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     private boolean envBuildFCall = OFF;
     private boolean isConstantVar = false;
     private enum DataType {FLT,INT}
+
     private DataType envConveyedType = null;
     private Value retVal_;
     private ArrayList<Value> retValList_;
@@ -39,6 +42,75 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     public Visitor(Module module) {
         this.builder = new Builder(module);
+        this.addRuntimeFunction();
+    }
+
+    private void addRuntimeFunction() {
+        Type i32Type = IntegerType.getType();
+        Type floatType = FloatType.getType();
+        Type voidType = Type.VoidType.getType();
+        Type ptrI32Type = PointerType.getPointerType(i32Type);
+        Type ptrFloatType = PointerType.getPointerType(floatType);
+        Type ptrVoidType = PointerType.getPointerType(voidType);
+
+        ArrayList<Type> emptyArgTypeList = new ArrayList<>();
+        ArrayList<Type> intArgTypeList = new ArrayList<>(List.of(i32Type));
+        ArrayList<Type> floatArgTypeList = new ArrayList<>(List.of(floatType));
+        ArrayList<Type> ptrI32ArgTypeList = new ArrayList<>(List.of(ptrI32Type));
+        ArrayList<Type> ptrFloatArgTypeList = new ArrayList<>(List.of(ptrFloatType));
+
+        // i32 getint()
+        scope.addSymbol("getint",
+                builder.buildFunction("getint", new FunctionType(i32Type, emptyArgTypeList), true)
+        );
+        // i32 getch()
+        scope.addSymbol("getch",
+                builder.buildFunction("getch", new FunctionType(i32Type, emptyArgTypeList), true)
+        );
+        // i32 getfloat()
+        scope.addSymbol("getfloat",
+                builder.buildFunction("getfloat", new FunctionType(floatType, emptyArgTypeList), true)
+        );
+        // i32 getarray(i32*)
+        scope.addSymbol("getarray",
+                builder.buildFunction("getarray", new FunctionType(i32Type, ptrI32ArgTypeList), true)
+        );
+        // i32 getfarray(float*)
+        scope.addSymbol("getfarray",
+                builder.buildFunction("getfarray", new FunctionType(i32Type, ptrFloatArgTypeList), true)
+        );
+        // void putint(i32)
+        scope.addSymbol("putint",
+                builder.buildFunction("putint", new FunctionType(voidType, intArgTypeList), true)
+        );
+        // void putch(i32)
+        scope.addSymbol("putch",
+                builder.buildFunction("putch", new FunctionType(voidType, intArgTypeList), true)
+        );
+        // void putfloat(float)
+        scope.addSymbol("putfloat",
+                builder.buildFunction("putfloat", new FunctionType(voidType, floatArgTypeList), true)
+        );
+        // void putarray(i32, i32*)
+        scope.addSymbol("putarray",
+                builder.buildFunction("putarray",
+                        new FunctionType(voidType, new ArrayList<>(Arrays.asList(i32Type, ptrI32Type))),
+                        true)
+        );
+        // void putfarray(i32, float*)
+        scope.addSymbol("putfarray",
+                builder.buildFunction("putfarray",
+                        new FunctionType(voidType, new ArrayList<>(Arrays.asList(i32Type, ptrFloatType))),
+                        true)
+        );
+        // void starttime()
+        scope.addSymbol("starttime",
+                builder.buildFunction("starttime", new FunctionType(voidType, emptyArgTypeList), true)
+        );
+        // void stoptime()
+        scope.addSymbol("stoptime",
+                builder.buildFunction("stoptime", new FunctionType(voidType, emptyArgTypeList), true)
+        );
     }
 
     private void setConstFolding(boolean stat) {
