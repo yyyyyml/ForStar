@@ -1,4 +1,4 @@
-	.file	null
+	.file	""
 	.option	pic
 	.text
 	.align	1
