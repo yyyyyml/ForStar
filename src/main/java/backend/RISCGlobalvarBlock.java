@@ -15,7 +15,7 @@ public class RISCGlobalvarBlock {
     }
 
     public String emit() {
-        return name + "\n\t" + ".word\t" + value;
+        return name + ":" + "\n\t" + ".word\t" + value;
     }
 
     public String getName() {

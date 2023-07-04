@@ -11,7 +11,7 @@ public class RISCEmitter {
 
     public void emit(RISCModule target) {
         StringBuilder out = new StringBuilder();
-        out.append("\t.file\t" + target.inputFilename + '\n');
+        out.append("\t.file\t" + '"' + target.inputFilename + '"' + '\n');
         out.append("\t.option\tpic\n");
         out.append("\t.text\n");
         for (RISCFunction riscFunc : target.getFunctionList()) {
@@ -24,7 +24,7 @@ public class RISCEmitter {
                     out.append("\t" + riscInst.emit() + "\n");
                 }
             }
-            out.append("\t.size\t" + riscFunc.funcName + ", -" + riscFunc.funcName + "\n");
+            out.append("\t.size\t" + riscFunc.funcName + ", .-" + riscFunc.funcName + "\n");
         }
         for (RISCFloatBlock FB : target.floatBlockLinkedList) {
             out.append(FB.emit() + "\n");
@@ -33,7 +33,7 @@ public class RISCEmitter {
             out.append(GVB.emit() + "\n");
         }
         out.append("\t.ident\t" + "\"ForStar\"\n");
-        out.append("\t.section\t" + ".note.GNU-stack,\"\",@progbits");
+        out.append("\t.section\t" + ".note.GNU-stack,\"\",@progbits" + "\n");
 
         System.out.println(out);
 
