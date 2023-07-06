@@ -192,6 +192,20 @@ main:
 	lw t3,0(t0)
 	mulw t2,t2,t3
 	subw t1,t1,t2
+	lla t0,a
+	lw t1,0(t0)
+	li t0,2
+	sw t0,-20(s0)
+	li t0,3
+	sw t0,-20(s0)
+	lla t0,a
+	lw t2,0(t0)
+	lla t0,b
+	lw t3,0(t0)
+	lla t0,c
+	lw t1,0(t0)
+	mulw t3,t3,t1
+	subw t2,t2,t3
 	lla t0,d
 	lw t1,0(t0)
 	lla t0,a

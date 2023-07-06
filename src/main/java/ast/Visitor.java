@@ -702,11 +702,15 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
         }
         // For the last eqExp blocks.
-        boolean islor = ctx.getParent().getChild(1).getText().equals( "||" );
-        if( islor )
+        if(ctx.getParent().getChild(1) != null)
         {
-            builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
+            boolean islor = ctx.getParent().getChild(1).getText().equals( "||" );
+            if( islor )
+            {
+                builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
+            }
         }
+
         return null;
     }
 
