@@ -3,6 +3,7 @@ package ir;
 import ir.types.ArrayType;
 import ir.types.FunctionType;
 import ir.types.PointerType;
+import ir.values.Constant;
 
 /**
  * 对于没有其他属性的Type,
@@ -146,4 +147,5 @@ public class Type {
             return "float";
         }
     }
+
 }

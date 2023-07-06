@@ -20,9 +20,7 @@ public class RISCBasicBlock {
     private RISCFunction riscFunction;
     private String blockName;
 
-    public String getBlockName() {
-        return blockName;
-    }
+    public String getBlockName (){return blockName;}
 
     /**
      * 此构造函数为创建函数的初始块和结束块
@@ -87,7 +85,7 @@ public class RISCBasicBlock {
                 case FMUL -> translateCaculate(curInst);
                 case FDIV -> translateCaculate(curInst);
                 case CALL -> translateCall(curInst);
-                case BR -> translateBr(curInst);
+                case BR ->  translateBr(curInst);
             }
 
         }
@@ -95,45 +93,48 @@ public class RISCBasicBlock {
 
     private void translateBr(Instruction curInst) {
         int paraCount = curInst.getNumOP();
-        if (paraCount == 1) {
+        if(paraCount == 1){
             Value v = curInst.getOperandAt(0);
             StringBuffer vName = new StringBuffer(v.getName());
             //vName.deleteCharAt(0);
             String vN = new String(vName);
-            MyString ms = new MyString("B" + vN);
+            MyString ms = new MyString("B"+vN);
             JInstruction j = new JInstruction(ms);
             instructionList.add(j);
-        } else if (paraCount == 3) {
+        }
+        else if(paraCount == 3){
             Value v1 = curInst.getOperandAt(0);
-            if (v1 instanceof Constant) {
-                if (((Constant.ConstantInt) v1).getVal() >= 1) {
+            if(v1 instanceof Constant){
+                if(((Constant.ConstantInt)v1).getVal()>=1){
                     Value v = curInst.getOperandAt(1);
                     StringBuffer vName = new StringBuffer(v.getName());
                     String vN = new String(vName);
-                    MyString ms = new MyString("B" + vN);
-                    JInstruction j = new JInstruction(ms);
-                    instructionList.add(j);
-                } else {
-                    Value v = curInst.getOperandAt(2);
-                    StringBuffer vName = new StringBuffer(v.getName());
-                    String vN = new String(vName);
-                    MyString ms = new MyString("B" + vN);
+                    MyString ms = new MyString("B"+vN);
                     JInstruction j = new JInstruction(ms);
                     instructionList.add(j);
                 }
-            } else {
+                else {
+                    Value v = curInst.getOperandAt(2);
+                    StringBuffer vName = new StringBuffer(v.getName());
+                    String vN = new String(vName);
+                    MyString ms = new MyString("B"+vN);
+                    JInstruction j = new JInstruction(ms);
+                    instructionList.add(j);
+                }
+            }
+            else {
                 RISCOperand rop1 = getOperand(v1);
                 Immediate imm = new Immediate(1);
                 Value v2 = curInst.getOperandAt(1);
                 StringBuffer vName2 = new StringBuffer(v2.getName());
                 String vN2 = new String(vName2);
-                MyString ms2 = new MyString("B" + vN2);
-                BgeInstruction bge = new BgeInstruction(rop1, imm, ms2);
+                MyString ms2 = new MyString("B"+vN2);
+                BgeInstruction bge = new BgeInstruction(rop1,imm,ms2);
                 instructionList.add(bge);
                 Value v3 = curInst.getOperandAt(2);
                 StringBuffer vName3 = new StringBuffer(v3.getName());
                 String vN3 = new String(vName3);
-                MyString ms3 = new MyString("B" + vN3);
+                MyString ms3 = new MyString("B"+vN3);
                 JInstruction j = new JInstruction(ms3);
                 instructionList.add(j);
             }

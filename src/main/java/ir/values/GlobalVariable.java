@@ -15,7 +15,8 @@ public class GlobalVariable extends User {
     public GlobalVariable(String name, Type type) {
         super(new PointerType(type));
         this.setName(name);
-        this.init = Constant.ConstantInt.getConstantInt(0);
+        if(type.isIntegerType()) this.init = Constant.ConstantInt.getConstantInt(0);
+        else if(type.isFloatType()) this.init = Constant.ConstantFloat.getConstantFloat(0);
     }
 
     public GlobalVariable(String name, Constant initval) {

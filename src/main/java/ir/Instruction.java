@@ -47,8 +47,8 @@ public class Instruction extends User {
     }
 
     public boolean isTerminator() {
-        return this.tag.ordinal() >= TAG.BR.ordinal()
-                && this.tag.ordinal() <= TAG.RET.ordinal();
+        return this.tag.ordinal() == TAG.BR.ordinal()
+                || this.tag.ordinal() == TAG.RET.ordinal();
     }
 
     public boolean isMemory() {
