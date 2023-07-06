@@ -645,10 +645,15 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     @Override
     public Void visitLOr1(SysY2022Parser.LOr1Context ctx) {
 
+        BasicBlock curLOrBlk = builder.getCurBB();
+
+
+        // Pass down blocks as inherited attributes for short-circuit evaluation.
         ctx.lAndExp().falseBlk = ctx.falseBlk;
         ctx.lAndExp().trueBlk = ctx.trueBlk;
-        visit(ctx.lAndExp());
 
+        builder.setCurBB(curLOrBlk);
+        visit(ctx.lAndExp());
         return null;
     }
 
@@ -702,6 +707,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
         }
         // For the last eqExp blocks.
+
         if(ctx.getParent().getChild(1) != null)
         {
             boolean islor = ctx.getParent().getChild(1).getText().equals( "||" );
@@ -710,7 +716,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
             }
         }
-
+        else{
+            builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
+        }
         return null;
     }
 

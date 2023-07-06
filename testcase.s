@@ -161,89 +161,25 @@ stoptime:
 	.global	main
 	.type	main	@function
 main:
-	addi sp,sp,-24
-	sd ra,16(sp)
-	sd s0,8(sp)
-	addi s0,sp,24
-	li t0,0
+	addi sp,sp,-28
+	sd ra,20(sp)
+	sd s0,12(sp)
+	addi s0,sp,28
+	li t0,5
+	sw t0,-24(s0)
+	li t0,10
 	sw t0,-20(s0)
-	lla t0,a
-	lw t1,0(t0)
-	lla t0,b
-	lw t2,0(t0)
-	mulw t1,t1,t2
-	lla t0,c
-	lw t2,0(t0)
-	divw t1,t1,t2
-	lla t0,e
-	lw t1,0(t0)
-	lla t0,d
-	lw t2,0(t0)
-	addw t1,t1,t2
-	lw t0,-20(s0)
-	mv a0,t0
-	li t0,1
-	sw t0,-20(s0)
-	lla t0,a
-	lw t1,0(t0)
-	lla t0,b
-	lw t2,0(t0)
-	lla t0,c
-	lw t3,0(t0)
-	mulw t2,t2,t3
-	subw t1,t1,t2
-	lla t0,a
-	lw t1,0(t0)
-	li t0,2
-	sw t0,-20(s0)
-	li t0,3
-	sw t0,-20(s0)
-	lla t0,a
-	lw t2,0(t0)
-	lla t0,b
-	lw t3,0(t0)
-	lla t0,c
-	lw t1,0(t0)
-	mulw t3,t3,t1
-	subw t2,t2,t3
-	lla t0,d
-	lw t1,0(t0)
-	lla t0,a
-	lw t2,0(t0)
-	lla t0,c
-	lw t3,0(t0)
-	divw t2,t2,t3
-	subw t1,t1,t2
-	lla t0,a
-	lw t1,0(t0)
-	lla t0,a
-	lw t2,0(t0)
-	lla t0,b
-	lw t3,0(t0)
-	addw t2,t2,t3
-	mulw t1,t1,t2
-	lla t0,c
-	lw t2,0(t0)
-	addw t1,t1,t2
-	lla t0,d
-	lw t1,0(t0)
-	lla t0,e
-	lw t2,0(t0)
-	addw t1,t1,t2
-	ld ra,16(sp)
-	ld s0,8(sp)
-	addi sp,sp,24
+	lw t0,-24(s0)
+	lw t1,-24(s0)
+	mv a0,t1
+	li t1,3
+	sw t1,-24(s0)
+	li t1,3
+	sw t1,-20(s0)
+	ld ra,20(sp)
+	ld s0,12(sp)
+	addi sp,sp,28
 	jr ra
 	.size	main, .-main
-a:
-	.word	1
-b:
-	.word	0
-c:
-	.word	1
-d:
-	.word	2
-e:
-	.word	4
 	.ident	"ForStar"
 	.section	.note.GNU-stack,"",@progbits
