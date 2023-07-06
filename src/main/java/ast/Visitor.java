@@ -618,10 +618,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     @Override
     public Void visitLOr2(SysY2022Parser.LOr2Context ctx) {
         //<editor-fold desc="For first N-1 lAndExp blocks.">
+
         BasicBlock curLOrBlk = builder.getCurBB();
         BasicBlock nxtLOrBlk = builder.buildBB("lor2next");
 
-        // Pass down blocks as inherited attributes for short-circuit evaluation.
+            // Pass down blocks as inherited attributes for short-circuit evaluation.
         ctx.lOrExp().falseBlk = nxtLOrBlk;
         ctx.lOrExp().trueBlk = ctx.trueBlk;
 
@@ -630,6 +631,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         builder.setCurBB(nxtLOrBlk);
 
         //</editor-fold>
+
+
         //<editor-fold desc="For the last lAndExp block.">
         ctx.lAndExp().falseBlk = ctx.falseBlk;
         ctx.lAndExp().trueBlk = ctx.trueBlk;
@@ -645,7 +648,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         ctx.lAndExp().falseBlk = ctx.falseBlk;
         ctx.lAndExp().trueBlk = ctx.trueBlk;
         visit(ctx.lAndExp());
-        //</editor-fold>
 
         return null;
     }
@@ -654,43 +656,45 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitLAnd2(SysY2022Parser.LAnd2Context ctx) {
+
         visit(ctx.lAndExp());
+        if(retVal_.getType().isIntegerType()) { // i32 -> i1
+                // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
+            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantInt.getConstantInt(0));
+        }
+        else if (retVal_.getType().isFloatType()) { // float -> i1
+            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
+        }
         /*
-           Type conversions of the condition.
+           Build the branching.
         */
-        if(retVal_.getType().isBoolType()) { // i32 -> i1
+        // For the first N-1 eqExp blocks.
+
+        // Build following blocks for short-circuit evaluation.
+        BasicBlock originBlk = builder.getCurBB();
+        BasicBlock nxtAndBlk = builder.buildBB("land2nxt");
+                // Add a branch instruction to terminate this block.
+        builder.setCurBB(originBlk);
+        builder.buildBr(retVal_, nxtAndBlk, ctx.falseBlk);
+        builder.setCurBB(nxtAndBlk);
+
+        visit(ctx.eqExp());
+        if(retVal_.getType().isIntegerType() ) { // i32 -> i1
             // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
             retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantInt.getConstantInt(0));
         }
         else if (retVal_.getType().isFloatType()) { // float -> i1
             retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
         }
-
-        /*
-          Build the branching.
-        */
-        // For the first N-1 eqExp blocks.
-
-        // Build following blocks for short-circuit evaluation.
-        BasicBlock originBlk = builder.getCurBB();
-        BasicBlock nxtAndBlk = builder.buildBB("lAndnext");
-        // Add a branch instruction to terminate this block.
-        builder.setCurBB(originBlk);
-        builder.buildBr(retVal_, nxtAndBlk, ctx.falseBlk);
-        builder.setCurBB(nxtAndBlk);
-
         // For the last eqExp blocks.
-        visit(ctx.eqExp());
         builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
+
         return null;
     }
 
     @Override
     public Void visitLAnd1(SysY2022Parser.LAnd1Context ctx) {
-
-        // For the last eqExp blocks.
         visit(ctx.eqExp());
-        builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
         return null;
     }
 
@@ -699,13 +703,15 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         // Retrieve left operand by visiting child.
         visit(ctx.eqExp());
         Value lOp = retVal_;
-        // Retrieve the next relExp as the right operand by visiting child.
+
+
+            // Retrieve the next relExp as the right operand by visiting child.
         visit(ctx.relExp());
         Value rOp = retVal_;
 
-        /*
-           Implicit type conversions.
-        */
+            /*
+            Implicit type conversions.
+             */
         if (lOp.getType().isFloatType() && !rOp.getType().isFloatType()) {
             rOp = builder.buildSitofp(rOp);
         }
@@ -713,8 +719,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             lOp = builder.buildSitofp(lOp);
         }
         else {
-            // Extend if one Opd is i32 and another is i1.
-            if(lOp.getType().isIntegerType() && rOp.getType().isBoolType()) {
+                // Extend if one Opd is i32 and another is i1.
+            if(lOp.getType().isIntegerType() && rOp.getType().isBoolType() ) {
                 rOp = builder.buildZExt(rOp);
             }
             if(rOp.getType().isIntegerType() && lOp.getType().isBoolType()) {
@@ -737,12 +743,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitEq1(SysY2022Parser.Eq1Context ctx) {
-
         visit(ctx.relExp());
-        Value lOp = retVal_;
-
-        retVal_ = lOp;
-
         return null;
     }
 
