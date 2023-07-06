@@ -13,6 +13,7 @@ import ir.values.BasicBlock;
 import ir.values.Constant;
 import ir.values.Function;
 import ir.values.GlobalVariable;
+import ir.Instruction;
 
 import java.util.ArrayList;
 public class Builder {
@@ -104,6 +105,13 @@ public class Builder {
         this.setCurBB(bb);
         return bb;
     }
+
+    /*public BasicBlock buildBB() {
+        BasicBlock bb = new BasicBlock();
+        curFunc.list.addLast(bb.node);
+        this.setCurBB(bb);
+        return bb;
+    }*/
 
     public ConversionInst.Fptosi buildFptosi(Value preVal) {
         if (!preVal.getType().isFloatType()) {
@@ -240,6 +248,78 @@ public class Builder {
         return unaryInst;
     }
 
+    public TerminatorInst.Br buildBr(Value cond, BasicBlock trueBlk, BasicBlock falseBlk) {
+        // Create and insert a block.
+        TerminatorInst.Br condBr = new TerminatorInst.Br(cond, trueBlk, falseBlk);
+        getCurBB().list.addLast(condBr.node);
+
+        return condBr;
+    }
+
+    public TerminatorInst.Br buildBr(BasicBlock blk) {
+        /*
+        Security Check.
+         */
+        /*if (getCurBB().getLastInst() != null && getCurBB().getLastInst().isBr()) {
+            throw new RuntimeException("Cannot insert a Br after another Br.");
+        }*/
+        // Create and insert a block.
+        TerminatorInst.Br uncondBr = new TerminatorInst.Br(blk);
+        getCurBB().list.addLast(uncondBr.node);
+
+        return uncondBr;
+    }
+
+    public BinaryInst buildComparison(String opr, Value lOp, Value rOp) {
+        // Security checks.
+        if (lOp.getType() != rOp.getType()) {
+            throw new RuntimeException("Unmatched types: [lOp] " + lOp.getType() + ", [rOp] " + rOp.getType());
+        }
+
+
+        BinaryInst inst = null;
+        if (lOp.getType().isIntegerType()) {
+            switch (opr) {
+                case "<=" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.LE, lOp, rOp);
+                case ">=" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.GE, lOp, rOp);
+                case "<" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.LT, lOp, rOp);
+                case ">" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.GT, lOp, rOp);
+                case "==" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.EQ, lOp, rOp);
+                case "!=" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.NE, lOp, rOp);
+                default -> {}
+            }
+        }
+        // Floating point comparison.
+        else {
+            switch (opr) {
+                case "<=" -> inst = new BinaryInst(Type.BoolType.getType() , Instruction.TAG.FLE, lOp, rOp);
+                case ">=" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.FGE, lOp, rOp);
+                case "<" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.FLT, lOp, rOp);
+                case ">" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.FGT, lOp, rOp);
+                case "==" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.FEQ, lOp, rOp);
+                case "!=" -> inst = new BinaryInst(Type.BoolType.getType(), Instruction.TAG.FNE, lOp, rOp);
+                default -> {}
+            }
+        }
+
+        if (inst == null) {
+            throw new RuntimeException("Operand '" + opr + "' cannot be recognized.");
+        }
+        // Insert and return the inst.
+        getCurBB().list.addLast(inst.node) ;
+        return inst;
+    }
+
+    public ConversionInst.Zext buildZExt(Value srcVal) {
+        // Security checks.
+        if (!srcVal.getType().isBoolType()) {
+            throw new RuntimeException("A non-i1 src Value is given.");
+        }
+        // Construct, insert, and return.
+        ConversionInst.Zext zext = new ConversionInst.Zext(srcVal);
+        getCurBB().list.addLast(zext.node) ;
+        return zext;
+    }
 }
 
 

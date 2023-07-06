@@ -1,6 +1,7 @@
 // Generated from E:/ForStar/src/main/java/frontend\SysY2022.g4 by ANTLR 4.12.0
 package frontend;
 
+import ir.values.BasicBlock;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATN;
 import org.antlr.v4.runtime.atn.ATNDeserializer;
@@ -3989,6 +3990,8 @@ public class SysY2022Parser extends Parser {
 
     @SuppressWarnings("CheckReturnValue")
     public static class LAndExpContext extends ParserRuleContext {
+        public BasicBlock trueBlk;
+        public BasicBlock falseBlk;
         public LAndExpContext(ParserRuleContext parent, int invokingState) {
             super(parent, invokingState);
         }
@@ -4008,6 +4011,7 @@ public class SysY2022Parser extends Parser {
 
     @SuppressWarnings("CheckReturnValue")
     public static class LAnd2Context extends LAndExpContext {
+
         public LAnd2Context(LAndExpContext ctx) {
             copyFrom(ctx);
         }
@@ -4039,6 +4043,7 @@ public class SysY2022Parser extends Parser {
 
     @SuppressWarnings("CheckReturnValue")
     public static class LAnd1Context extends LAndExpContext {
+
         public LAnd1Context(LAndExpContext ctx) {
             copyFrom(ctx);
         }
@@ -4066,6 +4071,8 @@ public class SysY2022Parser extends Parser {
 
     @SuppressWarnings("CheckReturnValue")
     public static class LOrExpContext extends ParserRuleContext {
+        public BasicBlock trueBlk;
+        public BasicBlock falseBlk;
         public LOrExpContext(ParserRuleContext parent, int invokingState) {
             super(parent, invokingState);
         }
@@ -4085,6 +4092,7 @@ public class SysY2022Parser extends Parser {
 
     @SuppressWarnings("CheckReturnValue")
     public static class LOr1Context extends LOrExpContext {
+
         public LOr1Context(LOrExpContext ctx) {
             copyFrom(ctx);
         }
@@ -4112,6 +4120,7 @@ public class SysY2022Parser extends Parser {
 
     @SuppressWarnings("CheckReturnValue")
     public static class LOr2Context extends LOrExpContext {
+
         public LOr2Context(LOrExpContext ctx) {
             copyFrom(ctx);
         }

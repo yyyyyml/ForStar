@@ -21,6 +21,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Stack;
 
 public class Visitor extends SysY2022BaseVisitor<Void> {
     private final Scope scope = new Scope();
@@ -39,6 +40,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     private ArrayList<Type> retTypeList_;
     private int retInt_;
     private float retFloat_;
+    Stack<ArrayList<ir.Instructions.TerminatorInst.Br>> bpStk = new Stack<>();
+    private final BasicBlock BREAK = new BasicBlock("BRK_PLACEHOLDER");
+    private final BasicBlock CONTINUE = new BasicBlock("CONT_PLACEHOLDER");
 
     public Visitor(Module module) {
         this.builder = new Builder(module);
@@ -395,9 +399,15 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             visit(ctx.unaryExp());
             if (retVal_.getType().isIntegerType()) {
                 //I1的转换还没写
+                if (retVal_.getType().isBoolType()) {
+                    retVal_ = builder.buildZExt(retVal_);
+                }
+                if (retVal_.getType().isBoolType()) {
+                    retVal_ = builder.buildZExt(retVal_);
+                }
                 switch (ctx.unaryOp().getText()) {
                     case "-" -> retVal_ = builder.buildSub(builder.buildConstant(0), retVal_);
-                    //!还没写
+                    case "!" -> retVal_ = builder.buildComparison("==", builder.buildConstant(0), retVal_);
                     case "+" -> {}
                 }
             }
@@ -405,7 +415,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             else {
                 switch (ctx.unaryOp().getText()) {
                     case "-" -> retVal_ = builder.buildFneg(Instruction.TAG.FNEG, retVal_);
-                    //!还没写
+                    case "!" -> retVal_ = builder.buildComparison("==", builder.buildConstant(0), retVal_);
                     case "+" -> {}
                 }
             }
@@ -438,6 +448,437 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         scope.pushTable();
         ctx.blockItem().forEach(this::visit);
         scope.popTable();
+        return null;
+    }
+
+    @Override
+    public Void visitIfelseStmt(SysY2022Parser.IfelseStmtContext ctx) {
+        /*
+        Store current block to add on it a Br to entryBlk.
+        And then build the entry block of the condition statement.
+         */
+        BasicBlock preBlk = builder.getCurBB();
+        BasicBlock entryBlk = builder.buildBB("_COND_ENTRY");
+        // Add a Br from the old preBlk to the new entryBlk.
+        builder.setCurBB(preBlk);
+        builder.buildBr(entryBlk);
+
+        /*
+        Build an EXIT block no matter if it may become dead code
+        that cannot be reached in the CFG.
+         */
+        BasicBlock exitBlk = builder.buildBB("_COND_EXIT");
+        /*
+        Build the TRUE branch (a block for jumping if condition is true).
+        Fill it by visiting child (the 1st stmt, the true branch).
+         */
+        BasicBlock trueEntryBlk = builder.buildBB("_THEN");
+        visit(ctx.stmt(0));
+        BasicBlock trueExitBlk = builder.getCurBB();
+        // Get trueBlkEndWithTerminator flag.
+        Instruction trueExitBlkLastInst = trueExitBlk.getLastInst();
+        boolean trueBlkEndWithTerminator = trueExitBlkLastInst != null &&
+                trueExitBlkLastInst.isTerminator();
+        /*
+        Build the FALSE branch (a block for jumping if condition is false),
+        if there is the 2nd stmt, meaning that it's an IF-ELSE statement.
+        Otherwise, it's an IF statement (w/o following ELSE), and
+        falseEntryBlk will remain null.
+
+        : if(falseEntryBlk != null) -> IF-ELSE statement
+        : if(falseEntryBlk == null) -> IF statement w/o ELSE
+         */
+        BasicBlock falseEntryBlk = null;
+        BasicBlock falseExitBlk = null;
+        boolean falseBlkEndWithTerminator = false;
+        falseEntryBlk = builder.buildBB("_ELSE");
+        visit(ctx.stmt(1)); // Fill the block by visiting child.
+        falseExitBlk = builder.getCurBB();
+        // Get falseBlkEndWithTerminator flag.
+        Instruction falseExitBlkLastInst = falseExitBlk.getLastInst();
+        falseBlkEndWithTerminator = falseExitBlkLastInst != null && falseExitBlkLastInst.isTerminator();
+
+        /*
+        Add Br terminator for trueExitBlock and falseExitBlock if needed (if both branches
+        end with Ret terminators.
+         */
+        // The exit block will be built when:
+        // "!trueBlkEndWithTerminator && !falseBlkEndWithTerminator" (under IF-ELSE)
+        // or "!trueBlkEndWithTerminator && no falseBlock" (i.e. IF w/o ELSE)
+        if (!trueBlkEndWithTerminator) {
+            builder.setCurBB(trueExitBlk);
+            builder.buildBr(exitBlk);
+        }
+        if (falseEntryBlk != null && !falseBlkEndWithTerminator) {
+            builder.setCurBB(falseExitBlk);
+            builder.buildBr(exitBlk);
+        }
+
+        /*
+        Cope with the condition expression by visiting child cond.
+         */
+        builder.setCurBB(entryBlk);
+        // Pass down blocks as inherited attributes for short-circuit evaluation.
+        ctx.cond().lOrExp().trueBlk = trueEntryBlk;
+        ctx.cond().lOrExp().falseBlk = (falseEntryBlk != null) ? falseEntryBlk : exitBlk;
+
+        visit(ctx.cond());
+
+        /*
+        Force the BB pointer to point to the exitBlk, which will serve as the upstream
+        block for processing the following content.
+        Even if the exitBlk is a dead entry that cannot be reached, all the content will
+        still be processed. These dead basic blocks can be removed in the following
+        CFG analysis by the optimizer.
+         */
+        builder.setCurBB(exitBlk);
+
+        return null;
+    }
+
+    @Override
+    public Void visitIfStmt(SysY2022Parser.IfStmtContext ctx) {
+        /*
+        Store current block to add on it a Br to entryBlk.
+        And then build the entry block of the condition statement.
+         */
+        BasicBlock preBlk = builder.getCurBB();
+        BasicBlock entryBlk = builder.buildBB("_COND_ENTRY");
+        // Add a Br from the old preBlk to the new entryBlk.
+        builder.setCurBB(preBlk);
+        builder.buildBr(entryBlk);
+
+        /*
+        Build an EXIT block no matter if it may become dead code
+        that cannot be reached in the CFG.
+         */
+        BasicBlock exitBlk = builder.buildBB("_COND_EXIT");
+        /*
+        Build the TRUE branch (a block for jumping if condition is true).
+        Fill it by visiting child (the 1st stmt, the true branch).
+         */
+        BasicBlock trueEntryBlk = builder.buildBB("_THEN");
+        visit(ctx.stmt());
+        BasicBlock trueExitBlk = builder.getCurBB();
+        // Get trueBlkEndWithTerminator flag.
+        Instruction trueExitBlkLastInst = trueExitBlk.getLastInst();
+        boolean trueBlkEndWithTerminator = trueExitBlkLastInst != null &&
+                trueExitBlkLastInst.isTerminator();
+        /*
+        Build the FALSE branch (a block for jumping if condition is false),
+        if there is the 2nd stmt, meaning that it's an IF-ELSE statement.
+        Otherwise, it's an IF statement (w/o following ELSE), and
+        falseEntryBlk will remain null.
+
+        : if(falseEntryBlk != null) -> IF-ELSE statement
+        : if(falseEntryBlk == null) -> IF statement w/o ELSE
+         */
+        BasicBlock falseEntryBlk = null;
+        BasicBlock falseExitBlk = null;
+        boolean falseBlkEndWithTerminator = false;
+        /*
+        Add Br terminator for trueExitBlock and falseExitBlock if needed (if both branches
+        end with Ret terminators.
+         */
+        // The exit block will be built when:
+        // "!trueBlkEndWithTerminator && !falseBlkEndWithTerminator" (under IF-ELSE)
+        // or "!trueBlkEndWithTerminator && no falseBlock" (i.e. IF w/o ELSE)
+        if (!trueBlkEndWithTerminator) {
+            builder.setCurBB(trueExitBlk);
+            builder.buildBr(exitBlk);
+        }
+        if (falseEntryBlk != null && !falseBlkEndWithTerminator) {
+            builder.setCurBB(falseExitBlk);
+            builder.buildBr(exitBlk);
+        }
+
+        /*
+        Cope with the condition expression by visiting child cond.
+         */
+        builder.setCurBB(entryBlk);
+        // Pass down blocks as inherited attributes for short-circuit evaluation.
+        ctx.cond().lOrExp().trueBlk = trueEntryBlk;
+        ctx.cond().lOrExp().falseBlk = (falseEntryBlk != null) ? falseEntryBlk : exitBlk;
+
+        visit(ctx.cond());
+
+        /*
+        Force the BB pointer to point to the exitBlk, which will serve as the upstream
+        block for processing the following content.
+        Even if the exitBlk is a dead entry that cannot be reached, all the content will
+        still be processed. These dead basic blocks can be removed in the following
+        CFG analysis by the optimizer.
+         */
+        builder.setCurBB(exitBlk);
+
+        return null;
+    }
+
+
+    @Override
+    public Void visitLOr2(SysY2022Parser.LOr2Context ctx) {
+        //<editor-fold desc="For first N-1 lAndExp blocks.">
+        BasicBlock curLOrBlk = builder.getCurBB();
+        BasicBlock nxtLOrBlk = builder.buildBB("lor2next");
+
+        // Pass down blocks as inherited attributes for short-circuit evaluation.
+        ctx.lOrExp().falseBlk = nxtLOrBlk;
+        ctx.lOrExp().trueBlk = ctx.trueBlk;
+
+        builder.setCurBB(curLOrBlk);
+        visit(ctx.lOrExp());
+        builder.setCurBB(nxtLOrBlk);
+
+        //</editor-fold>
+        //<editor-fold desc="For the last lAndExp block.">
+        ctx.lAndExp().falseBlk = ctx.falseBlk;
+        ctx.lAndExp().trueBlk = ctx.trueBlk;
+        visit(ctx.lAndExp());
+        //</editor-fold>
+
+        return null;
+    }
+
+    @Override
+    public Void visitLOr1(SysY2022Parser.LOr1Context ctx) {
+
+        ctx.lAndExp().falseBlk = ctx.falseBlk;
+        ctx.lAndExp().trueBlk = ctx.trueBlk;
+        visit(ctx.lAndExp());
+        //</editor-fold>
+
+        return null;
+    }
+
+
+
+    @Override
+    public Void visitLAnd2(SysY2022Parser.LAnd2Context ctx) {
+        visit(ctx.lAndExp());
+        /*
+           Type conversions of the condition.
+        */
+        if(retVal_.getType().isBoolType()) { // i32 -> i1
+            // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
+            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantInt.getConstantInt(0));
+        }
+        else if (retVal_.getType().isFloatType()) { // float -> i1
+            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
+        }
+
+        /*
+          Build the branching.
+        */
+        // For the first N-1 eqExp blocks.
+
+        // Build following blocks for short-circuit evaluation.
+        BasicBlock originBlk = builder.getCurBB();
+        BasicBlock nxtAndBlk = builder.buildBB("lAndnext");
+        // Add a branch instruction to terminate this block.
+        builder.setCurBB(originBlk);
+        builder.buildBr(retVal_, nxtAndBlk, ctx.falseBlk);
+        builder.setCurBB(nxtAndBlk);
+
+        // For the last eqExp blocks.
+        visit(ctx.eqExp());
+        builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
+        return null;
+    }
+
+    @Override
+    public Void visitLAnd1(SysY2022Parser.LAnd1Context ctx) {
+
+        // For the last eqExp blocks.
+        visit(ctx.eqExp());
+        builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
+        return null;
+    }
+
+    @Override
+    public Void visitEq2(SysY2022Parser.Eq2Context ctx) {
+        // Retrieve left operand by visiting child.
+        visit(ctx.eqExp());
+        Value lOp = retVal_;
+        // Retrieve the next relExp as the right operand by visiting child.
+        visit(ctx.relExp());
+        Value rOp = retVal_;
+
+        /*
+           Implicit type conversions.
+        */
+        if (lOp.getType().isFloatType() && !rOp.getType().isFloatType()) {
+            rOp = builder.buildSitofp(rOp);
+        }
+        else if (!lOp.getType().isFloatType() && rOp.getType().isFloatType()) {
+            lOp = builder.buildSitofp(lOp);
+        }
+        else {
+            // Extend if one Opd is i32 and another is i1.
+            if(lOp.getType().isIntegerType() && rOp.getType().isBoolType()) {
+                rOp = builder.buildZExt(rOp);
+            }
+            if(rOp.getType().isIntegerType() && lOp.getType().isBoolType()) {
+                lOp = builder.buildZExt(lOp);
+            }
+        }
+
+            /*
+            Build a comparison instruction, which yields a result
+            to be the left operand for the next round.
+             */
+        String opr = ctx.getChild(1).getText(); // The comparison operator.
+        lOp = builder.buildComparison(opr, lOp, rOp);
+
+        // The final result is stored in the last left operand.
+        retVal_ = lOp;
+
+        return null;
+    }
+
+    @Override
+    public Void visitEq1(SysY2022Parser.Eq1Context ctx) {
+
+        visit(ctx.relExp());
+        Value lOp = retVal_;
+
+        retVal_ = lOp;
+
+        return null;
+    }
+
+    @Override
+    public Void visitRel2(SysY2022Parser.Rel2Context ctx) {
+        // Retrieve left operand by visiting child.
+        visit(ctx.relExp());
+        Value lOp = retVal_;
+
+
+        // Retrieve the next addExp as the right operand by visiting child.
+        visit(ctx.addExp());
+        Value rOp = retVal_;
+
+        /*
+           Implicit type conversions.
+        */
+        if (lOp.getType().isFloatType() && !rOp.getType().isFloatType()) {
+            rOp = builder.buildSitofp(rOp);
+        }
+        else if (!lOp.getType().isFloatType() && rOp.getType().isFloatType()) {
+            lOp = builder.buildSitofp(lOp);
+        }
+        else {
+            // Same as visitEqExp above: Extend if one Opd is i32 and another is i1.
+            if (lOp.getType().isIntegerType() && rOp.getType().isBoolType()) {
+                rOp = builder.buildZExt(rOp);
+            }
+            if (rOp.getType().isIntegerType() && lOp.getType().isBoolType()) {
+                lOp = builder.buildZExt(lOp);
+            }
+        }
+
+        /*
+           Build a comparison instruction, which yields a result
+           to be the left operand for the next round.
+        */
+        String opr = ctx.getChild(1).getText(); // The comparison operator.
+        lOp = builder.buildComparison(opr, lOp, rOp);
+        // The final result is stored in the last left operand.
+        retVal_ = lOp;
+
+        return null;
+    }
+
+    @Override
+    public Void visitWhileStmt(SysY2022Parser.WhileStmtContext ctx) {
+        // Deepen by one layer of nested loop.
+        bpStk.push(new ArrayList<>());
+
+        /*
+        - Store current block to add on it a Br to entryBlk.
+        - Start a new block as the entry of loop continuing check for
+        jumping back at the end of the loop body, which is also the
+        entry block of the while statement.
+         */
+        BasicBlock preBlk = builder.getCurBB();
+
+        // NOTICE: A new block as condEntryBlk will be created no matter
+        // whether the preBlk is empty or not.
+        BasicBlock condEntryBlk = builder.buildBB("_WHILE_ENTRY");
+        // Add a Br from the old preBlk to the new entryBlk.
+        builder.setCurBB(preBlk);
+        builder.buildBr(condEntryBlk);
+
+        /*
+        Build an EXIT block no matter if it may become dead code
+        that cannot be reached in the CFG.
+         */
+        BasicBlock bodyEntryBlk = builder.buildBB("_WHILE_BODY");
+        BasicBlock exitBlk = builder.buildBB("_WHILE_EXIT");
+
+        /*
+        Cope with the condition expression by visiting child cond.
+         */
+        // Pass down blocks as inherited attributes for short-circuit evaluation.
+        ctx.cond().lOrExp().trueBlk = bodyEntryBlk;
+        ctx.cond().lOrExp().falseBlk = exitBlk;
+
+        builder.setCurBB(condEntryBlk);
+        visit(ctx.cond());
+
+        /*
+        Build the loop BODY.
+         */
+        builder.setCurBB(bodyEntryBlk);
+        visit(ctx.stmt());
+        BasicBlock bodyExitBlk = builder.getCurBB();
+        // If the loop body doesn't end with Ret,
+        // add a Br jumping back to the conditional statement.
+        if (bodyExitBlk.list.isEmpty() || !bodyExitBlk.getLastInst().isTerminator()) {
+            builder.setCurBB(bodyExitBlk);
+            builder.buildBr(condEntryBlk);
+        }
+
+        /*
+        Force the BB pointer to point to the exitBlk just as the conditional
+        statement regardless of dead code prevention.
+         */
+        builder.setCurBB(exitBlk);
+
+        // Pop the back-patching layer out.
+        for (ir.Instructions.TerminatorInst.Br br : bpStk.pop()) {
+            if (br.getOperandAt(0) == BREAK) {
+                br.setOperand(exitBlk,0);
+            }
+            else if (br.getOperandAt(0) == CONTINUE) {
+                br.setOperand(condEntryBlk,0);
+            }
+            else {
+                throw new RuntimeException("Invalid block placeholder occurs in the stack.");
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * stmt : 'break' ';' # breakStmt
+     */
+    @Override
+    public Void visitBreakStmt(SysY2022Parser.BreakStmtContext ctx) {
+        bpStk.peek().add(builder.buildBr(BREAK));
+        // Add a dead block for possible remaining dead code.
+        builder.buildBB("_FOLLOWING_BLK");
+        return null;
+    }
+
+    /**
+     * stmt : 'continue' ';' # contStmt
+     */
+    @Override
+    public Void visitContinueStmt(SysY2022Parser.ContinueStmtContext ctx) {
+        bpStk.peek().add(builder.buildBr(CONTINUE));
+        // Add a dead block for possible remaining dead code.
+        builder.buildBB("_FOLLOWING_BLK");
         return null;
     }
 
@@ -589,7 +1030,13 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 rOp = builder.buildLoad(((PointerType) rOp.getType()).getPointedType(), rOp);
             }
             //类型转换
-            //I1的转换暂时没写
+
+            if (lOp.getType().isBoolType()) {
+                lOp = builder.buildZExt(lOp);
+            }
+            if (rOp.getType().isBoolType()) {
+                rOp = builder.buildZExt(rOp);
+            }
             if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
                 lOp = builder.buildSitofp(lOp);
             } else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
@@ -698,6 +1145,12 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 rop = builder.buildLoad(((PointerType) rop.getType()).getPointedType(), rop);
             }
             //I1的转换还没写。
+            if (lop.getType().isBoolType()) {
+                lop = builder.buildZExt(lop);
+            }
+            if (rop.getType().isBoolType()) {
+                rop = builder.buildZExt(rop);
+            }
             if (lop.getType().isIntegerType() && rop.getType().isFloatType()) {
                 lop = builder.buildSitofp(lop);
             } else if (lop.getType().isFloatType() && rop.getType().isIntegerType()) {
@@ -711,7 +1164,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                         Value tmp = lop;
                         lop = builder.buildDiv(lop, rop);
                         lop = builder.buildMul(lop, rop);
-                        lop = builder.buildSub(tmp, rop);
+                        lop = builder.buildSub(tmp, lop);
                     }
                     else {
                         throw new RuntimeException("Float number can not use operator %!!");
