@@ -620,7 +620,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         //<editor-fold desc="For first N-1 lAndExp blocks.">
 
         BasicBlock curLOrBlk = builder.getCurBB();
-        BasicBlock nxtLOrBlk = builder.buildBB("lor2next");
+        BasicBlock nxtLOrBlk = builder.buildBB("lornext");
 
             // Pass down blocks as inherited attributes for short-circuit evaluation.
         ctx.lOrExp().falseBlk = nxtLOrBlk;
@@ -656,7 +656,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitLAnd2(SysY2022Parser.LAnd2Context ctx) {
-
         visit(ctx.lAndExp());
         if(retVal_.getType().isIntegerType()) { // i32 -> i1
                 // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
@@ -695,6 +694,19 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     @Override
     public Void visitLAnd1(SysY2022Parser.LAnd1Context ctx) {
         visit(ctx.eqExp());
+        if(retVal_.getType().isIntegerType() ) { // i32 -> i1
+            // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
+            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantInt.getConstantInt(0));
+        }
+        else if (retVal_.getType().isFloatType()) { // float -> i1
+            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
+        }
+        // For the last eqExp blocks.
+        boolean islor = ctx.getParent().getChild(1).getText().equals( "||" );
+        if( islor )
+        {
+            builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
+        }
         return null;
     }
 

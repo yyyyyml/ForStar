@@ -51,6 +51,8 @@ define dso_local i32 @main(){
 	%24 = sdiv i32 %22, %23
 	%25 = sub i32 %21, %24
 	%26 = icmp eq i32 %20, %25
+	br i1 %26, label  %14, label  %12
+
 27:
 	%28 = load i32, i32* @a
 	%29 = load i32, i32* @a
