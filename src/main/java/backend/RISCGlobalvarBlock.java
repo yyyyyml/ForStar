@@ -15,7 +15,24 @@ public class RISCGlobalvarBlock {
     }
 
     public String emit() {
-        return name + ":" + "\n\t" + ".word\t" + value;
+        StringBuffer out = new StringBuffer();
+        out.append("\t.global\t" + name + "\n");
+        if (value == 0) {
+            out.append("\t.bss\n");
+        } else {
+            out.append("\t.data\n");
+        }
+        out.append("\t.align\t2\n" + "\t.type\t" + name + ",@object\n" + "\t.size\t" + name + ",4\n");
+        out.append(name + ":" + "\n\t");
+        if (value == 0) {
+            out.append(".zero\t4");
+        } else {
+            out.append(".word\t" + value);
+        }
+
+        String S = new String(out);
+
+        return S;
     }
 
     public String getName() {
