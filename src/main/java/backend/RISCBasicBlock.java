@@ -75,7 +75,7 @@ public class RISCBasicBlock {
     public RISCBasicBlock(BasicBlock irBB, Function irFunc, RISCFunction riscFunc) {
         this.riscFunction = riscFunc;
         this.irFunction = irFunc;
-        this.blockName = irBB.getName();
+        this.blockName = irFunc.getName() + irBB.getName();
         for (IList.INode<Instruction, BasicBlock> Inode : irBB.list) {
 
             Instruction curInst = Inode.getElement();
@@ -166,7 +166,7 @@ public class RISCBasicBlock {
             StringBuffer vName = new StringBuffer(v.getName());
             //vName.deleteCharAt(0);
             String vN = new String(vName);
-            MyString ms = new MyString(".B" + vN);
+            MyString ms = new MyString(".B" + irFunction.getName() + vN);
             JInstruction j = new JInstruction(ms);
             instructionList.add(j);
         } else if(paraCount == 3){
@@ -176,14 +176,14 @@ public class RISCBasicBlock {
                     Value v = curInst.getOperandAt(1);
                     StringBuffer vName = new StringBuffer(v.getName());
                     String vN = new String(vName);
-                    MyString ms = new MyString(".B" + vN);
+                    MyString ms = new MyString(".B" + irFunction.getName() + vN);
                     JInstruction j = new JInstruction(ms);
                     instructionList.add(j);
                 } else {
                     Value v = curInst.getOperandAt(2);
                     StringBuffer vName = new StringBuffer(v.getName());
                     String vN = new String(vName);
-                    MyString ms = new MyString(".B" + vN);
+                    MyString ms = new MyString(".B" + irFunction.getName() + vN);
                     JInstruction j = new JInstruction(ms);
                     instructionList.add(j);
                 }
@@ -196,14 +196,14 @@ public class RISCBasicBlock {
                 Value v2 = curInst.getOperandAt(1);
                 StringBuffer vName2 = new StringBuffer(v2.getName());
                 String vN2 = new String(vName2);
-                MyString ms2 = new MyString(".B" + vN2);
+                MyString ms2 = new MyString(".B" + irFunction.getName() + vN2);
                 BneInstruction bne = new BneInstruction(rop1, rop2, ms2);
                 instructionList.add(bne);
 
                 Value v3 = curInst.getOperandAt(2);
                 StringBuffer vName3 = new StringBuffer(v3.getName());
                 String vN3 = new String(vName3);
-                MyString ms3 = new MyString(".B" + vN3);
+                MyString ms3 = new MyString(".B" + irFunction.getName() + vN3);
                 JInstruction j = new JInstruction(ms3);
                 instructionList.add(j);
             }

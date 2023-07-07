@@ -35,6 +35,7 @@ public class RISCFunction {
     private Function irFunction;
     public RISCModule riscModule;
     public Boolean addEndBlock = false;
+    public Boolean isBuildIn = false;
 
     /**
      * Function生成函数
@@ -56,7 +57,7 @@ public class RISCFunction {
         this.funcName = irFunc.getName();
         this.parameterSize = irFunc.getParamList().size();
         this.riscModule = riscModule;
-
+        if (irFunc.isBuiltin()) isBuildIn = true;
         //为函数本身参数建立map
         if (irFunc.getParamList().size() != 0) {
             int intCount = 0;

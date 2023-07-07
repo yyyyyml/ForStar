@@ -15,6 +15,9 @@ public class RISCEmitter {
         out.append("\t.option\tpic\n");
         out.append("\t.text\n");
         for (RISCFunction riscFunc : target.getFunctionList()) {
+            if (riscFunc.isBuildIn) {
+                continue;
+            }
             out.append("\t.align\t1\n");
             out.append("\t.global\t" + riscFunc.funcName + "\n");
             out.append("\t.type\t" + riscFunc.funcName + "\t@function\n");
