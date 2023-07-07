@@ -3,12 +3,12 @@ package backend.instructions;
 import backend.RISCInstruction;
 import backend.RISCOperand;
 
-public class BgeInstruction extends RISCInstruction {
+public class BneInstruction extends RISCInstruction {
     public RISCOperand op1;
     public RISCOperand op2;
     public RISCOperand op3;
 
-    public BgeInstruction(RISCOperand op1, RISCOperand op2, RISCOperand op3) {
+    public BneInstruction(RISCOperand op1, RISCOperand op2, RISCOperand op3) {
         this.operandNum = 3;
         this.op1 = op1;
         this.setOperand(op1, 0);
@@ -16,7 +16,7 @@ public class BgeInstruction extends RISCInstruction {
         this.setOperand(op2, 1);
         this.op3 = op3;
         this.setOperand(op3, 2);
-        this.type = ITYPE.bge;
+        this.type = ITYPE.bne;
     }
 
     @Override

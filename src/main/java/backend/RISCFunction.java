@@ -11,6 +11,7 @@ import util.IList;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Stack;
 
 public class RISCFunction {
 
@@ -33,6 +34,7 @@ public class RISCFunction {
     private LinkedList<RISCBasicBlock> BasicBlockList;
     private Function irFunction;
     public RISCModule riscModule;
+    public Boolean addEndBlock = false;
 
     /**
      * Function生成函数
@@ -66,19 +68,22 @@ public class RISCFunction {
                         myfuncParameters.put(v, intCount++);
                     } else {
                         myfuncParameters.put(v, stackIndex++);
+
+
                     }
                 } else if (v.getType().isFloatType()) {
                     if (floatCount < 8) {
                         myfuncParameters.put(v, floatCount++);
                     } else {
                         myfuncParameters.put(v, stackIndex++);
+
                     }
                 }
             }
         }
 
 
-        //寻找函数参数
+        //寻找函数内参数
         for (IList.INode<BasicBlock, Function> bbInode : irFunc.list) {
             BasicBlock irBB = bbInode.getElement();
             for (IList.INode<Instruction, BasicBlock> Inode : irBB.list) {
@@ -95,29 +100,48 @@ public class RISCFunction {
                                 funcParameters.put(v, intCount++);
                             } else {
                                 funcParameters.put(v, stackIndex++);
+
                             }
                         } else if (v.getType().isFloatType()) {
                             if (floatCount < 8) {
                                 funcParameters.put(v, floatCount++);
                             } else {
                                 funcParameters.put(v, stackIndex++);
+
                             }
                         }
-
+                        //计算参数所需占用的栈空间
+                        operandStackCounts = Math.max(operandStackCounts, stackIndex - 8);
                     }
                 }
             }
         }
 
+        //记录结束块位置
+        Stack<Integer> stack = new Stack<>();
+        Integer blockIndex = 0;
         for (IList.INode<BasicBlock, Function> bbInode : irFunc.list) {
+            blockIndex++;
+            System.out.println(funcName + "\t" + "localindex=" + localStackIndex);
+            addEndBlock = false;
             RISCBasicBlock curBB = new RISCBasicBlock(bbInode.getElement(), irFunc, this);
             BasicBlockList.add(curBB);
+            if (addEndBlock) {
+                System.out.println("!!!" + funcName + "\t" + "localindex=" + localStackIndex);
+                stack.push(blockIndex);
+            }
+        }
+
+        //倒序加入结束块
+        while (!stack.empty()) {
+            RISCBasicBlock lastBB = new RISCBasicBlock(1, irFunc, this);
+            BasicBlockList.add(stack.pop(), lastBB);
         }
 
         RISCBasicBlock firstBB = new RISCBasicBlock(0, irFunc, this);
         BasicBlockList.add(0, firstBB);
-        RISCBasicBlock lastBB = new RISCBasicBlock(1, irFunc, this);
-        BasicBlockList.add(lastBB);
+
+
     }
 
     public LinkedList<RISCBasicBlock> getBasicBlockList() {

@@ -19,8 +19,12 @@ public class RISCBasicBlock {
     private Function irFunction;
     private RISCFunction riscFunction;
     private String blockName;
+    public Boolean isEndblock = false;
 
-    public String getBlockName (){return blockName;}
+
+    public String getBlockName() {
+        return blockName;
+    }
 
     /**
      * 此构造函数为创建函数的初始块和结束块
@@ -30,6 +34,7 @@ public class RISCBasicBlock {
         this.irFunction = irFunc;
         //初始块
         if (i == 0) {
+            System.out.println(riscFunction.funcName + "\t" + "localindex=" + riscFunction.localStackIndex);
             int imm = 0;
             imm = riscFunction.localStackIndex + riscFunction.operandStackCounts * 8;
             AddiInstruction addi1 = new AddiInstruction(new RealRegister(2), new RealRegister(2), new Immediate(-imm));
@@ -44,8 +49,11 @@ public class RISCBasicBlock {
         }
         //结束块
         else {
+            System.out.println(riscFunction.funcName + "\t" + "localindex=" + riscFunction.localStackIndex);
+            isEndblock = true;
             int imm = 0;
-            imm = riscFunction.localStackIndex;
+            imm = riscFunction.localStackIndex + riscFunction.operandStackCounts * 8;
+            //System.out.println(riscFunction.funcName+"\t"+riscFunction.operandStackCounts);
             LdInstruction ld1 = new LdInstruction(new RealRegister(3), new Memory(imm - 8, 2));
             instructionList.add(ld1);
             LdInstruction ld2 = new LdInstruction(new RealRegister(1), new Memory(imm - 16, 2));
@@ -85,12 +93,72 @@ public class RISCBasicBlock {
                 case FMUL -> translateCaculate(curInst);
                 case FDIV -> translateCaculate(curInst);
                 case CALL -> translateCall(curInst);
-                case BR ->  translateBr(curInst);
+                case BR -> translateBr(curInst);
+                case NE -> translateNe(curInst);
+                case FNE -> translateNe(curInst);
             }
 
         }
     }
 
+    //控制流NE和FNE为两数相减，若两数相等，结果为0
+    private void translateNe(Instruction curInst) {
+        Value vop1 = curInst.getOperandAt(0);
+        RISCOperand op1 = getOperand(vop1);
+        RISCOperand temp1 = null;
+        if (op1 instanceof Memory) {
+            temp1 = new VirtualRegister(riscFunction.virtualRegisterIndex++);
+            LwInstruction lw1 = new LwInstruction(temp1, op1);
+            instructionList.add(lw1);
+        } else if (op1 instanceof Register) {
+            temp1 = op1;
+            //if(riscFunction.valueVRMap.get(vop1) == (VirtualRegister) op1) {riscFunction.valueVRMap.remove(vop1);}
+
+        } else if (op1 instanceof Immediate) {
+            VirtualRegister vr = getNewVr();
+            LiInstruction li = new LiInstruction(vr, op1);
+            instructionList.add(li);
+            temp1 = vr;
+        }
+
+        Value vop2 = curInst.getOperandAt(1);
+        RISCOperand op2 = getOperand(vop2);
+        RISCOperand temp2 = null;
+        if (op2 instanceof Memory) {
+            temp2 = new VirtualRegister(riscFunction.virtualRegisterIndex++, vop2);
+            //riscFunction.valueVRMap.put(vop2,(VirtualRegister) temp2);
+            LwInstruction lw2 = new LwInstruction(temp2, op2);
+            instructionList.add(lw2);
+        } else if (op2 instanceof Register) {
+            temp2 = op2;
+        } else if (op2 instanceof Immediate) {
+            VirtualRegister vr = getNewVr();
+            LiInstruction li = new LiInstruction(vr, op2);
+            instructionList.add(li);
+            temp2 = vr;
+        }
+
+        if (curInst.getTag() == Instruction.TAG.NE) {
+            SubwInstruction cal = new SubwInstruction(temp1, temp1, temp2);
+            instructionList.add(cal);
+        } else if (curInst.getTag() == Instruction.TAG.FNE) {
+            FsubInstruction cal = new FsubInstruction(temp1, temp1, temp2);
+            instructionList.add(cal);
+        }
+
+        RISCOperand dst = getOperand(curInst);
+        if (temp1 instanceof VirtualRegister) {
+            riscFunction.valueVRMap.put(curInst, (VirtualRegister) temp1);
+        } else if (temp1 instanceof FloatVirtualRegister) {
+            riscFunction.valueFloatVrMap.put(curInst, (FloatVirtualRegister) temp1);
+        }
+        if (riscFunction.funcParameters.containsKey(curInst)) {
+            MvInstruction mv = new MvInstruction(dst, temp1);
+            instructionList.add(mv);
+        }
+    }
+
+    //控制流，使用bne reg，zero，label实现
     private void translateBr(Instruction curInst) {
         int paraCount = curInst.getNumOP();
         if(paraCount == 1){
@@ -98,43 +166,44 @@ public class RISCBasicBlock {
             StringBuffer vName = new StringBuffer(v.getName());
             //vName.deleteCharAt(0);
             String vN = new String(vName);
-            MyString ms = new MyString("B"+vN);
+            MyString ms = new MyString(".B" + vN);
             JInstruction j = new JInstruction(ms);
             instructionList.add(j);
-        }
-        else if(paraCount == 3){
+        } else if(paraCount == 3){
             Value v1 = curInst.getOperandAt(0);
             if(v1 instanceof Constant){
                 if(((Constant.ConstantInt)v1).getVal()>=1){
                     Value v = curInst.getOperandAt(1);
                     StringBuffer vName = new StringBuffer(v.getName());
                     String vN = new String(vName);
-                    MyString ms = new MyString("B"+vN);
+                    MyString ms = new MyString(".B" + vN);
                     JInstruction j = new JInstruction(ms);
                     instructionList.add(j);
-                }
-                else {
+                } else {
                     Value v = curInst.getOperandAt(2);
                     StringBuffer vName = new StringBuffer(v.getName());
                     String vN = new String(vName);
-                    MyString ms = new MyString("B"+vN);
+                    MyString ms = new MyString(".B" + vN);
                     JInstruction j = new JInstruction(ms);
                     instructionList.add(j);
                 }
-            }
-            else {
+            } else {
                 RISCOperand rop1 = getOperand(v1);
-                Immediate imm = new Immediate(1);
+                Immediate imm = new Immediate(0);
+                RISCOperand rop2 = getNewVr();
+                LiInstruction li = new LiInstruction(rop2, imm);
+                instructionList.add(li);
                 Value v2 = curInst.getOperandAt(1);
                 StringBuffer vName2 = new StringBuffer(v2.getName());
                 String vN2 = new String(vName2);
-                MyString ms2 = new MyString("B"+vN2);
-                BgeInstruction bge = new BgeInstruction(rop1,imm,ms2);
-                instructionList.add(bge);
+                MyString ms2 = new MyString(".B" + vN2);
+                BneInstruction bne = new BneInstruction(rop1, rop2, ms2);
+                instructionList.add(bne);
+
                 Value v3 = curInst.getOperandAt(2);
                 StringBuffer vName3 = new StringBuffer(v3.getName());
                 String vN3 = new String(vName3);
-                MyString ms3 = new MyString("B"+vN3);
+                MyString ms3 = new MyString(".B" + vN3);
                 JInstruction j = new JInstruction(ms3);
                 instructionList.add(j);
             }
@@ -205,7 +274,7 @@ public class RISCBasicBlock {
 
     private void translateCaculate(Instruction curInst) {
 
-        boolean needVr = false;
+
 
         Value vop1 = curInst.getOperandAt(0);
         RISCOperand op1 = getOperand(vop1);
@@ -439,6 +508,8 @@ public class RISCBasicBlock {
 
         }
 
+        riscFunction.addEndBlock = true;
+
     }
 
     private RISCOperand getOperand(Value value) {
@@ -476,7 +547,9 @@ public class RISCBasicBlock {
                 RISCOperand mem = new Memory((opeIndex - 8) * 8, 2);
                 return mem;
             }
-        } else if (riscFunction.myfuncParameters.containsKey(value)) {
+        }
+        //判断为本函数的参数
+        else if (riscFunction.myfuncParameters.containsKey(value)) {
             int myPIndex = riscFunction.myfuncParameters.get(value);
             if (myPIndex < 8) {
                 if (value.getType().isIntegerType()) {
