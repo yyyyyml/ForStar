@@ -34,7 +34,7 @@ public class RISCBasicBlock {
         this.irFunction = irFunc;
         //初始块
         if (i == 0) {
-            System.out.println(riscFunction.funcName + "\t" + "localindex=" + riscFunction.localStackIndex);
+//            System.out.println(riscFunction.funcName + "\t" + "localindex=" + riscFunction.localStackIndex);
             int imm = 0;
             imm = riscFunction.localStackIndex + riscFunction.operandStackCounts * 8;
             AddiInstruction addi1 = new AddiInstruction(new RealRegister(2), new RealRegister(2), new Immediate(-imm));
@@ -49,7 +49,7 @@ public class RISCBasicBlock {
         }
         //结束块
         else {
-            System.out.println(riscFunction.funcName + "\t" + "localindex=" + riscFunction.localStackIndex);
+//            System.out.println(riscFunction.funcName + "\t" + "localindex=" + riscFunction.localStackIndex);
             isEndblock = true;
             int imm = 0;
             imm = riscFunction.localStackIndex + riscFunction.operandStackCounts * 8;
@@ -138,24 +138,27 @@ public class RISCBasicBlock {
             temp2 = vr;
         }
 
+        RISCOperand dst = getOperand(curInst);
+
         if (curInst.getTag() == Instruction.TAG.NE) {
-            SubwInstruction cal = new SubwInstruction(temp1, temp1, temp2);
+            SubwInstruction cal = new SubwInstruction(dst, temp1, temp2);
             instructionList.add(cal);
         } else if (curInst.getTag() == Instruction.TAG.FNE) {
-            FsubInstruction cal = new FsubInstruction(temp1, temp1, temp2);
+            FsubInstruction cal = new FsubInstruction(dst, temp1, temp2);
             instructionList.add(cal);
         }
 
-        RISCOperand dst = getOperand(curInst);
-        if (temp1 instanceof VirtualRegister) {
-            riscFunction.valueVRMap.put(curInst, (VirtualRegister) temp1);
-        } else if (temp1 instanceof FloatVirtualRegister) {
-            riscFunction.valueFloatVrMap.put(curInst, (FloatVirtualRegister) temp1);
-        }
-        if (riscFunction.funcParameters.containsKey(curInst)) {
-            MvInstruction mv = new MvInstruction(dst, temp1);
-            instructionList.add(mv);
-        }
+        riscFunction.valueRISCOperandHashMap.put(curInst, dst);
+
+//        if (temp1 instanceof VirtualRegister) {
+//            riscFunction.valueVRMap.put(curInst, (VirtualRegister) temp1);
+//        } else if (temp1 instanceof FloatVirtualRegister) {
+//            riscFunction.valueFloatVrMap.put(curInst, (FloatVirtualRegister) temp1);
+//        }
+//        if (riscFunction.funcParameters.containsKey(curInst)) {
+//            MvInstruction mv = new MvInstruction(dst, temp1);
+//            instructionList.add(mv);
+//        }
     }
 
     //控制流，使用bne reg，zero，label实现
@@ -278,6 +281,7 @@ public class RISCBasicBlock {
 
         Value vop1 = curInst.getOperandAt(0);
         RISCOperand op1 = getOperand(vop1);
+        System.out.println(vop1.getName() + " -> " + op1.emit());
         RISCOperand temp1 = null;
         if (op1 instanceof Memory) {
             temp1 = new VirtualRegister(riscFunction.virtualRegisterIndex++);
@@ -296,6 +300,7 @@ public class RISCBasicBlock {
 
         Value vop2 = curInst.getOperandAt(1);
         RISCOperand op2 = getOperand(vop2);
+        System.out.println(vop2.getName() + " -> " + op2.emit());
         RISCOperand temp2 = null;
         if (op2 instanceof Memory) {
             temp2 = new VirtualRegister(riscFunction.virtualRegisterIndex++, vop2);
@@ -311,51 +316,57 @@ public class RISCBasicBlock {
             temp2 = vr;
         }
 
+        RISCOperand dst = getOperand(curInst);
+
         switch (curInst.getTag()) {
             case ADD -> {
-                AddwInstruction cal = new AddwInstruction(temp1, temp1, temp2);
+                AddwInstruction cal = new AddwInstruction(dst, temp1, temp2);
                 instructionList.add(cal);
             }
             case SUB -> {
-                SubwInstruction cal = new SubwInstruction(temp1, temp1, temp2);
+                SubwInstruction cal = new SubwInstruction(dst, temp1, temp2);
                 instructionList.add(cal);
             }
             case MUL -> {
-                MulwInstruction cal = new MulwInstruction(temp1, temp1, temp2);
+                MulwInstruction cal = new MulwInstruction(dst, temp1, temp2);
                 instructionList.add(cal);
             }
             case DIV -> {
-                DivwInstruction cal = new DivwInstruction(temp1, temp1, temp2);
+                DivwInstruction cal = new DivwInstruction(dst, temp1, temp2);
                 instructionList.add(cal);
             }
             case FADD -> {
-                FaddInstruction cal = new FaddInstruction(temp1, temp1, temp2);
+                FaddInstruction cal = new FaddInstruction(dst, temp1, temp2);
                 instructionList.add(cal);
             }
             case FSUB -> {
-                FsubInstruction cal = new FsubInstruction(temp1, temp1, temp2);
+                FsubInstruction cal = new FsubInstruction(dst, temp1, temp2);
                 instructionList.add(cal);
             }
             case FMUL -> {
-                FmulInstruction cal = new FmulInstruction(temp1, temp1, temp2);
+                FmulInstruction cal = new FmulInstruction(dst, temp1, temp2);
                 instructionList.add(cal);
             }
             case FDIV -> {
-                FdivInstruction cal = new FdivInstruction(temp1, temp1, temp2);
+                FdivInstruction cal = new FdivInstruction(dst, temp1, temp2);
                 instructionList.add(cal);
             }
         }
-        RISCOperand dst = getOperand(curInst);
-        if (temp1 instanceof VirtualRegister) {
-            riscFunction.valueVRMap.put(curInst, (VirtualRegister) temp1);
-        } else if (temp1 instanceof FloatVirtualRegister) {
-            riscFunction.valueFloatVrMap.put(curInst, (FloatVirtualRegister) temp1);
-        }
-        if (riscFunction.funcParameters.containsKey(curInst)) {
+        riscFunction.valueRISCOperandHashMap.put(curInst, dst);
 
-            MvInstruction mv = new MvInstruction(dst, temp1);
-            instructionList.add(mv);
-        }
+
+//        if (temp1 instanceof VirtualRegister) {
+//            riscFunction.valueVRMap.remove(vop1);
+//            riscFunction.valueVRMap.put(curInst, (VirtualRegister) temp1);
+//        } else if (temp1 instanceof FloatVirtualRegister) {
+//            riscFunction.valueFloatVrMap.remove(vop1);
+//            riscFunction.valueFloatVrMap.put(curInst, (FloatVirtualRegister) temp1);
+//        }
+//        if (riscFunction.funcParameters.containsKey(curInst)) {
+//            RISCOperand dst = getOperand(curInst);
+//            MvInstruction mv = new MvInstruction(dst, temp1);
+//            instructionList.add(mv);
+//        }
 
     }
 
@@ -381,6 +392,7 @@ public class RISCBasicBlock {
                 MvInstruction mv1 = new MvInstruction(dst, src);
                 instructionList.add(mv1);
             }
+            riscFunction.valueRISCOperandHashMap.put(curInst, dst);
             if (Tdst instanceof Memory) {
                 SwInstruction sw1 = new SwInstruction(dst, Tdst);
                 instructionList.add(sw1);
@@ -401,6 +413,7 @@ public class RISCBasicBlock {
             } else if (src instanceof Register) {
                 ;
             }
+            riscFunction.valueRISCOperandHashMap.put(curInst, dst);
             if (Tdst instanceof Memory) {
                 FswInstruction fsw1 = new FswInstruction(dst, Tdst);
                 instructionList.add(fsw1);
@@ -474,8 +487,8 @@ public class RISCBasicBlock {
     private void translateAlloca(Instruction curInst) {
 
             Memory mem = new Memory(-riscFunction.localStackIndex, 1);
-            riscFunction.localStackIndex += 4;
-            riscFunction.valueMemoryHashMap.put(curInst, mem);
+        riscFunction.localStackIndex += 4;
+        riscFunction.valueRISCOperandHashMap.put(curInst, mem);
 
     }
 
@@ -581,11 +594,11 @@ public class RISCBasicBlock {
                 instructionList.add(flw);
                 return fvr;
             }
-            if (riscFunction.valueFloatVrMap.containsKey(value)) {
-                return riscFunction.valueFloatVrMap.get(value);
+            if (riscFunction.valueRISCOperandHashMap.containsKey(value)) {
+                return riscFunction.valueRISCOperandHashMap.get(value);
             } else {
                 FloatVirtualRegister fvr = new FloatVirtualRegister(riscFunction.floatVirtualRegisterIndex++);
-                riscFunction.valueFloatVrMap.put(value, fvr);
+
                 return fvr;
             }
         } else {
@@ -593,11 +606,14 @@ public class RISCBasicBlock {
                 int val = ((Constant.ConstantInt) value).getVal();
                 RISCOperand temp = new Immediate(val);
                 return temp;
-            } else if (riscFunction.valueVRMap.containsKey(value)) {
-                return riscFunction.valueVRMap.get(value);
-            } else if (riscFunction.valueMemoryHashMap.containsKey(value)) {
-                return riscFunction.valueMemoryHashMap.get(value);
-            } else if (riscFunction.valueRISCOperandHashMap.containsKey(value)) {
+            }
+//            else if (riscFunction.valueVRMap.containsKey(value)) {
+//                System.out.println("find KEY in valueVRMap"+value.getName()+" "+ riscFunction.valueVRMap.get(value).emit());
+//                return riscFunction.valueVRMap.get(value);
+//            } else if (riscFunction.valueMemoryHashMap.containsKey(value)) {
+//                return riscFunction.valueMemoryHashMap.get(value);
+//            }
+            else if (riscFunction.valueRISCOperandHashMap.containsKey(value)) {
                 return riscFunction.valueRISCOperandHashMap.get(value);
             }
 //            else if (Integer.parseInt(valueName) < riscFunction.parameterSize) {
@@ -617,7 +633,8 @@ public class RISCBasicBlock {
 //            }
             else {
                 VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++, value);
-                riscFunction.valueVRMap.put(value, vr);
+//                riscFunction.valueVRMap.put(value, vr);
+//                System.out.println("create VR "+value.getName()+" "+vr.emit());
                 return vr;
             }
         }

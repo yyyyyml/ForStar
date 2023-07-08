@@ -1,8 +1,5 @@
 package backend;
 
-import backend.operands.FloatVirtualRegister;
-import backend.operands.Memory;
-import backend.operands.VirtualRegister;
 import ir.Instruction;
 import ir.Value;
 import ir.values.BasicBlock;
@@ -20,9 +17,9 @@ public class RISCFunction {
     public int parameterSize;
     public int virtualRegisterIndex = 0;
     public int floatVirtualRegisterIndex = 0;
-    public HashMap<Value, FloatVirtualRegister> valueFloatVrMap;
-    public HashMap<Value, VirtualRegister> valueVRMap;
-    public HashMap<Value, Memory> valueMemoryHashMap;
+    //    public HashMap<Value, FloatVirtualRegister> valueFloatVrMap;
+//    public HashMap<Value, VirtualRegister> valueVRMap;
+//    public HashMap<Value, Memory> valueMemoryHashMap;
     public HashMap<Value, RISCOperand> valueRISCOperandHashMap;
     public HashMap<RISCOperand, Value> riscOperandValueHashMap;
     public HashMap<Value, Integer> funcParameters;
@@ -47,9 +44,11 @@ public class RISCFunction {
 
         myfuncParameters = new HashMap<>();
         funcParameters = new HashMap<>();
-        valueFloatVrMap = new HashMap<>();
-        valueVRMap = new HashMap<>();
-        valueMemoryHashMap = new HashMap<>();
+
+//        valueFloatVrMap = new HashMap<>();
+//        valueVRMap = new HashMap<>();
+//        valueMemoryHashMap = new HashMap<>();
+
         valueRISCOperandHashMap = new HashMap<>();
         riscOperandValueHashMap = new HashMap<>();
         BasicBlockList = new LinkedList<>();
@@ -123,12 +122,12 @@ public class RISCFunction {
         Integer blockIndex = 0;
         for (IList.INode<BasicBlock, Function> bbInode : irFunc.list) {
             blockIndex++;
-            System.out.println(funcName + "\t" + "localindex=" + localStackIndex);
+//            System.out.println(funcName + "\t" + "localindex=" + localStackIndex);
             addEndBlock = false;
             RISCBasicBlock curBB = new RISCBasicBlock(bbInode.getElement(), irFunc, this);
             BasicBlockList.add(curBB);
             if (addEndBlock) {
-                System.out.println("!!!" + funcName + "\t" + "localindex=" + localStackIndex);
+//                System.out.println("!!!" + funcName + "\t" + "localindex=" + localStackIndex);
                 stack.push(blockIndex);
             }
         }
