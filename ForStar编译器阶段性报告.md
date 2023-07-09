@@ -127,24 +127,24 @@ IR参考llvm的IR结构和形式。
 ## 4.3 后端
 
 后端文件目录结构如下：
--backend:后端文件夹
-    -RISCModule:目标代码整体的类，其余类为该类之下的属性
-    -RISCBuilder:生成目标代码的类，输入irmodule，生成riscmodule
-    -RISCFunction:目标代码的函数类，其中含有本函数的块
-    -RISCBasicBlock:目标代码的基本块类，其中含有本块的指令列表
-    -RISCInstruction:所有指令对象的父类
-    -RISCOperand:所有操作数对象的父类
-    -RISCGlobalvalBlock:为一个块，存放一个全局变量
-    -RISCFloatBlock:存放一个浮点数值的块
-    -RISCEmitter:打印目标代码
-    -instructions：目标代码指令对象文件夹
-        -LwInstruction
-        -SwInstruction
-        ...
-    -operands:目标代码操作数对象文件夹
-        -Immediate
-        -Register
-        ...
+- backend:后端文件夹
+    - RISCModule:目标代码整体的类，其余类为该类之下的属性
+    - RISCBuilder:生成目标代码的类，输入irmodule，生成riscmodule
+    - RISCFunction:目标代码的函数类，其中含有本函数的块
+    - RISCBasicBlock:目标代码的基本块类，其中含有本块的指令列表
+    - RISCInstruction:所有指令对象的父类
+    - RISCOperand:所有操作数对象的父类
+    - RISCGlobalvalBlock:为一个块，存放一个全局变量
+    - RISCFloatBlock:存放一个浮点数值的块
+    - RISCEmitter:打印目标代码
+    - instructions：目标代码指令对象文件夹
+        - LwInstruction
+        - SwInstruction
+        - ...
+    - operands:目标代码操作数对象文件夹
+        - Immediate
+        - Register
+        - ...
 
 ## 4.4 优化
 
