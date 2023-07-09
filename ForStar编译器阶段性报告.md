@@ -54,7 +54,7 @@ Compiler中核心代码如下，体现了编译器的执行过程：
 
 ```java
     // 词法分析
-	SysY2022Lexer lexer=new SysY2022Lexer(input);
+    SysY2022Lexer lexer=new SysY2022Lexer(input);
             CommonTokenStream tokenStream=new CommonTokenStream(lexer);
 
             // 语法分析
@@ -178,6 +178,9 @@ IR参考llvm的IR结构和形式。
 # 5 参考资料
 
 https://github.com/BUAA-SE-Compiling/miniSysY_example_compiler
+
 https://github.com/cabinz/cbias
+
 https://github.com/cabinz/cbias-tester
+
 https://llvm.org/docs/LangRef.html
