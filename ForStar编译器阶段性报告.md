@@ -14,17 +14,19 @@
 
 ### 梅展郡：
 
--
+- 调研
 -
 
 ### 杨孟林：
 
--
--
+- 调研
+- 实现IR结构定义
+- 实现寄存器分配
+- 实现测试
 
 ### 王子信：
 
--
+- 调研
 -
 
 # 3 结果展示
@@ -36,6 +38,19 @@
 ## 3.3 大赛测评
 
 # 4 设计与实现
+
+项目全部代码位于：https://github.com/yyyyyml/ForStar
+项目源码位于：https://gitlab.eduxiji.net/202310007201641/compiler2023-forstar
+项目结构如下：
+![42f79b9087b101cb9f123a3d3d3d89a8.png](:/fc0d3d854b6c46b7b3417a33bd87a40d)
+
+- frontend：包含ANTLR生成的词法分析器和语法分析器等文件
+- ast：实现将语法树转化为IR结构的相关文件
+- ir：包含IR结构定义
+- pass：包含IR优化和后端优化
+- backend：包含后端结构定义以及翻译成汇编代码的实现
+- util：自定义工具
+- Compiler：启动文件
 
 ## 4.1 前端
 
@@ -50,9 +65,6 @@
 # 5 参考资料
 
 https://github.com/BUAA-SE-Compiling/miniSysY_example_compiler
-
 https://github.com/cabinz/cbias
-
 https://github.com/cabinz/cbias-tester
-
 https://llvm.org/docs/LangRef.html
