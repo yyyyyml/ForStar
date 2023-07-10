@@ -116,6 +116,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         scope.addSymbol("stoptime",
                 builder.buildFunction("stoptime", new FunctionType(voidType, emptyArgTypeList), true)
         );
+
+        scope.addSymbol("memset",
+                builder.buildFunction("memset", new FunctionType(voidType, new ArrayList<>(Arrays.asList(ptrI32Type,i32Type,i32Type))), true)) ;
     }
 
     private void setConstFolding(boolean stat) {
@@ -399,13 +402,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         else {
             visit(ctx.unaryExp());
             if (retVal_.getType().isIntegerType()) {
-                //I1的转换还没写
-                if (retVal_.getType().isBoolType()) {
-                    retVal_ = builder.buildZExt(retVal_);
-                }
-                if (retVal_.getType().isBoolType()) {
-                    retVal_ = builder.buildZExt(retVal_);
-                }
+
+
                 switch (ctx.unaryOp().getText()) {
                     case "-" -> retVal_ = builder.buildSub(builder.buildConstant(0), retVal_);
                     case "!" -> retVal_ = builder.buildComparison("==", builder.buildConstant(0), retVal_);
@@ -414,9 +412,14 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             }
             // Float.
             else {
+                if (retVal_.getType().isBoolType()) {
+                    retVal_ = builder.buildZExt(retVal_);
+                    retVal_ = builder.buildSitofp(retVal_);
+                }
+
                 switch (ctx.unaryOp().getText()) {
                     case "-" -> retVal_ = builder.buildFneg(Instruction.TAG.FNEG, retVal_);
-                    case "!" -> retVal_ = builder.buildComparison("==", builder.buildConstant(0), retVal_);
+                    case "!" -> retVal_ = builder.buildComparison("==", builder.buildConstant(.0f), retVal_);
                     case "+" -> {}
                 }
             }
@@ -1235,7 +1238,17 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     public Void visitNumber(SysY2022Parser.NumberContext ctx) {
         if (ctx.IntConst() != null) {
             int ret = 0;
-            ret = new BigInteger(ctx.IntConst().getText(), 10).intValue();
+            String num = ctx.IntConst().getText();
+            if(num.length()>=2){
+                char num0 = num.charAt(0);
+                char num1 = num.charAt(1);
+                if(num0 == '0' && num1 == 'x') ret = new BigInteger(ctx.IntConst().getText().substring(2), 16).intValue();
+                else if(num0 == '0') ret = new BigInteger(ctx.IntConst().getText(), 8).intValue();
+                else ret = new BigInteger(ctx.IntConst().getText(), 10).intValue();
+            }
+            else{
+                ret = new BigInteger(ctx.IntConst().getText(), 10).intValue();
+            }
             setConveyedType(DataType.INT);
             retInt_ = ret;
             if (!this.inConstFolding()) {
@@ -1660,6 +1673,35 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             retVal_ = val;
         }
 
+        return null;
+    }
+
+    @Override
+    public Void visitArrFuncFParam(SysY2022Parser.ArrFuncFParamContext ctx) {
+        ArrayList<Integer> dimLens = new ArrayList<>();
+
+        // Retrieve dimLens info of the array as arg.
+        // 'expr' as array lengths for func formal args should be constants (Turn on ConstFolding)
+        setConstFolding(ON);
+        for (SysY2022Parser.ExpContext exprContext : ctx.exp()) {
+            visit(exprContext);
+            dimLens.add(retInt_);
+        }
+        setConstFolding(OFF);
+
+        // Build the ArrayType of the function argument.
+        Type arrType;
+        String bType = ctx.bType().getText();
+        switch (bType) {
+            case "int" -> arrType = IntegerType.getType();
+            case "float" -> arrType = FloatType.getType();
+            default -> throw new RuntimeException("Supported function argument type.");
+        }
+        for (int i = dimLens.size(); i > 0; i--) {
+            arrType = ArrayType.getType(arrType, dimLens.get(i - 1));
+        }
+
+        retType_ = PointerType.getType(arrType);
         return null;
     }
 }
