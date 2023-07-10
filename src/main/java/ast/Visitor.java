@@ -986,30 +986,33 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     public Void visitAdd2(SysY2022Parser.Add2Context ctx) {
         if (this.inConstFolding()) {
             visit(ctx.addExp());
+
             switch(getConveyedType()){
                 case INT->{
+
                     int lop = retInt_;
                     visit(ctx.mulExp());
                     switch(getConveyedType()){
                         case INT->{
+
                             int rop = retInt_;
-                            if(ctx.getChild(1).getText() =="+") {
+                            if (ctx.getChild(1).getText().equals("+")) {
                                 retInt_ = lop + rop;
+
                                 setConveyedType(DataType.INT);
-                            }
-                            else if(ctx.getChild(1).getText() =="-") {
+                            } else if (ctx.getChild(1).getText().equals("-")) {
                                 retInt_ = lop - rop;
                                 setConveyedType(DataType.INT);
                             }
+
                         }
                         case FLT->{
                             float rop = retFloat_;
-                            if(ctx.getChild(1).getText() =="+") {
-                                retFloat_ = (float)lop + rop;
+                            if (ctx.getChild(1).getText().equals("+")) {
+                                retFloat_ = (float) lop + rop;
                                 setConveyedType(DataType.FLT);
-                            }
-                            else if(ctx.getChild(1).getText() =="-") {
-                                retFloat_ = (float)lop - rop;
+                            } else if (ctx.getChild(1).getText().equals("-")) {
+                                retFloat_ = (float) lop - rop;
                                 setConveyedType(DataType.FLT);
                             }
                         }
@@ -1021,22 +1024,20 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     switch(getConveyedType()){
                         case INT->{
                             int rop = retInt_;
-                            if(ctx.getChild(1).getText() =="+") {
-                                retFloat_ = lop + (float)rop;
+                            if (ctx.getChild(1).getText().equals("+")) {
+                                retFloat_ = lop + (float) rop;
                                 setConveyedType(DataType.FLT);
-                            }
-                            else if(ctx.getChild(1).getText() =="-") {
-                                retFloat_ = lop - (float)rop;
+                            } else if (ctx.getChild(1).getText().equals("-")) {
+                                retFloat_ = lop - (float) rop;
                                 setConveyedType(DataType.FLT);
                             }
                         }
                         case FLT->{
                             float rop = retFloat_;
-                            if(ctx.getChild(1).getText() =="+") {
+                            if (ctx.getChild(1).getText().equals("+")) {
                                 retFloat_ = lop + rop;
                                 setConveyedType(DataType.FLT);
-                            }
-                            else if(ctx.getChild(1).getText() =="-") {
+                            } else if (ctx.getChild(1).getText().equals("-")) {
                                 retFloat_ = lop - rop;
                                 setConveyedType(DataType.FLT);
                             }
@@ -1096,30 +1097,26 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     switch(getConveyedType()){
                         case INT->{
                             int rop = retInt_;
-                            if(ctx.getChild(1).getText() =="*") {
+                            if (ctx.getChild(1).getText().equals("*")) {
                                 retInt_ = lop * rop;
                                 setConveyedType(DataType.INT);
-                            }
-                            else if(ctx.getChild(1).getText() =="/") {
+                            } else if (ctx.getChild(1).getText().equals("/")) {
                                 retInt_ = lop / rop;
                                 setConveyedType(DataType.INT);
-                            }
-                            else if(ctx.getChild(1).getText() =="%") {
+                            } else if (ctx.getChild(1).getText().equals("%")) {
                                 retInt_ = lop % rop;
                                 setConveyedType(DataType.INT);
                             }
                         }
                         case FLT->{
                             float rop = retFloat_;
-                            if(ctx.getChild(1).getText() =="*") {
-                                retFloat_ = (float)lop * rop;
+                            if (ctx.getChild(1).getText().equals("*")) {
+                                retFloat_ = (float) lop * rop;
                                 setConveyedType(DataType.FLT);
-                            }
-                            else if(ctx.getChild(1).getText() =="/") {
-                                retFloat_ = (float)lop / rop;
+                            } else if (ctx.getChild(1).getText().equals("/")) {
+                                retFloat_ = (float) lop / rop;
                                 setConveyedType(DataType.FLT);
-                            }
-                            else if(ctx.getChild(1).getText() =="%"){
+                            } else if (ctx.getChild(1).getText().equals("%")) {
                                 throw new RuntimeException("Float number can not use operator %!!");
                             }
                         }
@@ -1131,29 +1128,25 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     switch(getConveyedType()){
                         case INT->{
                             int rop = retInt_;
-                            if(ctx.getChild(1).getText() =="*") {
-                                retFloat_ = lop * (float)rop;
+                            if (ctx.getChild(1).getText().equals("*")) {
+                                retFloat_ = lop * (float) rop;
                                 setConveyedType(DataType.FLT);
-                            }
-                            else if(ctx.getChild(1).getText() =="/") {
-                                retFloat_ = lop / (float)rop;
+                            } else if (ctx.getChild(1).getText().equals("/")) {
+                                retFloat_ = lop / (float) rop;
                                 setConveyedType(DataType.FLT);
-                            }
-                            else if(ctx.getChild(1).getText() =="%"){
+                            } else if (ctx.getChild(1).getText().equals("%")) {
                                 throw new RuntimeException("Float number can not use operator %!!");
                             }
                         }
                         case FLT->{
                             float rop = retFloat_;
-                            if(ctx.getChild(1).getText() =="*") {
+                            if (ctx.getChild(1).getText().equals("*")) {
                                 retFloat_ = lop * rop;
                                 setConveyedType(DataType.FLT);
-                            }
-                            else if(ctx.getChild(1).getText() =="/") {
+                            } else if (ctx.getChild(1).getText().equals("/")) {
                                 retFloat_ = lop / rop;
                                 setConveyedType(DataType.FLT);
-                            }
-                            else if(ctx.getChild(1).getText() =="%"){
+                            } else if (ctx.getChild(1).getText().equals("%")) {
                                 throw new RuntimeException("Float number can not use operator %!!");
                             }
                         }
@@ -1268,6 +1261,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     private int getProductOf(List<Integer> list) {
         int prod = 1;
         for (Integer i : list) {
+
             prod *= i;
         }
         return prod;
@@ -1308,7 +1302,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         conflicts with variables having the same names in the outer scopes.
          */
 
-        String gvName = scope.isGlobal() ? ctx.Ident().getText() : null;
+        //String gvName = scope.isGlobal() ? ctx.Ident().getText() : null;
+        String gvName = ctx.Ident().getText();
         GlobalVariable arr;
 
         // With Initialization.
@@ -1415,6 +1410,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             this.setConstFolding(OFF);
 
             int dimLen = retInt_;
+
             dimLens.add(dimLen);
         }
 
@@ -1563,6 +1559,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         // the curDimLen = 3 and sizSublistInitNeeded = 2.
         int curDimLen = ctx.dimLens.get(0);
 
+        //int j = 1;
         ArrayList<Value> initArr = new ArrayList<>();
         for (SysY2022Parser.InitValContext initValContext : ctx.initVal()) {
             // If the one step lower level still isn't the atom element layer.
@@ -1572,6 +1569,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 initValContext.sizCurDepth = ctx.sizCurDepth / curDimLen;
 
                 visit(initValContext);
+
+                //System.out.println(j++);
+                //System.out.println(retValList_);
                 initArr.addAll(retValList_);
             }
             // If it is the lowest layer of an atom element.
