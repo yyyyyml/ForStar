@@ -1375,6 +1375,23 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
+    private int getZeroTailLen(List<Value> list) {
+        int len = 0;
+        for (int i = list.size() - 1; i > 0; i--) {
+            var elem = list.get(i);
+            if (!(elem instanceof Constant)) {
+                break;
+            }
+            var constElem = (Constant) elem;
+            if (constElem.getType().isFloatType() && !constElem.isZero()
+                    || constElem.getType().isIntegerType() && !constElem.isZero() ) {
+                break;
+            }
+            len++;
+        }
+        return len;
+    }
+
     @Override
     public Void visitArrVarDef(SysY2022Parser.ArrVarDefContext ctx) {
         // Get all lengths of dimension by looping through the constExp list.
@@ -1456,7 +1473,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     add(builder.buildConstant(0));
                     add(builder.buildConstant(0));
                 }};
-                GetElemPtrInst ptr1d = builder.buildGEP(alloca, zeroIndices);
+                MemoryInst.GEP ptr1d = builder.buildGEP(alloca, zeroIndices);
                 for (int i = 1; i < dimLens.size(); i++) {
                     ptr1d = builder.buildGEP(ptr1d, zeroIndices);
                 }
@@ -1466,13 +1483,13 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                  */
                 // Args of memset.
                 // For arg str: Cast float* to i32* if needed.
-                GetElemPtrInst startPoint = ptr1d;
+                MemoryInst.GEP startPoint = ptr1d;
                 Value str;
-                if (startPoint.getType().getPointeeType().isI32()) {
+                if (((PointerType)startPoint.getType()).getPointedType().isIntegerType()) {
                     str = startPoint;
                 }
                 else {
-                    str = builder.buildBitcast(startPoint, PointerType.getType(IntegerType.getI32()));
+                    str = builder.buildPtrcast(startPoint);
                 }
                 Constant.ConstantInt c = builder.buildConstant(0);
                 // For arg n: In SysY, both supported data types (int/float) are 4 bytes.
@@ -1487,15 +1504,15 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
 
                 // Initialize linearly using the 1d pointer and offset.
-                GetElemPtrInst gep = ptr1d;
+                MemoryInst.GEP gep = ptr1d;
                 for (int i = 0; i < retValList_.size() - zeroTail; i++) {
                     Value initVal = retValList_.get(i);
 
                     // If the initial Value is a Constant zero (literal 0 or .0f),
                     // skip this round to not generate any Store instruction.
 
-                    if (initVal instanceof Constant.ConstantInt && initVal == IntegerType.getZero()
-                            || initVal instanceof Constant.ConstantFloat && initVal == FloatType.getZero()) {
+                    if (initVal instanceof Constant.ConstantInt && initVal == IntegerType.getIntZero()
+                            || initVal instanceof Constant.ConstantFloat && initVal == FloatType.getFloatZero()) {
                         continue;
                     }
 
@@ -1512,7 +1529,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                         initVal = builder.buildSitofp(initVal);
                     }
                     else if (initVal.getType().isFloatType() && arrType.getElemType().isIntegerType()) {
-                        initVal = builder.buildFptosi(initVal, (IntegerType) arrType.getElemType());
+                        initVal = builder.buildFptosi(initVal);
                     }
 
                     // Assign the initial value with a Store.
@@ -1569,6 +1586,79 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             initArr.add(builder.buildConstant(0));
         }
         retValList_ = initArr;
+
+        return null;
+    }
+
+    @Override
+    public Void visitArrLVal(SysY2022Parser.ArrLValContext ctx) {
+        /*
+        Retrieve the value defined previously from the symbol table.
+         */
+        String name  = ctx.Ident().getText();
+        Value val = scope.getVal(name) ;
+
+        /*
+        Security Checks.
+         */
+        if (val == null) {
+            throw new RuntimeException("Undefined value: " + name);
+        }
+
+
+        if (this.inConstFolding()) {
+            // All const arrays should be promoted as global in this::visitArrConstInitVal.
+            if (!(val instanceof GlobalVariable)
+                    || !((GlobalVariable) val).isConstant()
+                    || !((GlobalVariable) val).isArray()) {
+                throw new RuntimeException("Try to fold a non-constant value.");
+            }
+
+            Constant.ConstantArray arr = ((Constant.ConstantArray) ((GlobalVariable) val).getInitVal());
+            ArrayList<Integer> indices = new ArrayList<>();
+            for (var exprContext : ctx.exp()) {
+                visit(exprContext);
+                indices.add(retInt_);
+            }
+            retVal_ = arr.getElemByIndex(indices);
+        }
+        else {
+            /*
+            Retrieve the array element.
+             */
+            Type valType = ((PointerType) val.getType()).getPointedType();
+            // An array.
+            if (valType.isArrayType()) {
+                for (SysY2022Parser.ExpContext exprContext : ctx.exp()) {
+                    visit(exprContext);
+                    val = builder.buildGEP(val, new ArrayList<>() {{
+                        add(builder.buildConstant(0));
+                        add(retVal_);
+                    }});
+                }
+            }
+            // A pointer (An array passed into as an argument in a function / A glb var)
+            else {
+                MemoryInst.Load load = builder.buildLoad(
+                        ((PointerType) val.getType()).getPointedType(),
+                        val
+                );
+                visit(ctx.exp(0));
+                val = builder.buildGEP(load, new ArrayList<>() {{
+                    add(retVal_);
+                }});
+
+                for (int i = 1; i < ctx.exp().size(); i++) {
+                    visit(ctx.exp(i));
+                    val = builder.buildGEP(val, new ArrayList<>() {{
+                        add(builder.buildConstant(0));
+                        add(retVal_);
+                    }});
+                }
+            }
+
+            retVal_ = val;
+        }
 
         return null;
     }

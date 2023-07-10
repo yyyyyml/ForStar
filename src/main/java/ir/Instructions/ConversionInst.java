@@ -74,7 +74,7 @@ public class ConversionInst {
      */
     public static class Ptrcast extends Instruction {
         public Ptrcast(Value cur) {
-            super(new PointerType(Type.FloatType.getType()), TAG.PTRCAST, 1);
+            super(new PointerType(Type.IntegerType.getType()), TAG.PTRCAST, 1);
             this.setOperand(cur, 0);
         }
 

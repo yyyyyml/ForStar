@@ -1,13 +1,7 @@
-float f;
-int z;
-int main () {
-    int a=0;
-    int b=0;
-    while(a){
-    if(b){
-    continue;
-    }
-    }
-    return 0;
+const int a[100] = {0};
+float b[1][2][3] = {0};
+int main(){
+    int c[100];
+    c[10] = a[0];
+    return c[10];
 }
-

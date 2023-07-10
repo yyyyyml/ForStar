@@ -10,6 +10,7 @@ import ir.Type;
 import ir.Value;
 import ir.types.ArrayType;
 import ir.types.FunctionType;
+import ir.types.PointerType;
 import ir.values.BasicBlock;
 import ir.values.Constant;
 import ir.values.Function;
@@ -130,6 +131,17 @@ public class Builder {
         ConversionInst.Sitofp inst = new ConversionInst.Sitofp(preVal);
         getCurBB().list.addLast(inst.node);
         return inst;
+    }
+
+    public ConversionInst.Ptrcast buildPtrcast(Value srcVal) {
+        // Security checks.
+        if (!srcVal.getType().isPointerType()) {
+            throw new RuntimeException("A non-pointer src Value is given.");
+        }
+        // Construct, insert, and return.
+        ConversionInst.Ptrcast ptrcast = new ConversionInst.Ptrcast(srcVal);
+        getCurBB().list.addLast(ptrcast.node) ;
+        return ptrcast;
     }
 
     public BinaryInst buildAdd(Value lOp, Value rOp) {

@@ -2515,6 +2515,8 @@ public class SysY2022Parser extends Parser {
 
     @SuppressWarnings("CheckReturnValue")
     public static class InitValContext extends ParserRuleContext {
+        public ArrayList<Integer> dimLens;
+        public int sizCurDepth;
         public InitValContext(ParserRuleContext parent, int invokingState) {
             super(parent, invokingState);
         }

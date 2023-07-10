@@ -2,6 +2,7 @@ package ir.values;
 
 import ir.Type;
 import ir.User;
+import ir.Value;
 import ir.types.ArrayType;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,6 +85,42 @@ public class Constant extends User {
             var newArr = new Constant.ConstantArray(arrType, initList);
             pool.put(key, newArr);
             return newArr;
+        }
+
+        public Value getElemByIndex(Iterable<Integer> indices) {
+            Value elem = this;
+            for (Integer idx : indices) {
+                if (elem.getType().isArrayType()) {
+                    elem = ((Constant.ConstantArray) elem).getOperandAt(idx);
+                }
+                else {
+                    throw new RuntimeException("Depth of indies given is to large.");
+                }
+            }
+            return elem;
+        }
+
+        @Override
+        public String toString() {
+            // e.g. [2 x i32] [i32 1, i32 2] or [2 x i32] zeroinitializer
+            StringBuilder strBuilder = new StringBuilder();
+            strBuilder.append(this.getType()); // "[2 x i32]"
+
+            if (this.isZero()) { // "zeroinitializer"
+                strBuilder.append(" zeroinitializer");
+            }
+            else { // "[i32 1, i32 2]"
+                strBuilder.append(" [");
+                for (int i = 0; i < this.getNumOP() ; i++) {
+                    if (i != 0) {
+                        strBuilder.append(", ");
+                    }
+                    strBuilder.append(this.getOperandAt(i));
+                }
+                strBuilder.append("]");
+            }
+
+            return strBuilder.toString();
         }
     }
     /**

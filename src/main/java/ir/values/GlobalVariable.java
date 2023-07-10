@@ -27,11 +27,18 @@ public class GlobalVariable extends User {
     public void setConst() {
         this.isConst = true;
     }
-
+    public boolean isConstant() {
+        return isConst;
+    }
     public void setInit(Constant init) {
         this.init = init;
     }
-
+    public Constant getInitVal() {
+        return init;
+    }
+    public boolean isArray() {
+        return ((PointerType)this.getType()).getPointedType().isArrayType();
+    }
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

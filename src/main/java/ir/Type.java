@@ -51,6 +51,13 @@ public class Type {
         return (this instanceof BoolType);
     }
 
+    public Constant getZero() {
+        if (this.isIntegerType()) {
+            return IntegerType.getIntZero();
+        } else if (this.isFloatType()) {
+            return FloatType.getFloatZero();
+        } else return null;
+    }
     // NoneType
     public static class NonType extends Type {
         private static NonType type = new NonType();
@@ -112,7 +119,7 @@ public class Type {
         public String toString() {
             return "i32";
         }
-        public static Constant getZero(){
+        public static Constant getIntZero(){
             return Constant.ConstantInt.getConstantInt(0);
         }
     }
@@ -150,7 +157,7 @@ public class Type {
             return "float";
         }
 
-        public static Constant getZero(){
+        public static Constant getFloatZero(){
             return Constant.ConstantFloat.getConstantFloat(0);
         }
     }
