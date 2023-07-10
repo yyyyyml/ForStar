@@ -13,7 +13,7 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.List;
-
+import java.util.ArrayList;
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue"})
 public class SysY2022Parser extends Parser {
     public static final int
@@ -2303,6 +2303,8 @@ public class SysY2022Parser extends Parser {
 
     @SuppressWarnings("CheckReturnValue")
     public static class ConstInitValContext extends ParserRuleContext {
+        public ArrayList<Integer> dimLens;
+        public int sizCurDepth;
         public ConstInitValContext(ParserRuleContext parent, int invokingState) {
             super(parent, invokingState);
         }

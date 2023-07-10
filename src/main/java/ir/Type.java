@@ -112,6 +112,9 @@ public class Type {
         public String toString() {
             return "i32";
         }
+        public static Constant getZero(){
+            return Constant.ConstantInt.getConstantInt(0);
+        }
     }
 
     // BoolType
@@ -145,6 +148,10 @@ public class Type {
         @Override
         public String toString() {
             return "float";
+        }
+
+        public static Constant getZero(){
+            return Constant.ConstantFloat.getConstantFloat(0);
         }
     }
 

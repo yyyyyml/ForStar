@@ -8,6 +8,7 @@ import ir.Instructions.FnegInst;
 import ir.Module;
 import ir.Type;
 import ir.Value;
+import ir.types.ArrayType;
 import ir.types.FunctionType;
 import ir.values.BasicBlock;
 import ir.values.Constant;
@@ -319,6 +320,57 @@ public class Builder {
         ConversionInst.Zext zext = new ConversionInst.Zext(srcVal);
         getCurBB().list.addLast(zext.node) ;
         return zext;
+    }
+
+    public Constant.ConstantArray buildConstArr(ArrayType arrType, ArrayList<Constant> initList) {
+        /*
+        If the initialization list is shorter than needed,
+        filled the blanks with 0 (or .0f).
+         */
+        Type primType = arrType.getAtomType();
+        Constant prim = new Constant(primType);
+        while (arrType.getAtomLen() > initList.size()) {
+            initList.add(prim);
+        }
+
+
+        if (arrType.getElemType().isArrayType()) {
+            /*
+            Build the nested initList from the given linear initList.
+             */
+            ArrayList<Constant> nestedInitList = new ArrayList<>();
+            int j = 0;
+            int step = arrType.getAtomLen() / arrType.getLen();
+            while(j < initList.size()) {
+                nestedInitList.add(
+                        buildConstArr(
+                                (ArrayType) arrType.getElemType(),
+                                new ArrayList<>(initList.subList(j, j + step))
+                        )
+                );
+                j += step;
+            }
+
+            return Constant.ConstantArray.get(arrType, nestedInitList);
+        }
+        else {
+            Type elemType = arrType.getElemType();
+            for (int i = 0; i < initList.size(); i++) {
+                Value elem = initList.get(i);
+                if (elem.getType() != elemType) {
+                    if (elemType.isFloatType()) { // cast elem i32 -> float
+                        int numericVal = ((Constant.ConstantInt) elem).getVal();
+                        initList.set(i, buildConstant((float) numericVal));
+                    }
+                    else if (elemType.isIntegerType()) { // cast elem float -> i32
+                        float numericVal = ((Constant.ConstantFloat) elem).getVal();
+                        initList.set(i, buildConstant((int) numericVal));
+                    }
+                }
+            }
+            return Constant.ConstantArray.get(arrType, initList);
+        }
+
     }
 }
 

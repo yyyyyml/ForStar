@@ -10,6 +10,7 @@ import ir.Type;
 import ir.Type.FloatType;
 import ir.Type.IntegerType;
 import ir.Value;
+import ir.types.ArrayType;
 import ir.types.FunctionType;
 import ir.types.PointerType;
 import ir.values.BasicBlock;
@@ -1251,4 +1252,324 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         return null;
     }
 
+    private int getProductOf(List<Integer> list) {
+        int prod = 1;
+        for (Integer i : list) {
+            prod *= i;
+        }
+        return prod;
+    }
+
+    @Override
+    public Void visitArrConstDef(SysY2022Parser.ArrConstDefContext ctx) {
+        // Scan to retrieve the length of each dimension, storing them in a list.
+        ArrayList<Integer> dimLens = new ArrayList<>();
+        for (SysY2022Parser.ConstExpContext constExpContext : ctx.constExp()) {
+            visit(constExpContext);
+            int dimLen = ((Constant.ConstantInt) retVal_).getVal();
+            dimLens.add(dimLen);
+        }
+
+        // The type of the basic element in the array.
+        Type tmpType = null;
+        // Retrieve the basic element type.
+        String bType = ctx.getParent().getChild(1).getText();
+        switch (bType) {
+            case "int" -> tmpType = IntegerType.getType();
+            case "float" -> tmpType = FloatType.getType();
+        }
+        // Build the final type of the array
+        // by looping through the dimLens from the inside out.
+        for (int i = dimLens.size(); i > 0; i--) {
+            tmpType = ArrayType.getType(tmpType, dimLens.get(i - 1));
+        }
+        ArrayType arrType = (ArrayType) tmpType;
+
+        /*
+        In SysY, no explicit addresses or pointers is allowed, because of which
+        all const local arrays can be directly promoted to be located in global space.
+        (no one cares whether its address is on stack or global segment).
+
+        Thus, all const arrays are treated as global arrays.
+        But promoted local arrays needs to be reassigned a name before emitted to prevent
+        conflicts with variables having the same names in the outer scopes.
+         */
+
+        String gvName = scope.isGlobal() ? ctx.Ident().getText() : null;
+        GlobalVariable arr;
+
+        // With Initialization.
+        if (ctx.constInitVal() != null) {
+            // Pass down the lengths of each dimension.
+            // Visit constInitVal (ArrConstInitVal) to generate the initial list for the array
+            // which will be filled with 0 by visitArrConstInitVal if the number of given initial
+            // values is not enough.
+            ctx.constInitVal().dimLens = dimLens;
+            ctx.constInitVal().sizCurDepth = getProductOf(dimLens);
+
+            this.setConstFolding(ON);
+            visit(ctx.constInitVal());
+            this.setConstFolding(OFF);
+
+            // ArrConstInitVal will generate an array of Values,
+            // convert them into Constants and build a ConstArray.
+            ArrayList<Constant> initList = new ArrayList<>();
+            for (Value val : retValList_) {
+                initList.add((Constant.ConstantInt) val);
+            }
+            Constant.ConstantArray initArr = builder.buildConstArr(arrType, initList);
+            // Build the ConstArray a global variable.
+            arr = builder.buildGlobalVar(gvName, initArr);
+        }
+        // W/o initialization.
+        else {
+            arr = builder.buildGlobalVar(gvName, arrType);
+        }
+
+        // This line will also check if a glb var is successfully built.
+        // A java exception will be thrown if arr == null.
+        arr.setConst();
+        // Add the array into the symbol table.
+        scope.addSymbol(ctx.Ident().getText(), arr);
+
+        return null;
+    }
+
+    @Override
+    public Void visitArrConstInitVal(SysY2022Parser.ArrConstInitValContext ctx) {
+        // For arr[3][2] with initialization { {1,2}, {3,4}, {5,6} },
+        // the dimLen = 3 and sizSublistInitNeeded = 2.
+        int dimLen = ctx.dimLens.get(0);
+
+        ArrayList<Value> initArr = new ArrayList<>();
+        for (SysY2022Parser.ConstInitValContext constInitValContext : ctx.constInitVal()) {
+            // If the one step lower level still isn't the atom element layer.
+            if (constInitValContext instanceof SysY2022Parser.ArrConstInitValContext) {
+                constInitValContext.dimLens = new ArrayList<>(
+                        ctx.dimLens.subList(1, ctx.dimLens.size()));
+                constInitValContext.sizCurDepth = ctx.sizCurDepth / dimLen;
+                visit(constInitValContext);
+                initArr.addAll(retValList_);
+            }
+            // If it is the lowest layer.
+            else {
+                visit(constInitValContext);
+                initArr.add(retVal_);
+            }
+        }
+
+        // Security check.
+        if (initArr.size() > ctx.sizCurDepth) {
+            throw new RuntimeException("The length of initList (" + initArr.size() + ")" +
+                    " exceeds the maximum size of current depth (" + ctx.sizCurDepth + ")");
+        }
+
+        // Fill the initialized list with enough 0.
+        int sizToFillTo = (ctx.getParent() instanceof SysY2022Parser.ArrConstDefContext) ?
+                ctx.sizCurDepth : ctx.dimLens.get(ctx.dimLens.size() - 1);
+        for (int i = initArr.size(); i < sizToFillTo; i++) {
+            initArr.add(builder.buildConstant(0));
+        }
+        retValList_ = initArr;
+
+        return null;
+    }
+
+    @Override
+    public Void visitArrVarDef(SysY2022Parser.ArrVarDefContext ctx) {
+        // Get all lengths of dimension by looping through the constExp list.
+        ArrayList<Integer> dimLens = new ArrayList<>();
+        for (SysY2022Parser.ConstExpContext constExpContext : ctx.constExp()) {
+            this.setConstFolding(ON);
+            visit(constExpContext);
+            this.setConstFolding(OFF);
+
+            int dimLen = retInt_;
+            dimLens.add(dimLen);
+        }
+
+        Type tmpType = null;
+        // Retrieve the basic element type.
+        String bType = ctx.getParent().getChild(0).getText();
+        switch (bType) {
+            case "int" -> tmpType = IntegerType.getType() ;
+            case "float" -> tmpType = FloatType.getType();
+        }
+        // Build the arrType bottom-up (reversely).
+        for (int i = dimLens.size(); i > 0; i--) {
+            tmpType = ArrayType.getType(tmpType, dimLens.get(i - 1));
+        }
+        ArrayType arrType = (ArrayType) tmpType;
+
+        /*
+        Global array.
+         */
+        if (scope.isGlobal()) {
+            // With initialization.
+            if (ctx.initVal() != null) {
+                // Pass down dim info.
+                // Visit child to retrieve the initialized Value list (stored in retValList_).
+                ctx.initVal().dimLens = dimLens;
+                ctx.initVal().sizCurDepth = getProductOf(dimLens);
+
+                this.setConstFolding(ON);
+                visit(ctx.initVal());
+                this.setConstFolding(OFF);
+
+                // Convert the Values returned into Constants.
+                ArrayList<Constant> initList = new ArrayList<>();
+                for (Value val : retValList_) {
+                    initList.add((Constant) val);
+                }
+                // Build the const array, set it to be a global variable and put it into the symbol table.
+                Constant.ConstantArray initArr = builder.buildConstArr(arrType, initList);
+                GlobalVariable arr = builder.buildGlobalVar(ctx.Ident().getText(), initArr);
+                scope.addSymbol(ctx.Ident().getText(), arr) ;
+            }
+            // W/o initialization.
+            else {
+                GlobalVariable arr = builder.buildGlobalVar(ctx.Ident().getText(), arrType);
+                scope.addSymbol(ctx.Ident().getText(), arr) ;
+            }
+        }
+        /*
+        Local array.
+         */
+        else {
+            var alloca = builder.buildAlloca(arrType);
+            scope.addSymbol(ctx.Ident().getText(), alloca) ;
+
+            // If there's initialization, translate it as several GEP & Store combos.
+            if (ctx.initVal() != null) {
+                // Compute and pass down dimensional info, visit child to generate initialization assignments.
+                ctx.initVal().dimLens = dimLens;
+                ctx.initVal().sizCurDepth = getProductOf(dimLens);
+
+                visit(ctx.initVal());
+                int zeroTail = getZeroTailLen(retValList_);
+
+                /*
+                Indexing array with any number of dimensions with GEP in 1-d array fashion.
+                 */
+                // Dereference the pointer returned by Alloca to be an 1-d array address.
+                ArrayList<Value> zeroIndices = new ArrayList<>() {{
+                    add(builder.buildConstant(0));
+                    add(builder.buildConstant(0));
+                }};
+                GetElemPtrInst ptr1d = builder.buildGEP(alloca, zeroIndices);
+                for (int i = 1; i < dimLens.size(); i++) {
+                    ptr1d = builder.buildGEP(ptr1d, zeroIndices);
+                }
+
+                /*
+                Firstly fill the memory block with zero using memset.
+                 */
+                // Args of memset.
+                // For arg str: Cast float* to i32* if needed.
+                GetElemPtrInst startPoint = ptr1d;
+                Value str;
+                if (startPoint.getType().getPointeeType().isI32()) {
+                    str = startPoint;
+                }
+                else {
+                    str = builder.buildBitcast(startPoint, PointerType.getType(IntegerType.getI32()));
+                }
+                Constant.ConstantInt c = builder.buildConstant(0);
+                // For arg n: In SysY, both supported data types (int/float) are 4 bytes.
+                Constant.ConstantInt n = builder.buildConstant(4 * arrType.getAtomLen());
+
+                //Call memset.
+                builder.buildCall((Function) scope.getVal("memset") , new ArrayList<>(){{
+                    add(str);
+                    add(c);
+                    add(n);
+                }});
+
+
+                // Initialize linearly using the 1d pointer and offset.
+                GetElemPtrInst gep = ptr1d;
+                for (int i = 0; i < retValList_.size() - zeroTail; i++) {
+                    Value initVal = retValList_.get(i);
+
+                    // If the initial Value is a Constant zero (literal 0 or .0f),
+                    // skip this round to not generate any Store instruction.
+
+                    if (initVal instanceof Constant.ConstantInt && initVal == IntegerType.getZero()
+                            || initVal instanceof Constant.ConstantFloat && initVal == FloatType.getZero()) {
+                        continue;
+                    }
+
+                    // Index the address of the cell to store initial data.
+                    if (i > 0) {
+                        int offset1d = i;
+                        gep = builder.buildGEP(ptr1d, new ArrayList<>() {{
+                            add(builder.buildConstant(offset1d));
+                        }});
+                    }
+
+                    // Type matching check and conversion.
+                    if (initVal.getType().isIntegerType() && arrType.getElemType().isFloatType()) {
+                        initVal = builder.buildSitofp(initVal);
+                    }
+                    else if (initVal.getType().isFloatType() && arrType.getElemType().isIntegerType()) {
+                        initVal = builder.buildFptosi(initVal, (IntegerType) arrType.getElemType());
+                    }
+
+                    // Assign the initial value with a Store.
+                    builder.buildStore(initVal, gep);
+                }
+
+
+            }
+        }
+        return null;
+    }
+
+
+    @Override
+    public Void visitArrInitval(SysY2022Parser.ArrInitvalContext ctx) {
+
+        // For arr[3][2] with initialization { {1,2}, {3,4}, {5,6} },
+        // the curDimLen = 3 and sizSublistInitNeeded = 2.
+        int curDimLen = ctx.dimLens.get(0);
+
+        ArrayList<Value> initArr = new ArrayList<>();
+        for (SysY2022Parser.InitValContext initValContext : ctx.initVal()) {
+            // If the one step lower level still isn't the atom element layer.
+            if (initValContext instanceof SysY2022Parser.ArrInitvalContext) {
+                initValContext.dimLens = new ArrayList<>(
+                        ctx.dimLens.subList(1, ctx.dimLens.size()));
+                initValContext.sizCurDepth = ctx.sizCurDepth / curDimLen;
+
+                visit(initValContext);
+                initArr.addAll(retValList_);
+            }
+            // If it is the lowest layer of an atom element.
+            else {
+                visit(initValContext);
+                initArr.add(retVal_);
+            }
+        }
+
+        // Security check.
+        if (initArr.size() > ctx.sizCurDepth) {
+            throw new RuntimeException("The length of initList (" + initArr.size() + ")" +
+                    " exceeds the maximum size of current depth (" + ctx.sizCurDepth + ")");
+        }
+
+        // Fill the initialized list of current layer with enough 0.
+        // NOTICE1: This step is necessary for dealing with the "{}" initializer in SysY.
+        // TODO: But this can be a performance bottle neck with big "{}". same as visitArrConstInitVal
+        // NOTICE2: Only for the outer-most initializer should fill the return list up to the sizCurDepth required.
+        // Any atom elements in any nested sub-initializer (inner layer) are regarded as the inner-most layer elements,
+        // where the layer should be filled up to only the size of last dimension.
+        int sizToFillTo = (ctx.getParent() instanceof SysY2022Parser.ArrVarDefContext) ?
+                ctx.sizCurDepth : ctx.dimLens.get(ctx.dimLens.size() - 1);
+        for (int i = initArr.size(); i < sizToFillTo; i++) {
+            initArr.add(builder.buildConstant(0));
+        }
+        retValList_ = initArr;
+
+        return null;
+    }
 }
