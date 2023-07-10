@@ -63,7 +63,8 @@ STRING : '"'(ESC|.)*?'"';
 fragment ESC : '\\"'|'\\\\';
 
 LINE_COMMENT : '//' .*? '\r'? '\n' -> skip;
-COMMENT : '//' .*? '\n' -> skip;
+//COMMENT : '//' .*? '\n' -> skip;
+COMMENT: '/*'.*?'*/' -> skip;
 
 WS : [ \t\n\r]+ -> skip;
 
