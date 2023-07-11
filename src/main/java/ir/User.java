@@ -50,6 +50,7 @@ public abstract class User extends Value {
             this.addInOperandList(newUse);
             v.addInUseList(newUse);
         }
+//        System.out.println(this.getOperandAt(0));
     }
 
     public void addInOperandList(Use use) {

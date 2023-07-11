@@ -19,6 +19,7 @@ import ir.values.Function;
 import ir.values.GlobalVariable;
 
 import java.math.BigInteger;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -1325,7 +1326,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             for (Value val : retValList_) {
                 initList.add((Constant.ConstantInt) val);
             }
+            System.out.println("--------------------------------------------------------"+initList);
             Constant.ConstantArray initArr = builder.buildConstArr(arrType, initList);
+            System.out.println("--------------------------------------------------------"+initArr);
             // Build the ConstArray a global variable.
             arr = builder.buildGlobalVar(gvName, initArr);
         }

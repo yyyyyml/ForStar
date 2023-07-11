@@ -23,14 +23,16 @@ public class Constant extends User {
     }
 
     public static class ConstantArray extends Constant {
-        ConstantArray(ArrayType arrType, ArrayList<Constant> initList){
-            super(arrType);
+        public ConstantArray(ArrayType arrType, ArrayList<Constant> initList){
+            super(arrType, initList.size());
             for (int i = 0; i < initList.size(); i++) {
                 Constant elem = initList.get(i);
-                if (!elem.isZero()) {
-                    super.setOperand(elem,i);
-                }
+                System.out.println(elem);
+                //if (!elem.isZero()) {
+                super.setOperand(elem,i);
+                //}
             }
+
         }
 
         private static class ConstArrKey {
@@ -57,8 +59,10 @@ public class Constant extends User {
         }
 
         private static final HashMap<ConstArrKey, Constant.ConstantArray> pool = new HashMap<>();
+
         public static Constant.ConstantArray get(ArrayType arrType, ArrayList<Constant> initList) {
             // Check type.
+
             for (Constant elem : initList) {
                 if (arrType.getElemType() != elem.getType()) {
                     throw new RuntimeException(
@@ -68,22 +72,23 @@ public class Constant extends User {
             }
 
             // Process initList: remove all zero values at the end.
-            for (int i = initList.size() - 1; i >= 0; i--) {
+            /*for (int i = initList.size() - 1; i >= 0; i--) {
                 Constant elem = initList.get(i);
                 if (!elem.isZero()) {
                     break;
                 }
                 initList.remove(i);
-            }
+            }*/
 
             // Retrieve the instance and return it.
-            var key = new ConstArrKey(arrType, initList);
+            /*var key = new ConstArrKey(arrType, initList);
             if (pool.containsKey(key)) {
                 return pool.get(key);
-            }
+            }*/
 
-            var newArr = new Constant.ConstantArray(arrType, initList);
-            pool.put(key, newArr);
+            Constant.ConstantArray newArr = new Constant.ConstantArray(arrType, initList);
+            //System.out.println(newArr);
+            //pool.put(key, newArr);
             return newArr;
         }
 
@@ -116,12 +121,15 @@ public class Constant extends User {
                         strBuilder.append(", ");
                     }
                     strBuilder.append(this.getOperandAt(i));
+//                    System.out.println(this.getOperandAt(i));
                 }
                 strBuilder.append("]");
             }
 
             return strBuilder.toString();
         }
+
+
     }
     /**
      * 整数常量
@@ -151,7 +159,7 @@ public class Constant extends User {
 
         @Override
         public String toString() {
-            return this.getType().toString() + this.val;
+            return this.getType().toString() +" "+ this.val;
         }
 
         public int getVal() {

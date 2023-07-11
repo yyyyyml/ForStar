@@ -75,6 +75,8 @@ public class Builder {
         return glbVar;
     }
 
+
+
     public MemoryInst.Alloca buildAlloca(Type allocatedType) {
         MemoryInst.Alloca inst = new MemoryInst.Alloca(allocatedType);
         getCurBB().list.addFirst(inst.node);
@@ -363,7 +365,7 @@ public class Builder {
                 j += step;
             }
 
-            return Constant.ConstantArray.get(arrType, nestedInitList);
+            return new Constant.ConstantArray(arrType, nestedInitList);
         }
         else {
             Type elemType = arrType.getElemType();
@@ -380,7 +382,7 @@ public class Builder {
                     }
                 }
             }
-            return Constant.ConstantArray.get(arrType, initList);
+            return new Constant.ConstantArray(arrType, initList);
         }
 
     }
