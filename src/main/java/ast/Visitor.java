@@ -1407,6 +1407,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     @Override
     public Void visitArrVarDef(SysY2022Parser.ArrVarDefContext ctx) {
         // Get all lengths of dimension by looping through the constExp list.
+
         ArrayList<Integer> dimLens = new ArrayList<>();
         for (SysY2022Parser.ConstExpContext constExpContext : ctx.constExp()) {
             this.setConstFolding(ON);
@@ -1452,7 +1453,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     initList.add((Constant) val);
                 }
                 // Build the const array, set it to be a global variable and put it into the symbol table.
+
                 Constant.ConstantArray initArr = builder.buildConstArr(arrType, initList);
+                //System.out.println(initArr);
                 GlobalVariable arr = builder.buildGlobalVar(ctx.Ident().getText(), initArr);
                 scope.addSymbol(ctx.Ident().getText(), arr, "constarray") ;
             }
@@ -1596,6 +1599,12 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         // NOTICE2: Only for the outer-most initializer should fill the return list up to the sizCurDepth required.
         // Any atom elements in any nested sub-initializer (inner layer) are regarded as the inner-most layer elements,
         // where the layer should be filled up to only the size of last dimension.
+        if(initArr.size()<=1){
+
+        }
+        else{
+
+        }
         int sizToFillTo = (ctx.getParent() instanceof SysY2022Parser.ArrVarDefContext) ?
                 ctx.sizCurDepth : ctx.dimLens.get(ctx.dimLens.size() - 1);
         for (int i = initArr.size(); i < sizToFillTo; i++) {

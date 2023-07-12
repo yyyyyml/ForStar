@@ -341,49 +341,68 @@ public class Builder {
         If the initialization list is shorter than needed,
         filled the blanks with 0 (or .0f).
          */
-        Type primType = arrType.getAtomType();
-        Constant prim = new Constant(primType);
-        while (arrType.getAtomLen() > initList.size()) {
-            initList.add(prim);
+        boolean isZ = true;
+        for(int i = initList.size()-1;i>=0;i--)
+        {
+            if (initList.get(i).getName().equals("0")||initList.get(i).getName().equals("0.0")) {
+                continue;
+            }
+            else{
+                isZ = false;
+                break;
+            }
         }
+        if(isZ == true)
+        {
+            return new Constant.ConstantArray(arrType, initList);
+        }
+        else{
+            Type primType = arrType.getAtomType();
+            Constant prim = new Constant(primType);
+            while (arrType.getAtomLen() > initList.size()) {
+                initList.add(prim);
+            }
 
 
-        if (arrType.getElemType().isArrayType()) {
+            if (arrType.getElemType().isArrayType()) {
             /*
             Build the nested initList from the given linear initList.
              */
-            ArrayList<Constant> nestedInitList = new ArrayList<>();
-            int j = 0;
-            int step = arrType.getAtomLen() / arrType.getLen();
-            while(j < initList.size()) {
-                nestedInitList.add(
-                        buildConstArr(
-                                (ArrayType) arrType.getElemType(),
-                                new ArrayList<>(initList.subList(j, j + step))
-                        )
-                );
-                j += step;
-            }
+                ArrayList<Constant> nestedInitList = new ArrayList<>();
+                int j = 0;
+                int step = arrType.getAtomLen() / arrType.getLen();
+                while(j < initList.size()) {
+                    nestedInitList.add(
+                            buildConstArr(
+                                    (ArrayType) arrType.getElemType(),
+                                    new ArrayList<>(initList.subList(j, j + step))
+                            )
+                    );
+                    j += step;
+                }
 
-            return new Constant.ConstantArray(arrType, nestedInitList);
-        }
-        else {
-            Type elemType = arrType.getElemType();
-            for (int i = 0; i < initList.size(); i++) {
-                Value elem = initList.get(i);
-                if (elem.getType() != elemType) {
-                    if (elemType.isFloatType()) { // cast elem i32 -> float
-                        int numericVal = ((Constant.ConstantInt) elem).getVal();
-                        initList.set(i, buildConstant((float) numericVal));
-                    }
-                    else if (elemType.isIntegerType()) { // cast elem float -> i32
-                        float numericVal = ((Constant.ConstantFloat) elem).getVal();
-                        initList.set(i, buildConstant((int) numericVal));
+                return new Constant.ConstantArray(arrType, nestedInitList);
+            }
+            else {
+                Type elemType = arrType.getElemType();
+                for (int i = 0; i < initList.size(); i++) {
+                    Value elem = initList.get(i);
+                    if (elem.getType() != elemType) {
+                        if (elemType.isFloatType()) { // cast elem i32 -> float
+                            int numericVal = ((Constant.ConstantInt) elem).getVal();
+                            initList.set(i, buildConstant((float) numericVal));
+                        }
+                        else if (elemType.isIntegerType()) { // cast elem float -> i32
+                            float numericVal = ((Constant.ConstantFloat) elem).getVal();
+                            initList.set(i, buildConstant((int) numericVal));
+                        }
                     }
                 }
+
+                return new Constant.ConstantArray(arrType, initList);
             }
-            return new Constant.ConstantArray(arrType, initList);
         }
+
 
     }
 }

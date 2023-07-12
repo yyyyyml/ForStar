@@ -23,8 +23,11 @@ public class Constant extends User {
     }
 
     public static class ConstantArray extends Constant {
+        boolean isAllZero = false;
         public ConstantArray(ArrayType arrType, ArrayList<Constant> initList){
             super(arrType, initList.size());
+
+            if(initList.size()>0&&isZero(initList)) isAllZero = true;
             for (int i = 0; i < initList.size(); i++) {
                 Constant elem = initList.get(i);
 
@@ -111,7 +114,7 @@ public class Constant extends User {
             StringBuilder strBuilder = new StringBuilder();
             strBuilder.append(this.getType()); // "[2 x i32]"
 
-            if (this.isZero()) { // "zeroinitializer"
+            if (isAllZero) { // "zeroinitializer"
                 strBuilder.append(" zeroinitializer");
             }
             else { // "[i32 1, i32 2]"
@@ -184,7 +187,10 @@ public class Constant extends User {
             return new ConstantFloat(Type.FloatType.getType(), value);
 
         }
-
+        @Override
+        public String toString() {
+            return this.getType().toString() +" "+ this.val;
+        }
         public float getVal() {
             return val;
         }
@@ -193,5 +199,19 @@ public class Constant extends User {
     public boolean isZero() {
         return this == this.getType().getZero();
     }
+    public boolean isZero(ArrayList <Constant > initlist) {
+        boolean isZ = true;
+        for(int i = initlist.size()-1;i>=0;i--)
+        {
+            if (initlist.get(i).getName().equals("0")||initlist.get(i).getName().equals("0.0")) {
+                continue;
+            }
+            else{
+                isZ = false;
+                break;
+            }
+        }
 
+        return isZ;
+    }
 }
