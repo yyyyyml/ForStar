@@ -27,7 +27,7 @@ public class Constant extends User {
             super(arrType, initList.size());
             for (int i = 0; i < initList.size(); i++) {
                 Constant elem = initList.get(i);
-                System.out.println(elem);
+
                 //if (!elem.isZero()) {
                 super.setOperand(elem,i);
                 //}
@@ -87,7 +87,7 @@ public class Constant extends User {
             }*/
 
             Constant.ConstantArray newArr = new Constant.ConstantArray(arrType, initList);
-            //System.out.println(newArr);
+
             //pool.put(key, newArr);
             return newArr;
         }

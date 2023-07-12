@@ -27,6 +27,7 @@ import java.util.Stack;
 
 public class Visitor extends SysY2022BaseVisitor<Void> {
     private final Scope scope = new Scope();
+    String curFuncName = "";
     private final boolean ON = true;
     private final boolean OFF = false;
     private Builder builder;
@@ -266,6 +267,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     @Override
     public Void visitFuncDef(SysY2022Parser.FuncDefContext ctx) {
         String funcName = ctx.Ident().getText();
+        curFuncName  = funcName;
         Type retType;
         String strRetType = ctx.funcType().getText();
         switch (strRetType) {
@@ -916,6 +918,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     public Void visitScalarLVal(SysY2022Parser.ScalarLValContext ctx) {
         String name = ctx.Ident().getText();
         isConstantVar = scope.checkVarType(name);
+
         Value val = scope.getVal(name);
         if (val == null) {
             throw new RuntimeException("Undefined value: " + name);
@@ -1303,8 +1306,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         conflicts with variables having the same names in the outer scopes.
          */
 
-        //String gvName = scope.isGlobal() ? ctx.Ident().getText() : null;
-        String gvName = ctx.Ident().getText();
+        String gvName = scope.isGlobal() ? ctx.Ident().getText() : curFuncName+"_"+ ctx.Ident().getText();
+
         GlobalVariable arr;
 
         // With Initialization.
@@ -1326,9 +1329,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             for (Value val : retValList_) {
                 initList.add((Constant.ConstantInt) val);
             }
-            System.out.println("--------------------------------------------------------"+initList);
             Constant.ConstantArray initArr = builder.buildConstArr(arrType, initList);
-            System.out.println("--------------------------------------------------------"+initArr);
             // Build the ConstArray a global variable.
             arr = builder.buildGlobalVar(gvName, initArr);
         }
@@ -1341,7 +1342,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         // A java exception will be thrown if arr == null.
         arr.setConst();
         // Add the array into the symbol table.
-        scope.addSymbol(ctx.Ident().getText(), arr);
+        scope.addSymbol(ctx.Ident().getText(), arr,"const");
 
         return null;
     }
@@ -1453,12 +1454,12 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 // Build the const array, set it to be a global variable and put it into the symbol table.
                 Constant.ConstantArray initArr = builder.buildConstArr(arrType, initList);
                 GlobalVariable arr = builder.buildGlobalVar(ctx.Ident().getText(), initArr);
-                scope.addSymbol(ctx.Ident().getText(), arr) ;
+                scope.addSymbol(ctx.Ident().getText(), arr, "constarray") ;
             }
             // W/o initialization.
             else {
                 GlobalVariable arr = builder.buildGlobalVar(ctx.Ident().getText(), arrType);
-                scope.addSymbol(ctx.Ident().getText(), arr) ;
+                scope.addSymbol(ctx.Ident().getText(), arr,"constarray") ;
             }
         }
         /*
@@ -1573,8 +1574,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
                 visit(initValContext);
 
-                //System.out.println(j++);
-                //System.out.println(retValList_);
+
                 initArr.addAll(retValList_);
             }
             // If it is the lowest layer of an atom element.
@@ -1612,6 +1612,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         Retrieve the value defined previously from the symbol table.
          */
         String name  = ctx.Ident().getText();
+        isConstantVar = scope.checkVarType(name);
         Value val = scope.getVal(name) ;
 
         /*
