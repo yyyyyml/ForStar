@@ -24,7 +24,7 @@ public class RISCFunction {
     public HashMap<RISCOperand, Value> riscOperandValueHashMap;
     public HashMap<Value, Integer> funcParameters;
     public HashMap<Value, Integer> myfuncParameters;
-    public int localStackIndex = 20;
+    public int localStackIndex = 16;
     public int operandStackCounts = 0;
     public int stackSize;
     public int stackIndex;

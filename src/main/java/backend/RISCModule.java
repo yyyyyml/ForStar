@@ -1,6 +1,8 @@
 package backend;
 
 
+import ir.types.ArrayType;
+import ir.types.PointerType;
 import ir.values.Constant;
 import ir.values.Function;
 import ir.values.GlobalVariable;
@@ -27,19 +29,31 @@ public class RISCModule {
     }
 
     public void addGlobalvar(GlobalVariable gv) {
-        if (gv.init == null) {
-            RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(0, gv.getName().substring(1));
-            GlobalVarMap.put(gv, GVB);
-            GlobalVarList.add(GVB);
-        } else if (gv.init.getType().isIntegerType()) {
-            RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(((Constant.ConstantInt) gv.init).getVal(), gv.getName().substring(1));
-            GlobalVarMap.put(gv, GVB);
-            GlobalVarList.add(GVB);
-        } else if (gv.init.getType().isFloatType()) {
-            RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(((Constant.ConstantFloat) gv.init).getVal(), gv.getName().substring(1));
-            GlobalVarMap.put(gv, GVB);
-            GlobalVarList.add(GVB);
+        if (((PointerType) gv.getType()).getPointedType().isArrayType()) {
+            int totalSize = ((ArrayType) ((PointerType) gv.getType()).getPointedType()).getTotalSize();
+            LinkedList<Integer> valList = new LinkedList<>();
+            System.out.println(11111111);
+            if (true) {
+                RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(valList, gv.getName().substring(1), totalSize);
+                GlobalVarMap.put(gv, GVB);
+                GlobalVarList.add(GVB);
+            }
 
+        } else {
+            if (gv.init == null) {
+                RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(0, gv.getName().substring(1));
+                GlobalVarMap.put(gv, GVB);
+                GlobalVarList.add(GVB);
+            } else if (gv.init.getType().isIntegerType()) {
+                RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(((Constant.ConstantInt) gv.init).getVal(), gv.getName().substring(1));
+                GlobalVarMap.put(gv, GVB);
+                GlobalVarList.add(GVB);
+            } else if (gv.init.getType().isFloatType()) {
+                RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(((Constant.ConstantFloat) gv.init).getVal(), gv.getName().substring(1));
+                GlobalVarMap.put(gv, GVB);
+                GlobalVarList.add(GVB);
+
+            }
         }
 
     }
