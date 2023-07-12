@@ -13,6 +13,8 @@ public class RISCEmitter {
         StringBuilder out = new StringBuilder();
         out.append("\t.file\t" + '"' + target.inputFilename + '"' + '\n');
         out.append("\t.option\tpic\n");
+        out.append("\t.attribute unaligned_access, 0\n");
+        out.append("\t.attribute stack_align, 16\n");
         out.append("\t.text\n");
         for (RISCFunction riscFunc : target.getFunctionList()) {
             if (riscFunc.isBuildIn) {

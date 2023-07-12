@@ -41,6 +41,7 @@ public class RISCBasicBlock {
 //            System.out.println(riscFunction.funcName + "\t" + "localindex=" + riscFunction.localStackIndex);
             int imm = 0;
             imm = riscFunction.localStackIndex + riscFunction.operandStackCounts * 8;
+            imm = imm + (16 - imm % 16) % 16;
             AddiInstruction addi1 = new AddiInstruction(new RealRegister(2), new RealRegister(2), new Immediate(-imm));
             instructionList.add(addi1);
             SdInstruction sd1 = new SdInstruction(new RealRegister(3), new Memory(imm - 8, 2));
@@ -57,6 +58,7 @@ public class RISCBasicBlock {
             isEndblock = true;
             int imm = 0;
             imm = riscFunction.localStackIndex + riscFunction.operandStackCounts * 8;
+            imm = imm + (16 - imm % 16) % 16;
             //System.out.println(riscFunction.funcName+"\t"+riscFunction.operandStackCounts);
             LdInstruction ld1 = new LdInstruction(new RealRegister(3), new Memory(imm - 8, 2));
             instructionList.add(ld1);

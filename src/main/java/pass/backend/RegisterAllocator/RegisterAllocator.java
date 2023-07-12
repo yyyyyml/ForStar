@@ -541,7 +541,7 @@ public class RegisterAllocator implements BaseBackendPass {
 
                 // 找return位置，修改return的上面3条有关栈空间的指令
                 if (instIndex == riscInstList.size() - 1 && riscInst.type == RISCInstruction.ITYPE.jr) {
-                    if (riscFunc.stackSize % 8 != 0) {
+                    if (riscFunc.stackSize % 16 == 12) {
                         RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
                         Memory raMemory = (Memory) ldraInst.getOperandAt(1);
                         raMemory.setOffset(riscFunc.stackSize - 8 + 4);
@@ -553,6 +553,30 @@ public class RegisterAllocator implements BaseBackendPass {
                         RISCInstruction addiInst = riscInstList.get(instIndex - 1);
                         Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
                         addiMemory.setVal(riscFunc.stackSize + 4);
+                    } else if (riscFunc.stackSize % 16 == 8) {
+                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
+                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
+                        raMemory.setOffset(riscFunc.stackSize - 8 + 8);
+
+                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
+                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
+                        s0Memory.setOffset(riscFunc.stackSize - 16 + 8);
+
+                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
+                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
+                        addiMemory.setVal(riscFunc.stackSize + 8);
+                    } else if (riscFunc.stackSize % 16 == 4) {
+                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
+                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
+                        raMemory.setOffset(riscFunc.stackSize - 8 + 12);
+
+                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
+                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
+                        s0Memory.setOffset(riscFunc.stackSize - 16 + 12);
+
+                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
+                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
+                        addiMemory.setVal(riscFunc.stackSize + 12);
                     } else {
                         RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
                         Memory raMemory = (Memory) ldraInst.getOperandAt(1);
@@ -574,7 +598,7 @@ public class RegisterAllocator implements BaseBackendPass {
         // 修改函数的前4条指令
         var firstInstList = riscBBList.get(0).getInstructionList();
 
-        if (riscFunc.stackSize % 8 != 0) {
+        if (riscFunc.stackSize % 16 == 12) {
             RISCInstruction addispInst = firstInstList.get(0);
             Immediate addisp = (Immediate) addispInst.getOperandAt(2);
             addisp.setVal(-riscFunc.stackSize - 4);
@@ -590,6 +614,38 @@ public class RegisterAllocator implements BaseBackendPass {
             RISCInstruction addis0Inst = firstInstList.get(3);
             Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
             addis0.setVal(riscFunc.stackSize + 4);
+        } else if (riscFunc.stackSize % 16 == 8) {
+            RISCInstruction addispInst = firstInstList.get(0);
+            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
+            addisp.setVal(-riscFunc.stackSize - 8);
+
+            RISCInstruction ldraInst = firstInstList.get(1);
+            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
+            raMemory.setOffset(riscFunc.stackSize - 8 + 8);
+
+            RISCInstruction lds0Inst = firstInstList.get(2);
+            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
+            s0Memory.setOffset(riscFunc.stackSize - 16 + 8);
+
+            RISCInstruction addis0Inst = firstInstList.get(3);
+            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
+            addis0.setVal(riscFunc.stackSize);
+        } else if (riscFunc.stackSize % 16 == 4) {
+            RISCInstruction addispInst = firstInstList.get(0);
+            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
+            addisp.setVal(-riscFunc.stackSize - 12);
+
+            RISCInstruction ldraInst = firstInstList.get(1);
+            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
+            raMemory.setOffset(riscFunc.stackSize - 8 + 12);
+
+            RISCInstruction lds0Inst = firstInstList.get(2);
+            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
+            s0Memory.setOffset(riscFunc.stackSize - 16 + 12);
+
+            RISCInstruction addis0Inst = firstInstList.get(3);
+            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
+            addis0.setVal(riscFunc.stackSize);
         } else {
             RISCInstruction addispInst = firstInstList.get(0);
             Immediate addisp = (Immediate) addispInst.getOperandAt(2);
