@@ -5,6 +5,8 @@ import backend.operands.*;
 import ir.Instruction;
 import ir.Type;
 import ir.Value;
+import ir.types.ArrayType;
+import ir.types.PointerType;
 import ir.values.BasicBlock;
 import ir.values.Constant;
 import ir.values.Function;
@@ -98,9 +100,38 @@ public class RISCBasicBlock {
                 case BR -> translateBr(curInst);
                 case NE -> translateCond(curInst);
                 case FNE -> translateCond(curInst);
+                case GEP -> translateGep(curInst);
+
             }
 
         }
+    }
+
+    //数组
+    private void translateGep(Instruction curInst) {
+        int totalSize = ((ArrayType) ((PointerType) curInst.getOperandAt(0).getType()).getPointedType()).getTotalSize();
+        int selfSize = ((ArrayType) ((PointerType) curInst.getOperandAt(0).getType()).getPointedType()).getSize();
+        int containedSize = totalSize / selfSize;
+        int num = curInst.getNumOP();
+//        System.out.println("Tsize="+totalSize);
+//        System.out.println("Ssize="+selfSize);
+        Value vop1 = curInst.getOperandAt(0);
+        Value vop2 = curInst.getOperandAt(1);
+        Value vop3 = curInst.getOperandAt(2);
+
+        RISCOperand basicAddress = getOperand(vop1);
+
+        if (basicAddress instanceof Memory) {
+
+            int index = ((Constant.ConstantInt) vop3).getVal();
+            int addIndex = index * containedSize * 4;
+            int newAddress = ((Memory) basicAddress).getOffset() + addIndex;
+            Memory mem = new Memory(newAddress, ((Memory) basicAddress).basicAddress);
+            riscFunction.valueRISCOperandHashMap.put(curInst, mem);
+        } else {
+            System.out.println("BUG is " + curInst);
+        }
+
     }
 
     //控制流NE和FNE为两数相减，若两数相等，结果为0
@@ -555,8 +586,18 @@ public class RISCBasicBlock {
 
     private void translateAlloca(Instruction curInst) {
 
-        Memory mem = new Memory(-riscFunction.localStackIndex, 1);
-        riscFunction.localStackIndex += 4;
+        Memory mem;
+        if (((PointerType) curInst.getType()).getPointedType().isArrayType()) {
+            int tsize = ((ArrayType) ((PointerType) curInst.getType()).getPointedType()).getTotalSize();
+
+            riscFunction.localStackIndex += (tsize * 4);
+            System.out.println(riscFunction.localStackIndex);
+            mem = new Memory(-riscFunction.localStackIndex, 1);
+        } else {
+            riscFunction.localStackIndex += 4;
+            mem = new Memory(-riscFunction.localStackIndex, 1);
+        }
+
         riscFunction.valueRISCOperandHashMap.put(curInst, mem);
 
     }
