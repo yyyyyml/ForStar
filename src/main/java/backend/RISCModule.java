@@ -34,7 +34,7 @@ public class RISCModule {
             LinkedList<Integer> valList = new LinkedList<>();
             System.out.println(11111111);
             if (true) {
-                RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(valList, gv.getName().substring(1), totalSize);
+                RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(valList, gv.getName().substring(1), totalSize, gv.init);
                 GlobalVarMap.put(gv, GVB);
                 GlobalVarList.add(GVB);
             }
