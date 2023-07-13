@@ -95,7 +95,7 @@ public class RISCFunction {
                     int stackIndex = 8;
                     for (int i = 0; i <= paraCount; i++) {
                         Value v = curInst.getOperandAt(i);
-                        if (v.getType().isIntegerType()) {
+                        if (v.getType().isIntegerType() || v.getType().isPointerType()) {
                             if (intCount < 8) {
                                 funcParameters.put(v, intCount++);
                             } else {

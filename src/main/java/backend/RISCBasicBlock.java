@@ -111,27 +111,88 @@ public class RISCBasicBlock {
 
     //数组
     private void translateGep(Instruction curInst) {
-        int totalSize = ((ArrayType) ((PointerType) curInst.getOperandAt(0).getType()).getPointedType()).getTotalSize();
-        int selfSize = ((ArrayType) ((PointerType) curInst.getOperandAt(0).getType()).getPointedType()).getSize();
-        int containedSize = totalSize / selfSize;
+        //System.out.println(curInst);
         int num = curInst.getNumOP();
+        if (num == 3) {
+            int totalSize = ((ArrayType) ((PointerType) curInst.getOperandAt(0).getType()).getPointedType()).getTotalSize();
+            int selfSize = ((ArrayType) ((PointerType) curInst.getOperandAt(0).getType()).getPointedType()).getSize();
+            int containedSize = totalSize / selfSize;
+
 //        System.out.println("Tsize="+totalSize);
 //        System.out.println("Ssize="+selfSize);
-        Value vop1 = curInst.getOperandAt(0);
-        Value vop2 = curInst.getOperandAt(1);
-        Value vop3 = curInst.getOperandAt(2);
+            Value vop1 = curInst.getOperandAt(0);
+            Value vop2 = curInst.getOperandAt(1);
+            Value vop3 = curInst.getOperandAt(2);
 
-        RISCOperand basicAddress = getOperand(vop1);
+            RISCOperand basicAddress = getOperand(vop1);
 
-        if (basicAddress instanceof Memory) {
+            if (basicAddress instanceof Memory) {
 
-            int index = ((Constant.ConstantInt) vop3).getVal();
-            int addIndex = index * containedSize * 4;
-            int newAddress = ((Memory) basicAddress).getOffset() + addIndex;
-            Memory mem = new Memory(newAddress, ((Memory) basicAddress).basicAddress);
-            riscFunction.valueRISCOperandHashMap.put(curInst, mem);
-        } else {
-            System.out.println("BUG is " + curInst);
+                int index = ((Constant.ConstantInt) vop3).getVal();
+                int addIndex = index * containedSize * 4;
+                int newAddress = ((Memory) basicAddress).getOffset() + addIndex;
+                Memory mem = new Memory(newAddress, ((Memory) basicAddress).basicAddress);
+
+                if (riscFunction.funcParameters.containsKey(curInst)) {
+                    RISCOperand dst = getOperand(curInst);
+                    System.out.println("dst=   " + dst.emit());
+
+                    if (dst instanceof RealRegister) {
+
+                        AddiInstruction addi = new AddiInstruction((Register) dst, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
+                        instructionList.add(addi);
+
+                    } else if (dst instanceof Memory) {
+                        VirtualRegister vr = getNewVr();
+                        AddiInstruction addi = new AddiInstruction(vr, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
+                        instructionList.add(addi);
+                        SwInstruction sw = new SwInstruction(vr, dst);
+                        instructionList.add(sw);
+                    }
+                }
+                riscFunction.valueRISCOperandHashMap.put(curInst, mem);
+                System.out.println(curInst);
+                System.out.println(mem.emit());
+            } else {
+                System.out.println("BUG is " + curInst);
+            }
+        } else if (num == 2) {
+            Value vop1 = curInst.getOperandAt(0);
+            Value vop2 = curInst.getOperandAt(1);
+
+
+            RISCOperand basicAddress = getOperand(vop1);
+
+            if (basicAddress instanceof Memory) {
+
+                int index = ((Constant.ConstantInt) vop2).getVal();
+                int addIndex = index * 4;
+                int newAddress = ((Memory) basicAddress).getOffset() + addIndex;
+                Memory mem = new Memory(newAddress, ((Memory) basicAddress).basicAddress);
+
+                if (riscFunction.funcParameters.containsKey(curInst)) {
+                    RISCOperand dst = getOperand(curInst);
+                    System.out.println("dst=   " + dst.emit());
+
+                    if (dst instanceof RealRegister) {
+
+                        AddiInstruction addi = new AddiInstruction((Register) dst, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
+                        instructionList.add(addi);
+
+                    } else if (dst instanceof Memory) {
+                        VirtualRegister vr = getNewVr();
+                        AddiInstruction addi = new AddiInstruction(vr, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
+                        instructionList.add(addi);
+                        SwInstruction sw = new SwInstruction(vr, dst);
+                        instructionList.add(sw);
+                    }
+                }
+                riscFunction.valueRISCOperandHashMap.put(curInst, mem);
+                System.out.println(curInst);
+                System.out.println(mem.emit());
+            } else {
+                System.out.println("BUG is " + curInst);
+            }
         }
 
     }
@@ -593,12 +654,13 @@ public class RISCBasicBlock {
             int tsize = ((ArrayType) ((PointerType) curInst.getType()).getPointedType()).getTotalSize();
 
             riscFunction.localStackIndex += (tsize * 4);
-            System.out.println(riscFunction.localStackIndex);
+            //System.out.println(riscFunction.localStackIndex);
             mem = new Memory(-riscFunction.localStackIndex, 1);
         } else {
             riscFunction.localStackIndex += 4;
             mem = new Memory(-riscFunction.localStackIndex, 1);
         }
+        System.out.println(curInst + " " + mem.emit());
 
         riscFunction.valueRISCOperandHashMap.put(curInst, mem);
 
@@ -653,12 +715,14 @@ public class RISCBasicBlock {
             } else {
                 throw new RuntimeException("哈哈哈哈哈，你又出BUG了\n");
             }
+        } else if (riscFunction.valueRISCOperandHashMap.containsKey(value)) {
+            return riscFunction.valueRISCOperandHashMap.get(value);
         }
         //判断为call中的参数
         else if (riscFunction.funcParameters.containsKey(value)) {
             int opeIndex = riscFunction.funcParameters.get(value);
             if (opeIndex < 8) {
-                if (value.getType().isIntegerType()) {
+                if (value.getType().isIntegerType() || value.getType().isPointerType()) {
                     RISCOperand reg = new RealRegister(allocAReg(opeIndex));
                     return reg;
                 } else {
@@ -705,9 +769,6 @@ public class RISCBasicBlock {
                 FlwInstruction flw = new FlwInstruction(fvr, mem);
                 instructionList.add(flw);
                 return fvr;
-            }
-            if (riscFunction.valueRISCOperandHashMap.containsKey(value)) {
-                return riscFunction.valueRISCOperandHashMap.get(value);
             } else {
                 FloatVirtualRegister fvr = new FloatVirtualRegister(riscFunction.floatVirtualRegisterIndex++);
 
@@ -718,35 +779,8 @@ public class RISCBasicBlock {
                 int val = ((Constant.ConstantInt) value).getVal();
                 RISCOperand temp = new Immediate(val);
                 return temp;
-            }
-//            else if (riscFunction.valueVRMap.containsKey(value)) {
-//                System.out.println("find KEY in valueVRMap"+value.getName()+" "+ riscFunction.valueVRMap.get(value).emit());
-//                return riscFunction.valueVRMap.get(value);
-//            } else if (riscFunction.valueMemoryHashMap.containsKey(value)) {
-//                return riscFunction.valueMemoryHashMap.get(value);
-//            }
-            else if (riscFunction.valueRISCOperandHashMap.containsKey(value)) {
-                return riscFunction.valueRISCOperandHashMap.get(value);
-            }
-//            else if (Integer.parseInt(valueName) < riscFunction.parameterSize) {
-//
-//                int vname = Integer.parseInt(valueName);
-//                System.out.println(vname);
-//                if (vname <= 8) {
-//                    RealRegister reg = new RealRegister(allocAReg(vname));
-//                    return reg;
-//                } else {
-//                    VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++);
-//                    LdInstruction ld1 = new LdInstruction(vr, new Memory(((8 - vname) * 8), 2));
-//                    instructionList.add(ld1);
-//                    riscFunction.valueVRMap.put(value, vr);
-//                    return vr;
-//                }
-//            }
-            else {
+            } else {
                 VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++, value);
-//                riscFunction.valueVRMap.put(value, vr);
-//                System.out.println("create VR "+value.getName()+" "+vr.emit());
                 return vr;
             }
         }
