@@ -93,16 +93,21 @@ public class ArrayType extends Type {
         }
         return tmp;
     }
+
     public int getLen() {
         return size;
     }
+
     public int getAtomLen() {
         int size = 1;
-        for (Type tmp=this; tmp.isArrayType(); tmp=((ArrayType) tmp).getElemType())
+        for (Type tmp = this; tmp.isArrayType(); tmp = ((ArrayType) tmp).getElemType())
             size *= ((ArrayType) tmp).getLen();
         return size;
     }
+
     public Constant getZero() {
-        return Constant.ConstantArray.get(this, new ArrayList<Constant>());
+        System.out.println();
+        return new Constant.ConstantArray(this, new ArrayList<Constant>());
+
     }
 }

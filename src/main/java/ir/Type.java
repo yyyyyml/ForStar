@@ -56,7 +56,11 @@ public class Type {
             return IntegerType.getIntZero();
         } else if (this.isFloatType()) {
             return FloatType.getFloatZero();
-        } else return null;
+        }
+//        else if(this.isArrayType()) {
+//            return ((ArrayType) this).getArrayZero();
+//        }
+        else return null;
     }
     // NoneType
     public static class NonType extends Type {

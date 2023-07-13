@@ -4,6 +4,7 @@ import ir.Type;
 import ir.User;
 import ir.Value;
 import ir.types.ArrayType;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -23,7 +24,7 @@ public class Constant extends User {
     }
 
     public static class ConstantArray extends Constant {
-        boolean isAllZero = false;
+        public boolean isAllZero = false;
         public ConstantArray(ArrayType arrType, ArrayList<Constant> initList){
             super(arrType, initList.size());
 
@@ -31,9 +32,9 @@ public class Constant extends User {
             for (int i = 0; i < initList.size(); i++) {
                 Constant elem = initList.get(i);
 
-                //if (!elem.isZero()) {
+//                if (!elem.isZero()) {
                 super.setOperand(elem,i);
-                //}
+//                }
             }
 
         }
@@ -116,6 +117,7 @@ public class Constant extends User {
 
             if (isAllZero) { // "zeroinitializer"
                 strBuilder.append(" zeroinitializer");
+                System.out.println("0初始化");
             }
             else { // "[i32 1, i32 2]"
                 strBuilder.append(" [");
@@ -197,7 +199,10 @@ public class Constant extends User {
     }
 
     public boolean isZero() {
+//        System.out.println("------------------"+this.getType());
+//        System.out.println(this == this.getType().getZero());
         return this == this.getType().getZero();
+
     }
     public boolean isZero(ArrayList <Constant > initlist) {
         boolean isZ = true;

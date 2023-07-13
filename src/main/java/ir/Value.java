@@ -39,5 +39,14 @@ public abstract class Value {
             v.useList.add(use);
         }
     }
+//    public boolean isConst() {
+//        if (this instanceof Constant) {
+//            if (this instanceof Constant.ConstantArray) {
+//                return false;
+//            } else return true;
+//        } else {
+//            return false;
+//        }
+//    }
 
 }
