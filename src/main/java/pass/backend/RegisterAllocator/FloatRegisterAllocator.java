@@ -629,7 +629,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
 
             RISCInstruction addis0Inst = firstInstList.get(3);
             Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-            addis0.setVal(riscFunc.stackSize);
+            addis0.setVal(riscFunc.stackSize + 8);
         } else if (riscFunc.stackSize % 16 == 4) {
             RISCInstruction addispInst = firstInstList.get(0);
             Immediate addisp = (Immediate) addispInst.getOperandAt(2);
@@ -645,7 +645,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
 
             RISCInstruction addis0Inst = firstInstList.get(3);
             Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-            addis0.setVal(riscFunc.stackSize);
+            addis0.setVal(riscFunc.stackSize + 12);
         } else {
             RISCInstruction addispInst = firstInstList.get(0);
             Immediate addisp = (Immediate) addispInst.getOperandAt(2);
