@@ -344,14 +344,20 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             var argCtxs = ctx.funcRParams().funcRParam();
             ArrayList<Type> argTypes = ((FunctionType)func.getType()).getParamTypeList();
             for (int i = 0; i < argCtxs.size(); i++) {
+
                 var argCtx = argCtxs.get(i);
                 Type typeRequired = argTypes.get(i);
+                System.out.println(typeRequired);
                 visit(argCtx);
                 Value realArg = retVal_;
+                System.out.println(realArg.getType());
+                System.out.println(realArg.getType().isPointerType());
                 if (!typeRequired.isPointerType() && realArg.getType().isPointerType()) {
+
                     realArg = builder.buildLoad(typeRequired, realArg);
                 }
                 if (typeRequired.isPointerType() && realArg.getType().isPointerType()) {
+
                     while (realArg.getType() != typeRequired) {
                         realArg = builder.buildGEP(realArg, new ArrayList<>() {{
                             add(builder.buildConstant(0) );
@@ -919,12 +925,15 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         isConstantVar = scope.checkVarType(name);
 
         Value val = scope.getVal(name);
+        System.out.println(name);
+        System.out.println(val);
         if (val == null) {
             throw new RuntimeException("Undefined value: " + name);
         }
 
         //如果这个lval能被表达成primaryexp就直接返回值
         if (val.getType().isIntegerType() || val.getType().isFloatType()) {
+
             retVal_ = val;
         }
         //否则返回变量的地址，即一个指针变量
@@ -933,7 +942,12 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             if (pointedType.isPointerType()) {
                 retVal_ = builder.buildLoad(pointedType, val);
             }
-            //数组的情况先不写
+            else if (pointedType.isArrayType()) {
+                retVal_ = builder.buildGEP(val, new ArrayList<>(){{
+                    add(builder.buildConstant(0));
+                    add(builder.buildConstant(0));
+                }});
+            }
             //函数的情况？？？？
             else {
                 if (inBuildFCall()) {
@@ -1454,7 +1468,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 // Build the const array, set it to be a global variable and put it into the symbol table.
 
                 Constant.ConstantArray initArr = builder.buildConstArr(arrType, initList);
-                //System.out.println(initArr);
+                System.out.println(initArr.isAllZero);
+                //System.out.println(initArr)
                 GlobalVariable arr = builder.buildGlobalVar(ctx.Ident().getText(), initArr);
                 scope.addSymbol(ctx.Ident().getText(), arr, "constarray") ;
             }
