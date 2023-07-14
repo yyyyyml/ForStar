@@ -1509,24 +1509,23 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                  */
                 // Args of memset.
                 // For arg str: Cast float* to i32* if needed.
-//                MemoryInst.GEP startPoint = ptr1d;
-//                Value str;
-//                if (((PointerType)startPoint.getType()).getPointedType().isIntegerType()) {
-//                    str = startPoint;
-//                }
-//                else {
-//                    str = builder.buildPtrcast(startPoint);
-//                }
-//                Constant.ConstantInt c = builder.buildConstant(0);
-//                // For arg n: In SysY, both supported data types (int/float) are 4 bytes.
-//                Constant.ConstantInt n = builder.buildConstant(4 * arrType.getAtomLen());
-//
-//                //Call memset.
-//                builder.buildCall((Function) scope.getVal("memset") , new ArrayList<>(){{
-//                    add(str);
-//                    add(c);
-//                    add(n);
-//                }});
+                MemoryInst.GEP startPoint = ptr1d;
+                Value str;
+                if (((PointerType) startPoint.getType()).getPointedType().isIntegerType()) {
+                    str = startPoint;
+                } else {
+                    str = builder.buildPtrcast(startPoint);
+                }
+                Constant.ConstantInt c = builder.buildConstant(0);
+                // For arg n: In SysY, both supported data types (int/float) are 4 bytes.
+                Constant.ConstantInt n = builder.buildConstant(4 * arrType.getAtomLen());
+
+                //Call memset.
+                builder.buildCall((Function) scope.getVal("memset"), new ArrayList<>() {{
+                    add(str);
+                    add(c);
+                    add(n);
+                }});
 
 
                 // Initialize linearly using the 1d pointer and offset.
@@ -1537,8 +1536,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     // If the initial Value is a Constant zero (literal 0 or .0f),
                     // skip this round to not generate any Store instruction.
 
-                    if (initVal instanceof Constant.ConstantInt && initVal == IntegerType.getIntZero()
-                            || initVal instanceof Constant.ConstantFloat && initVal == FloatType.getFloatZero()) {
+                    if (initVal instanceof Constant.ConstantInt && ((Constant.ConstantInt) initVal).getVal() == 0
+                            || initVal instanceof Constant.ConstantFloat && ((Constant.ConstantFloat) initVal).getVal() == 0) {
                         continue;
                     }
 
