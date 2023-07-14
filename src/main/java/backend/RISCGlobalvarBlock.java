@@ -105,7 +105,7 @@ public class RISCGlobalvarBlock {
                         out.append("\t.word\t" + Float.floatToIntBits(val) + "\n");
                     }
                 } else if (v instanceof Constant.ConstantArray) {
-                    out.append(arrToString((Constant) v, size / (+1)));
+                    out.append(arrToString((Constant) v, size / (operandSize)));
                 }
 
             }

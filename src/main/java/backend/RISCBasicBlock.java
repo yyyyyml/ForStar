@@ -127,32 +127,35 @@ public class RISCBasicBlock {
             RISCOperand basicAddress = getOperand(vop1);
 
             if (basicAddress instanceof Memory) {
+                if (vop3 instanceof Constant.ConstantInt) {
+                    int index = ((Constant.ConstantInt) vop3).getVal();
+                    int addIndex = index * containedSize * 4;
+                    int newAddress = ((Memory) basicAddress).getOffset() + addIndex;
+                    Memory mem = new Memory(newAddress, ((Memory) basicAddress).basicAddress);
 
-                int index = ((Constant.ConstantInt) vop3).getVal();
-                int addIndex = index * containedSize * 4;
-                int newAddress = ((Memory) basicAddress).getOffset() + addIndex;
-                Memory mem = new Memory(newAddress, ((Memory) basicAddress).basicAddress);
+                    if (riscFunction.funcParameters.containsKey(curInst)) {
+                        RISCOperand dst = getOperand(curInst);
+                        System.out.println("dst=   " + dst.emit());
 
-                if (riscFunction.funcParameters.containsKey(curInst)) {
-                    RISCOperand dst = getOperand(curInst);
-                    System.out.println("dst=   " + dst.emit());
+                        if (dst instanceof RealRegister) {
 
-                    if (dst instanceof RealRegister) {
+                            AddiInstruction addi = new AddiInstruction((Register) dst, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
+                            instructionList.add(addi);
 
-                        AddiInstruction addi = new AddiInstruction((Register) dst, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
-                        instructionList.add(addi);
-
-                    } else if (dst instanceof Memory) {
-                        VirtualRegister vr = getNewVr();
-                        AddiInstruction addi = new AddiInstruction(vr, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
-                        instructionList.add(addi);
-                        SwInstruction sw = new SwInstruction(vr, dst);
-                        instructionList.add(sw);
+                        } else if (dst instanceof Memory) {
+                            VirtualRegister vr = getNewVr();
+                            AddiInstruction addi = new AddiInstruction(vr, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
+                            instructionList.add(addi);
+                            SwInstruction sw = new SwInstruction(vr, dst);
+                            instructionList.add(sw);
+                        }
                     }
+                    riscFunction.valueRISCOperandHashMap.put(curInst, mem);
+                } else {
+
                 }
-                riscFunction.valueRISCOperandHashMap.put(curInst, mem);
-                System.out.println(curInst);
-                System.out.println(mem.emit());
+//                System.out.println(curInst);
+//                System.out.println(mem.emit());
             } else {
                 System.out.println("BUG is " + curInst);
             }
@@ -342,28 +345,70 @@ public class RISCBasicBlock {
                 MyString dst2 = new MyString(".B" + irFunction.getName() + vN2);
 
                 switch (cond.getTag()) {
-                    case EQ, FEQ -> {
+                    case EQ -> {
                         BeqInstruction b = new BeqInstruction(temp1, temp2, dst1);
                         instructionList.add(b);
                     }
-                    case NE, FNE -> {
+                    case NE -> {
                         BneInstruction b = new BneInstruction(temp1, temp2, dst1);
                         instructionList.add(b);
                     }
-                    case LT, FLT -> {
+                    case LT -> {
                         BltInstruction b = new BltInstruction(temp1, temp2, dst1);
                         instructionList.add(b);
                     }
-                    case LE, FLE -> {
+                    case LE -> {
                         BleInstruction b = new BleInstruction(temp1, temp2, dst1);
                         instructionList.add(b);
                     }
-                    case GT, FGT -> {
+                    case GT -> {
                         BgtInstruction b = new BgtInstruction(temp1, temp2, dst1);
                         instructionList.add(b);
                     }
-                    case GE, FGE -> {
+                    case GE -> {
                         BgeInstruction b = new BgeInstruction(temp1, temp2, dst1);
+                        instructionList.add(b);
+                    }
+                    case FEQ -> {
+                        VirtualRegister vr = getNewVr();
+                        FeqInstruction f = new FeqInstruction(vr, temp1, temp2);
+                        instructionList.add(f);
+                        BeqInstruction b = new BeqInstruction(vr, new RealRegister(0), dst1);
+                        instructionList.add(b);
+                    }
+                    case FNE -> {
+                        VirtualRegister vr = getNewVr();
+                        FneInstruction f = new FneInstruction(vr, temp1, temp2);
+                        instructionList.add(f);
+                        BeqInstruction b = new BeqInstruction(vr, new RealRegister(0), dst1);
+                        instructionList.add(b);
+                    }
+                    case FLT -> {
+                        VirtualRegister vr = getNewVr();
+                        FltInstruction f = new FltInstruction(vr, temp1, temp2);
+                        instructionList.add(f);
+                        BeqInstruction b = new BeqInstruction(vr, new RealRegister(0), dst1);
+                        instructionList.add(b);
+                    }
+                    case FLE -> {
+                        VirtualRegister vr = getNewVr();
+                        FleInstruction f = new FleInstruction(vr, temp1, temp2);
+                        instructionList.add(f);
+                        BeqInstruction b = new BeqInstruction(vr, new RealRegister(0), dst1);
+                        instructionList.add(b);
+                    }
+                    case FGT -> {
+                        VirtualRegister vr = getNewVr();
+                        FgtInstruction f = new FgtInstruction(vr, temp1, temp2);
+                        instructionList.add(f);
+                        BeqInstruction b = new BeqInstruction(vr, new RealRegister(0), dst1);
+                        instructionList.add(b);
+                    }
+                    case FGE -> {
+                        VirtualRegister vr = getNewVr();
+                        FgeInstruction f = new FgeInstruction(vr, temp1, temp2);
+                        instructionList.add(f);
+                        BeqInstruction b = new BeqInstruction(vr, new RealRegister(0), dst1);
                         instructionList.add(b);
                     }
 
