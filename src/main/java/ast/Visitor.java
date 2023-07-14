@@ -671,6 +671,12 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitLAnd2(SysY2022Parser.LAnd2Context ctx) {
+        BasicBlock originBlk = builder.getCurBB();
+        BasicBlock nxtAndBlk = builder.buildBB("land2nxt");
+        // Add a branch instruction to terminate this block.
+        builder.setCurBB(originBlk);
+        ctx.lAndExp().falseBlk = ctx.falseBlk;
+        ctx.lAndExp().trueBlk = nxtAndBlk;
         visit(ctx.lAndExp());
         if(retVal_.getType().isIntegerType()) { // i32 -> i1
                 // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
@@ -685,10 +691,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         // For the first N-1 eqExp blocks.
 
         // Build following blocks for short-circuit evaluation.
-        BasicBlock originBlk = builder.getCurBB();
-        BasicBlock nxtAndBlk = builder.buildBB("land2nxt");
-                // Add a branch instruction to terminate this block.
-        builder.setCurBB(originBlk);
+
         builder.buildBr(retVal_, nxtAndBlk, ctx.falseBlk);
         builder.setCurBB(nxtAndBlk);
 
@@ -1511,9 +1514,10 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 // For arg str: Cast float* to i32* if needed.
                 MemoryInst.GEP startPoint = ptr1d;
                 Value str;
-                if (((PointerType) startPoint.getType()).getPointedType().isIntegerType()) {
+                if (((PointerType)startPoint.getType()).getPointedType().isIntegerType()) {
                     str = startPoint;
-                } else {
+                }
+                else {
                     str = builder.buildPtrcast(startPoint);
                 }
                 Constant.ConstantInt c = builder.buildConstant(0);
@@ -1521,7 +1525,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 Constant.ConstantInt n = builder.buildConstant(4 * arrType.getAtomLen());
 
                 //Call memset.
-                builder.buildCall((Function) scope.getVal("memset"), new ArrayList<>() {{
+                builder.buildCall((Function) scope.getVal("memset") , new ArrayList<>(){{
                     add(str);
                     add(c);
                     add(n);
@@ -1536,8 +1540,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     // If the initial Value is a Constant zero (literal 0 or .0f),
                     // skip this round to not generate any Store instruction.
 
-                    if (initVal instanceof Constant.ConstantInt && ((Constant.ConstantInt) initVal).getVal() == 0
-                            || initVal instanceof Constant.ConstantFloat && ((Constant.ConstantFloat) initVal).getVal() == 0) {
+                    if (initVal instanceof Constant.ConstantInt && ((Constant.ConstantInt)initVal).getVal() == 0
+                            || initVal instanceof Constant.ConstantFloat && ((Constant.ConstantFloat)initVal).getVal() == 0) {
                         continue;
                     }
 
@@ -1608,12 +1612,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         // NOTICE2: Only for the outer-most initializer should fill the return list up to the sizCurDepth required.
         // Any atom elements in any nested sub-initializer (inner layer) are regarded as the inner-most layer elements,
         // where the layer should be filled up to only the size of last dimension.
-        if(initArr.size()<=1){
 
-        }
-        else{
-
-        }
         int sizToFillTo = (ctx.getParent() instanceof SysY2022Parser.ArrVarDefContext) ?
                 ctx.sizCurDepth : ctx.dimLens.get(ctx.dimLens.size() - 1);
         for (int i = initArr.size(); i < sizToFillTo; i++) {
