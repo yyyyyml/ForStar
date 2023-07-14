@@ -2,6 +2,7 @@ package backend;
 
 import ir.Instruction;
 import ir.Value;
+import ir.types.PointerType;
 import ir.values.BasicBlock;
 import ir.values.Function;
 import util.IList;
@@ -63,7 +64,7 @@ public class RISCFunction {
             int floatCount = 0;
             int stackIndex = 8;
             for (Value v : irFunc.getParamList()) {
-                if (v.getType().isIntegerType()) {
+                if (v.getType().isIntegerType() || (v.getType().isPointerType() && ((PointerType) v.getType()).getPointedType().isIntegerType())) {
                     if (intCount < 8) {
                         myfuncParameters.put(v, intCount++);
                     } else {
@@ -71,7 +72,7 @@ public class RISCFunction {
 
 
                     }
-                } else if (v.getType().isFloatType()) {
+                } else if (v.getType().isFloatType() || (v.getType().isPointerType() && ((PointerType) v.getType()).getPointedType().isFloatType())) {
                     if (floatCount < 8) {
                         myfuncParameters.put(v, floatCount++);
                     } else {
