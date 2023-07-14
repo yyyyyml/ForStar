@@ -3998,7 +3998,7 @@ public class SysY2022Parser extends Parser {
 	public static class LAndExpContext extends ParserRuleContext {
 		public BasicBlock trueBlk;
 		public BasicBlock falseBlk;
-
+		public String Ident = "land";
 		public LAndExpContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}

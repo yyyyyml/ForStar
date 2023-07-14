@@ -671,6 +671,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitLAnd2(SysY2022Parser.LAnd2Context ctx) {
+        ctx.Ident = "land2";
         BasicBlock originBlk = builder.getCurBB();
         BasicBlock nxtAndBlk = builder.buildBB("land2nxt");
         // Add a branch instruction to terminate this block.
@@ -691,8 +692,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         // For the first N-1 eqExp blocks.
 
         // Build following blocks for short-circuit evaluation.
-
-        builder.buildBr(retVal_, nxtAndBlk, ctx.falseBlk);
+        if(ctx.lAndExp().Ident.equals("land1")) {
+            builder.buildBr(retVal_, nxtAndBlk, ctx.falseBlk);
+        }
         builder.setCurBB(nxtAndBlk);
 
         visit(ctx.eqExp());
@@ -711,6 +713,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitLAnd1(SysY2022Parser.LAnd1Context ctx) {
+        ctx.Ident = "land1";
         visit(ctx.eqExp());
         if(retVal_.getType().isIntegerType() ) { // i32 -> i1
             // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
@@ -1264,9 +1267,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 retVal_ = builder.buildConstant(retInt_);
             }
         } else {
+            System.out.println(ctx.getChild(0).getText());
             float ret = Float.parseFloat(ctx.getChild(0).getText());
             setConveyedType(DataType.FLT);
             retFloat_ = ret;
+            System.out.println(ret);
             if (!this.inConstFolding()) {
                 retVal_ = builder.buildConstant(retFloat_);
             }
