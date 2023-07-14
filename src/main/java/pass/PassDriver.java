@@ -6,6 +6,7 @@ import pass.backend.BaseBackendPass;
 import pass.backend.RegisterAllocator.FloatRegisterAllocator;
 import pass.backend.RegisterAllocator.RegisterAllocator;
 import pass.ir.BaseIRPass;
+import pass.ir.DeadCodePass.DeadCodePass;
 
 import java.util.ArrayList;
 
@@ -19,6 +20,8 @@ public class PassDriver {
     public PassDriver() {
         irPassList = new ArrayList<>();
         backendPassList = new ArrayList<>();
+
+        irPassList.add(new DeadCodePass());
 
         backendPassList.add(new RegisterAllocator());
         backendPassList.add(new FloatRegisterAllocator());
