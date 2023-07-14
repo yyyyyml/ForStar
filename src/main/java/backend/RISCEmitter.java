@@ -41,7 +41,7 @@ public class RISCEmitter {
         out.append("\t.ident\t" + "\"ForStar\"\n");
         out.append("\t.section\t" + ".note.GNU-stack,\"\",@progbits" + "\n");
 
-        System.out.println(out);
+//        System.out.println(out);
 
         if (outputName != null) {
             try {

@@ -99,7 +99,7 @@ public class Emitter {
             }
         }
 
-        System.out.println(sb);
+        // System.out.println(sb);
 
         try {
             FileWriter fw = new FileWriter(outputName);
