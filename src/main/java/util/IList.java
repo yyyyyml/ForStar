@@ -98,6 +98,7 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
         return p.getPrev();
     }
 
+
     @Override
     public Iterator<INode<T, P>> iterator() {
         return new IIterator(head, tail);
@@ -146,6 +147,15 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
 
         public void setParent(IList<T, P> parentList) {
             this.parentList = parentList;
+        }
+
+        public void removeSelf() {
+//            if (this.parentList == null) {
+//                throw new RuntimeException("不存在父");
+//            }
+            this.next.prev = this.prev;
+            this.prev.next = this.next;
+            this.parentList = null;
         }
     }
 
