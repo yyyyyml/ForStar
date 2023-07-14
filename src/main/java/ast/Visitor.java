@@ -347,18 +347,16 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
                 var argCtx = argCtxs.get(i);
                 Type typeRequired = argTypes.get(i);
-                System.out.println(typeRequired);
                 visit(argCtx);
                 Value realArg = retVal_;
-                System.out.println(realArg.getType());
-                System.out.println(realArg.getType().isPointerType());
                 if (!typeRequired.isPointerType() && realArg.getType().isPointerType()) {
 
                     realArg = builder.buildLoad(typeRequired, realArg);
                 }
                 if (typeRequired.isPointerType() && realArg.getType().isPointerType()) {
-
-                    while (realArg.getType() != typeRequired) {
+                    while (((PointerType)realArg.getType() ).getPointedType()
+                            != ((PointerType)typeRequired).getPointedType()) {
+                        System.out.println("?");
                         realArg = builder.buildGEP(realArg, new ArrayList<>() {{
                             add(builder.buildConstant(0) );
                             add(builder.buildConstant(0));
@@ -925,8 +923,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         isConstantVar = scope.checkVarType(name);
 
         Value val = scope.getVal(name);
-        System.out.println(name);
-        System.out.println(val);
         if (val == null) {
             throw new RuntimeException("Undefined value: " + name);
         }
