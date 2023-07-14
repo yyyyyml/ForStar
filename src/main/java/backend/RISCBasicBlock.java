@@ -24,7 +24,7 @@ public class RISCBasicBlock {
     private String blockName;
     public Boolean isEndblock = false;
     public HashMap<Value, Instruction> condInstructionMap = new HashMap<>();
-
+    public int i;
 
     public String getBlockName() {
         return blockName;
