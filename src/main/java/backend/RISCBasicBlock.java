@@ -127,6 +127,8 @@ public class RISCBasicBlock {
             RISCOperand basicAddress = getOperand(vop1);
 
             if (basicAddress instanceof Memory) {
+                //如果第三个操作数为常数，直接计算
+                //这里写的一坨大便
                 if (vop3 instanceof Constant.ConstantInt) {
                     int index = ((Constant.ConstantInt) vop3).getVal();
                     int addIndex = index * containedSize * 4;
@@ -151,7 +153,42 @@ public class RISCBasicBlock {
                         }
                     }
                     riscFunction.valueRISCOperandHashMap.put(curInst, mem);
-                } else {
+                }
+                //如果第三个操作数为非常数
+                else {
+                    RISCOperand index = getOperand(vop3);
+                    Register basicAdd = ((Memory) basicAddress).basicAddress;
+                    RISCOperand dst = getOperand(curInst);
+                    int s = containedSize * 4;
+                    VirtualRegister vr1 = getNewVr();
+                    LiInstruction li1 = new LiInstruction(vr1, new Immediate(s));
+                    instructionList.add(li1);
+                    //计算地址增量，放入vr中
+                    if (index instanceof Register) {
+                        MulwInstruction mul1 = new MulwInstruction(vr1, vr1, index);
+                        instructionList.add(mul1);
+                    } else if (index instanceof Memory) {
+                        VirtualRegister vr = getNewVr();
+                        LwInstruction lw = new LwInstruction(vr, index);
+                        instructionList.add(lw);
+                        MulwInstruction mul1 = new MulwInstruction(vr1, vr1, vr);
+                        instructionList.add(mul1);
+                    }
+                    //计算偏移量，放入vr1
+                    int basicOffset = ((Memory) basicAddress).getOffset();
+                    AddiInstruction add = new AddiInstruction(vr1, vr1, new Immediate(basicOffset));
+                    instructionList.add(add);
+                    //计算结果
+                    AddwInstruction addw = new AddwInstruction(dst, basicAdd, vr1);
+                    instructionList.add(addw);
+
+                    if (dst instanceof RealRegister) {
+                        MvInstruction mv = new MvInstruction(vr1, dst);
+                        instructionList.add(mv);
+                        riscFunction.valueRISCOperandHashMap.put(curInst, new Memory(0, vr1));
+                    } else if (dst instanceof VirtualRegister) {
+                        riscFunction.valueRISCOperandHashMap.put(curInst, new Memory(0, (Register) dst));
+                    }
 
                 }
 //                System.out.println(curInst);
@@ -167,32 +204,65 @@ public class RISCBasicBlock {
             RISCOperand basicAddress = getOperand(vop1);
 
             if (basicAddress instanceof Memory) {
+                if (vop2 instanceof Constant.ConstantInt) {
+                    int index = ((Constant.ConstantInt) vop2).getVal();
+                    int addIndex = index * 4;
+                    int newAddress = ((Memory) basicAddress).getOffset() + addIndex;
+                    Memory mem = new Memory(newAddress, ((Memory) basicAddress).basicAddress);
 
-                int index = ((Constant.ConstantInt) vop2).getVal();
-                int addIndex = index * 4;
-                int newAddress = ((Memory) basicAddress).getOffset() + addIndex;
-                Memory mem = new Memory(newAddress, ((Memory) basicAddress).basicAddress);
+                    if (riscFunction.funcParameters.containsKey(curInst)) {
+                        RISCOperand dst = getOperand(curInst);
+                        System.out.println("dst=   " + dst.emit());
 
-                if (riscFunction.funcParameters.containsKey(curInst)) {
+                        if (dst instanceof RealRegister) {
+
+                            AddiInstruction addi = new AddiInstruction((Register) dst, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
+                            instructionList.add(addi);
+
+                        } else if (dst instanceof Memory) {
+                            VirtualRegister vr = getNewVr();
+                            AddiInstruction addi = new AddiInstruction(vr, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
+                            instructionList.add(addi);
+                            SwInstruction sw = new SwInstruction(vr, dst);
+                            instructionList.add(sw);
+                        }
+                    }
+                    riscFunction.valueRISCOperandHashMap.put(curInst, mem);
+                } else {
+                    RISCOperand index = getOperand(vop2);
+                    Register basicAdd = ((Memory) basicAddress).basicAddress;
                     RISCOperand dst = getOperand(curInst);
-                    System.out.println("dst=   " + dst.emit());
+                    int s = 4;
+                    VirtualRegister vr1 = getNewVr();
+                    LiInstruction li1 = new LiInstruction(vr1, new Immediate(s));
+                    instructionList.add(li1);
+                    //计算地址增量，放入vr中
+                    if (index instanceof Register) {
+                        MulwInstruction mul1 = new MulwInstruction(vr1, vr1, index);
+                        instructionList.add(mul1);
+                    } else if (index instanceof Memory) {
+                        VirtualRegister vr = getNewVr();
+                        LwInstruction lw = new LwInstruction(vr, index);
+                        instructionList.add(lw);
+                        MulwInstruction mul1 = new MulwInstruction(vr1, vr1, vr);
+                        instructionList.add(mul1);
+                    }
+                    //计算偏移量，放入vr1
+                    int basicOffset = ((Memory) basicAddress).getOffset();
+                    AddiInstruction add = new AddiInstruction(vr1, vr1, new Immediate(basicOffset));
+                    instructionList.add(add);
+                    //计算结果
+                    AddwInstruction addw = new AddwInstruction(dst, basicAdd, vr1);
+                    instructionList.add(addw);
 
                     if (dst instanceof RealRegister) {
-
-                        AddiInstruction addi = new AddiInstruction((Register) dst, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
-                        instructionList.add(addi);
-
-                    } else if (dst instanceof Memory) {
-                        VirtualRegister vr = getNewVr();
-                        AddiInstruction addi = new AddiInstruction(vr, ((Memory) basicAddress).basicAddress, new Immediate(newAddress));
-                        instructionList.add(addi);
-                        SwInstruction sw = new SwInstruction(vr, dst);
-                        instructionList.add(sw);
+                        MvInstruction mv = new MvInstruction(vr1, dst);
+                        instructionList.add(mv);
+                        riscFunction.valueRISCOperandHashMap.put(curInst, new Memory(0, vr1));
+                    } else if (dst instanceof VirtualRegister) {
+                        riscFunction.valueRISCOperandHashMap.put(curInst, new Memory(0, (Register) dst));
                     }
                 }
-                riscFunction.valueRISCOperandHashMap.put(curInst, mem);
-                System.out.println(curInst);
-                System.out.println(mem.emit());
             } else {
                 System.out.println("BUG is " + curInst);
             }
