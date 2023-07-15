@@ -21,6 +21,6 @@ public class SltInstruction extends RISCInstruction {
 
     @Override
     public String emit() {
-        return this.type.name() + ".s " + getOperandAt(0).emit() + "," + getOperandAt(1).emit() + "," + getOperandAt(2).emit();
+        return this.type.name() + " " + getOperandAt(0).emit() + "," + getOperandAt(1).emit() + "," + getOperandAt(2).emit();
     }
 }

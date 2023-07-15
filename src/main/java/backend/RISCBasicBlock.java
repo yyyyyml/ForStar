@@ -363,29 +363,43 @@ public class RISCBasicBlock {
 
         switch (cond.getTag()) {
             case EQ -> {
-                SeqInstruction b = new SeqInstruction(dst,temp1, temp2);
+                VirtualRegister vr = getNewVr();
+                SubwInstruction sub = new SubwInstruction(vr,temp1,temp2);
+                instructionList.add(sub);
+                SeqzInstruction b = new SeqzInstruction(dst,vr);
                 instructionList.add(b);
             }
             case NE -> {
                 VirtualRegister vr = getNewVr();
-                SeqInstruction b = new SeqInstruction(vr,temp1, temp2);
+                SubwInstruction sub = new SubwInstruction(vr,temp1,temp2);
+                instructionList.add(sub);
+                SeqzInstruction b = new SeqzInstruction(dst,vr);
                 instructionList.add(b);
-                XorInstruction xor = new XorInstruction(dst,vr,new Immediate(1));
+                XoriInstruction xor = new XoriInstruction(dst,dst,new Immediate(1));
+                instructionList.add(xor);
             }
             case LT -> {
                 SltInstruction b = new SltInstruction(dst,temp1, temp2);
                 instructionList.add(b);
             }
             case LE -> {
-                SleInstruction b = new SleInstruction(dst,temp1, temp2);
+                // 小于等于 相当于大于反过来
+                VirtualRegister vr = getNewVr();
+                SubwInstruction sub = new SubwInstruction(vr,temp2,temp1);
+                instructionList.add(sub);
+                SgtzInstruction b = new SgtzInstruction(dst,vr);
                 instructionList.add(b);
             }
             case GT -> {
-                SgtInstruction b = new SgtInstruction(dst,temp1, temp2);
+                VirtualRegister vr = getNewVr();
+                SubwInstruction sub = new SubwInstruction(vr,temp1,temp2);
+                instructionList.add(sub);
+                SgtzInstruction b = new SgtzInstruction(dst,vr);
                 instructionList.add(b);
             }
             case GE -> {
-                SgeInstruction b = new SgeInstruction(dst,temp1, temp2);
+                //大于等于相当于小于反过来
+                SltInstruction b = new SltInstruction(dst,temp2, temp1);
                 instructionList.add(b);
             }
             case FEQ -> {
@@ -396,7 +410,8 @@ public class RISCBasicBlock {
                 VirtualRegister vr = getNewVr();
                 FeqInstruction b = new FeqInstruction(vr,temp1, temp2);
                 instructionList.add(b);
-                XorInstruction xor = new XorInstruction(dst,vr,new Immediate(1));
+                XoriInstruction xor = new XoriInstruction(dst,vr,new Immediate(1));
+                instructionList.add(xor);
             }
             case FLT -> {
                 FltInstruction b = new FltInstruction(dst,temp1, temp2);

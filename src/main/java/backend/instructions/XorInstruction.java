@@ -16,7 +16,7 @@ public class XorInstruction extends RISCInstruction {
         this.setOperand(op2, 1);
         this.op3 = op3;
         this.setOperand(op3, 2);
-        this.type = ITYPE.seq;
+        this.type = ITYPE.xor;
     }
 
     @Override
