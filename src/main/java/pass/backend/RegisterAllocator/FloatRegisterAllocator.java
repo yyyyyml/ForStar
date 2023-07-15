@@ -269,6 +269,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
     private void renameRegister(RISCFunction riscFunc) {
 
         LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
+        ArrayList<FloatRealRegister> nowRealRegList = new ArrayList<>();
 
         for (RISCBasicBlock riscBB : riscBBList) {
             LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
@@ -293,7 +294,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                     var riscOp = operandList.get(opIndex);
                     int opPosition = riscOp.getPosition();
 
-                    if (riscOp.isMemory()) {
+                    if (riscOp.isMemory()) { // 在内存表示中可能会用到虚拟寄存器，所以要处理
                         var mem = (Memory) riscOp;
                         if (mem.basicAddress.isFloatVirtualRegister()) {
                             var vReg = (FloatVirtualRegister) mem.basicAddress;
@@ -328,6 +329,8 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                 // spillTime > 当前位置，说明分配过寄存器
                                 var id = vReg.getRealReg();
                                 var newReg = new FloatRealRegister(id);
+                                if (!listHasReg(nowRealRegList, newReg))
+                                    nowRealRegList.add(newReg); // 加入当前在用的寄存器
                                 // 替换内存的basicAddress
                                 mem.basicAddress = newReg;
                                 // 记录替换成了哪个
@@ -344,6 +347,8 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                 if (tempRegID != -1) {
                                     // 有空闲，分配成功
                                     FloatRealRegister tempReg = new FloatRealRegister(tempRegID);
+                                    if (!listHasReg(nowRealRegList, tempReg))
+                                        nowRealRegList.add(tempReg); // 加入当前在用的寄存器
                                     // 替换内存的basicAddress
                                     mem.basicAddress = tempReg;
                                     // 记录替换成了哪个
@@ -379,6 +384,8 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                     }
 
                                     var tempReg = new FloatRealRegister(tempIdFromZero++);
+                                    if (!listHasReg(nowRealRegList, tempReg))
+                                        nowRealRegList.add(tempReg); // 加入当前在用的寄存器
 //                                    System.out.println(tempIdFromZero);
 
                                     var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
@@ -446,6 +453,8 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                             // spillTime > 当前位置，说明分配过寄存器
                             var id = vReg.getRealReg();
                             var newReg = new FloatRealRegister(id);
+                            if (!listHasReg(nowRealRegList, newReg))
+                                nowRealRegList.add(newReg); // 加入当前在用的寄存器
                             // 替换操作数
                             riscInst.setOpLocal(newReg, opIndex, opPosition);
                             // 记录替换成了哪个
@@ -462,6 +471,8 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                             if (tempRegID != -1) {
                                 // 有空闲，分配成功
                                 FloatRealRegister tempReg = new FloatRealRegister(tempRegID);
+                                if (!listHasReg(nowRealRegList, tempReg))
+                                    nowRealRegList.add(tempReg); // 加入当前在用的寄存器
                                 // 替换操作数
                                 riscInst.setOpLocal(tempReg, opIndex, opPosition);
                                 // 记录替换成了哪个
@@ -497,6 +508,8 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                 }
 
                                 var tempReg = new FloatRealRegister(tempIdFromZero++);
+                                if (!listHasReg(nowRealRegList, tempReg))
+                                    nowRealRegList.add(tempReg); // 加入当前在用的寄存器
 //                                System.out.println(tempIdFromZero);
 
                                 var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
@@ -536,7 +549,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
 //                        System.out.println(opPosition);
 //                        System.out.println("---------------------" + riscInst.emit());
                 }
-                riscFunc.stackIndex = tempStackIndex; // 恢复栈的位置
+
 
                 // 找return位置，修改return的上面3条有关栈空间的指令
                 if (instIndex == riscInstList.size() - 1 && riscInst.type == RISCInstruction.ITYPE.jr) {
@@ -592,6 +605,27 @@ public class FloatRegisterAllocator implements BaseBackendPass {
 
 
                 }
+
+                // 找call指令，处理寄存器的保存
+                if (riscInst.type == RISCInstruction.ITYPE.call) {
+                    // TODO:记录当前时刻用到的寄存器
+                    for (FloatRealRegister reg : nowRealRegList) {
+                        var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
+                        riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
+//                                System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
+                        if (riscFunc.stackSize < riscFunc.stackIndex)
+                            riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
+                        RISCInstruction inst1 = new SwInstruction(reg, tempStack); // 保存原值
+
+                        RISCInstruction inst2 = new LwInstruction(reg, tempStack); // 恢复原值
+
+                        riscInstList.add(instIndex, inst1);
+                        instIndex += 1; // 跳过加在前面的指令
+                        riscInstList.add(instIndex + 1, inst2);
+                    }
+                }
+
+                riscFunc.stackIndex = tempStackIndex; // 恢复栈的位置
             }
         }
 
@@ -663,6 +697,13 @@ public class FloatRegisterAllocator implements BaseBackendPass {
             Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
             addis0.setVal(riscFunc.stackSize);
         }
+    }
+
+    private boolean listHasReg(ArrayList<FloatRealRegister> list, FloatRealRegister tempReg) {
+        for (FloatRealRegister reg : list) {
+            if (tempReg.regType == reg.regType) return true;
+        }
+        return false;
     }
 
 
