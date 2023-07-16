@@ -29,7 +29,7 @@ public class RealRegister extends Register {
 
 
     public RealRegister(int r1, int offset) {
-        switch (r1 + offset) {
+        switch (r1 + offset + 2) {
             case 0 -> regType = REGTYPE.zero;
             case 1 -> regType = REGTYPE.s0;
             case 2 -> regType = REGTYPE.sp;
@@ -45,17 +45,17 @@ public class RealRegister extends Register {
             case 15 -> regType = REGTYPE.t4;
             case 16 -> regType = REGTYPE.t5;
             case 17 -> regType = REGTYPE.t6;
-            case 18 -> regType = REGTYPE.x7;
-            case 19 -> regType = REGTYPE.x8;
-            case 20 -> regType = REGTYPE.x9;
-            case 21 -> regType = REGTYPE.x10;
-            case 22 -> regType = REGTYPE.x11;
-            case 23 -> regType = REGTYPE.x12;
-            case 24 -> regType = REGTYPE.x13;
-            case 25 -> regType = REGTYPE.x14;
-            case 26 -> regType = REGTYPE.x15;
-            case 27 -> regType = REGTYPE.x16;
-            case 28 -> regType = REGTYPE.x17;
+            case 18 -> regType = REGTYPE.s1;
+            case 19 -> regType = REGTYPE.s2;
+            case 20 -> regType = REGTYPE.s3;
+            case 21 -> regType = REGTYPE.s4;
+            case 22 -> regType = REGTYPE.s5;
+            case 23 -> regType = REGTYPE.s6;
+            case 24 -> regType = REGTYPE.s7;
+            case 25 -> regType = REGTYPE.s8;
+            case 26 -> regType = REGTYPE.s9;
+            case 27 -> regType = REGTYPE.s10;
+            case 28 -> regType = REGTYPE.s11;
             case 29 -> regType = REGTYPE.x18;
             case 30 -> regType = REGTYPE.x19;
             case 31 -> regType = REGTYPE.x20;
@@ -131,7 +131,19 @@ public class RealRegister extends Register {
         a3,
         a4,
         a6,
-        a7
+        a7,
+        s1,
+        s2,
+        s3,
+        s4,
+        s5,
+        s6,
+        s7,
+        s8,
+        s9,
+        s10,
+        s11
+
 
     }
 }

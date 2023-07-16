@@ -68,6 +68,13 @@ public class RISCInstruction {
         riscOperand.setPosition(i);
     }
 
+    public boolean isNumber12bit() {
+        return this.type == ITYPE.addi || this.type == ITYPE.xori ||
+                this.type == ITYPE.lw || this.type == ITYPE.flw || this.type == ITYPE.ld || this.type == ITYPE.fld ||
+                this.type == ITYPE.sw || this.type == ITYPE.fsw || this.type == ITYPE.sd;
+    }
+
+
     public String emit() {
         return type.name();
     }
@@ -114,6 +121,37 @@ public class RISCInstruction {
         subw,
         mulw,
         call,
-        lla, flw, fsw, fadd, fmul, fdiv, fsub, fmv, J, j, bge, bne, blt, beq, ble, bgt, feq, fne, fgt, fge, fle, flt, fld, fcvt, fneg, seq, sle, sgt, sge, seqz, sgtz, divw
+        lla,
+        flw,
+        fsw,
+        fadd,
+        fmul,
+        fdiv,
+        fsub,
+        fmv,
+        J,
+        j,
+        bge,
+        bne,
+        blt,
+        beq,
+        ble,
+        bgt,
+        feq,
+        fne,
+        fgt,
+        fge,
+        fle,
+        flt,
+        fld,
+        fcvt,
+        fneg,
+        seq,
+        sle,
+        sgt,
+        sge,
+        seqz,
+        sgtz,
+        divw
     }
 }
