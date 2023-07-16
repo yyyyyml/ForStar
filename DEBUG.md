@@ -4,9 +4,15 @@
 
 
 ### 62_percolation WA
-
+应为：
+8
+0
+我们是：
+3
+0
+可能是控制流有问题
 ### 69_expr_eval WA
-
+-11
 ### 71_full_conn WA
 
 ### 74_kmp WA
@@ -14,7 +20,7 @@
 ### 78_side_effect WA
 
 ### 81_skip_spaces WA
-
+-11
 ### 83_long_array WA
 
 ### 84_long_array2 RE
