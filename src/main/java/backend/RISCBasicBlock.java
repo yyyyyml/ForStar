@@ -385,11 +385,11 @@ public class RISCBasicBlock {
             case LE -> {
                 // 小于等于 相当于大于反过来
                 VirtualRegister vr = getNewVr();
-                SubwInstruction sub = new SubwInstruction(vr,temp1,temp2);
+                SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
                 instructionList.add(sub);
-                SgtzInstruction b = new SgtzInstruction(dst,vr);
+                SgtzInstruction b = new SgtzInstruction(dst, vr);
                 instructionList.add(b);
-                XoriInstruction xor = new XoriInstruction(dst,dst,new Immediate(1));
+                XoriInstruction xor = new XoriInstruction(dst, dst, new Immediate(1));
                 instructionList.add(xor);
             }
             case GT -> {
@@ -401,9 +401,9 @@ public class RISCBasicBlock {
             }
             case GE -> {
                 //大于等于相当于小于反过来
-                SltInstruction b = new SltInstruction(dst,temp1, temp2);
+                SltInstruction b = new SltInstruction(dst, temp1, temp2);
                 instructionList.add(b);
-                XoriInstruction xor = new XoriInstruction(dst,dst,new Immediate(1));
+                XoriInstruction xor = new XoriInstruction(dst, dst, new Immediate(1));
                 instructionList.add(xor);
             }
             case FEQ -> {
