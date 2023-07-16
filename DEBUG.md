@@ -38,9 +38,8 @@
 ### 96_matrix_add RE
 
 test.s:15: Error: illegal operands `sd f10,-96(s0)'
-test.s:16: Error: illegal operands `sd f11,-88(s0)'
-test.s:17: Error: illegal operands `sd f12,-80(s0)'
-test.s:18: Error: illegal operands `sd f13,-72(s0)'
+
+test.s:36: Error: illegal operands `fld t2,-48(s0)'
 
 ### 97_matrix_sub RE
 
