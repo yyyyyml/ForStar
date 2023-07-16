@@ -2,7 +2,6 @@
 
 ## functional
 
----
 
 ### 62_percolation WA
 
@@ -44,7 +43,6 @@
 
 ## hidden_functional
 
----
 
 ### 11_BST WA
 
