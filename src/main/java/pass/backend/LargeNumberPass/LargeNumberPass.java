@@ -18,6 +18,7 @@ public class LargeNumberPass implements BaseBackendPass {
         for (RISCFunction riscFunc : riscModule.getFunctionList()) {
             if (riscFunc.isBuildIn) continue;
             for (RISCBasicBlock riscBB : riscFunc.getBasicBlockList()) {
+                position = 0;
                 LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
                 for (int instIndex = 0; instIndex < riscInstList.size(); instIndex++) {
                     RISCInstruction riscInst = riscInstList.get(instIndex);
