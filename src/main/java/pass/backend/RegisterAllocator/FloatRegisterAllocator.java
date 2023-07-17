@@ -35,7 +35,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>(); // 编号对应的虚拟寄存器对象
         time2Function = new ArrayList<>();
-        regNum = 6;
+        regNum = 8;
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
