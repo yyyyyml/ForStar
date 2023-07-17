@@ -5,13 +5,34 @@
 
 ### 69_expr_eval WA
 
-段错误
+-11
+单独跑是段错误
 
 ### 71_full_conn WA
 
+dog
+dog
+dog
+dog
+dog
+cat
+0
+应为：
+dog
+cat
+dog
+dog
+cat
+cat
+0
+
 ### 74_kmp WA
 
+-11
+
 ### 83_long_array WA
+
+-11
 
 ### 84_long_array2 RE
 
@@ -21,11 +42,23 @@
 
 ### 87_many_params WA
 
+-11
+
 ### 88_many_params2 WA
+
+-11
 
 ### 89_many_globals WA
 
+2830192
+应为：
+2812118
+
 ### 93_nested_calls WA
+
+0
+应为：
+250
 
 ### 95_float RE
 
