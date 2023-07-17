@@ -17,8 +17,6 @@
 
 ### 74_kmp WA
 
-### 78_side_effect WA
-
 ### 81_skip_spaces WA
 -11
 ### 83_long_array WA
@@ -41,23 +39,19 @@
 
 前端问题
 
-### 96_matrix_add RE
+### 96_matrix_add WA
 
-test.s:15: Error: illegal operands `sd f10,-96(s0)'
+段错误
 
-test.s:36: Error: illegal operands `fld t2,-48(s0)'
+### 97_matrix_sub WA
 
-### 97_matrix_sub RE
+### 98_matrix_mul WA
 
-### 98_matrix_mul RE
-
-### 99_matrix_trans RE
+### 99_matrix_trans WA
 
 ## hidden_functional
 
 ### 11_BST WA
-
-### 12_DSU WA
 
 ### 15_graph_coloring WA
 
