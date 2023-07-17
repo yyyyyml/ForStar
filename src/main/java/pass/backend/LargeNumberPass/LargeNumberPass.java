@@ -11,13 +11,12 @@ import pass.backend.BaseBackendPass;
 import java.util.LinkedList;
 
 public class LargeNumberPass implements BaseBackendPass {
-    public int position = 0; // 表示当前t0的值为s0加多少
+    public int position = 0; // 表示当前t0的值为s0加position
 
     @Override
     public void run(RISCModule riscModule) {
         for (RISCFunction riscFunc : riscModule.getFunctionList()) {
             if (riscFunc.isBuildIn) continue;
-            if (riscFunc.stackSize < 2048) continue;
             for (RISCBasicBlock riscBB : riscFunc.getBasicBlockList()) {
                 LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
                 for (int instIndex = 0; instIndex < riscInstList.size(); instIndex++) {
