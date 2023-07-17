@@ -899,7 +899,7 @@ public class RISCBasicBlock {
             }
             //超出部分放栈里
             else {
-                RISCOperand mem = new Memory((myPIndex - 8) * 8, 2);
+                RISCOperand mem = new Memory((myPIndex - 8) * 8, 1);
                 return mem;
             }
         }

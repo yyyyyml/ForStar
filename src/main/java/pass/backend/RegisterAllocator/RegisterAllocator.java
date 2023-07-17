@@ -126,8 +126,8 @@ public class RegisterAllocator implements BaseBackendPass {
         int index = 0; // 用于记录位置，存到live interval中
 
         // 先遍历一遍 记录变量的live interval
-        riscFunc.stackSize = riscFunc.localStackIndex + 8 * riscFunc.operandStackCounts;
-        riscFunc.stackIndex = riscFunc.localStackIndex + 8 * riscFunc.operandStackCounts;
+        riscFunc.stackSize = riscFunc.localStackIndex;
+        riscFunc.stackIndex = riscFunc.localStackIndex;
         System.out.println("zhan----------------------" + riscFunc.stackSize);
 
         System.out.println(riscFunc.stackSize);
@@ -554,6 +554,7 @@ public class RegisterAllocator implements BaseBackendPass {
 
                 // 找return位置，修改return的上面3条有关栈空间的指令
                 if (instIndex == riscInstList.size() - 1 && riscInst.type == RISCInstruction.ITYPE.jr) {
+                    riscFunc.stackSize += 8 * riscFunc.operandStackCounts; // 给参数留位置
                     if (riscFunc.stackSize % 16 == 12) {
                         RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
                         Memory raMemory = (Memory) ldraInst.getOperandAt(1);
@@ -603,6 +604,7 @@ public class RegisterAllocator implements BaseBackendPass {
                         Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
                         addiMemory.setVal(riscFunc.stackSize);
                     }
+                    riscFunc.stackSize -= 8 * riscFunc.operandStackCounts; // 恢复
 
                 }
 
@@ -633,6 +635,7 @@ public class RegisterAllocator implements BaseBackendPass {
         // 修改函数的前4条指令
         var firstInstList = riscBBList.get(0).getInstructionList();
 
+        riscFunc.stackSize += 8 * riscFunc.operandStackCounts; // 给参数留位置
         if (riscFunc.stackSize % 16 == 12) {
             RISCInstruction addispInst = firstInstList.get(0);
             Immediate addisp = (Immediate) addispInst.getOperandAt(2);
@@ -698,6 +701,7 @@ public class RegisterAllocator implements BaseBackendPass {
             Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
             addis0.setVal(riscFunc.stackSize);
         }
+        riscFunc.stackSize -= 8 * riscFunc.operandStackCounts; // 恢复
 
     }
 
