@@ -64,7 +64,7 @@ public class RISCFunction {
             int floatCount = 0;
             int stackIndex = 8;
             for (Value v : irFunc.getParamList()) {
-                if (v.getType().isIntegerType() || (v.getType().isPointerType() && ((PointerType) v.getType()).getPointedType().isIntegerType())) {
+                if (v.getType().isIntegerType() || v.getType().isPointerType() ) {
                     if (intCount < 8) {
                         myfuncParameters.put(v, intCount++);
                     } else {
@@ -72,7 +72,7 @@ public class RISCFunction {
 
 
                     }
-                } else if (v.getType().isFloatType() || (v.getType().isPointerType() && ((PointerType) v.getType()).getPointedType().isFloatType())) {
+                } else if (v.getType().isFloatType() ) {
                     if (floatCount < 8) {
                         myfuncParameters.put(v, floatCount++);
                     } else {

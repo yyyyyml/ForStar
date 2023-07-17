@@ -13,7 +13,7 @@ public class FsdInstruction extends RISCInstruction {
         this.setOperand(op1, 0);
         this.op2 = memory;
         this.setOperand(op2, 1);
-        this.type = ITYPE.sd;
+        this.type = ITYPE.fsd;
     }
 
 

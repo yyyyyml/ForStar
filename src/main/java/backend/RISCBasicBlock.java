@@ -541,15 +541,23 @@ public class RISCBasicBlock {
         CallInstruction call1 = new CallInstruction(funcName);
         instructionList.add(call1);
         //以下操作为将a0（函数返回值）和ir中的虚拟寄存器进行对应
-        RealRegister a0 = new RealRegister(allocAReg(0));
-        //删除原先hashmap中的对应关系
-        if (riscFunction.valueRISCOperandHashMap.containsValue(a0)) {
-            Value key = riscFunction.riscOperandValueHashMap.get(a0);
-            riscFunction.valueRISCOperandHashMap.remove(key);
+
+        if(curInst.getType().isIntegerType()||curInst.getType().isPointerType())
+        {
+            RealRegister a0 = new RealRegister(allocAReg(0));
+            VirtualRegister vr = getNewVr();
+            MvInstruction mv = new MvInstruction(vr,a0);
+            instructionList.add(mv);
+            riscFunction.valueRISCOperandHashMap.put(curInst, vr);
 
         }
-        riscFunction.valueRISCOperandHashMap.put(curInst, a0);
-        riscFunction.riscOperandValueHashMap.put(a0, curInst);
+        else if(curInst.getType().isFloatType()){
+            FloatRealRegister Fa0 = new FloatRealRegister(10);
+            FloatVirtualRegister Fvr = getNewFvr();
+            FmvInstruction fmv = new FmvInstruction(Fvr,Fa0);
+            instructionList.add(fmv);
+            riscFunction.valueRISCOperandHashMap.put(curInst,Fvr);
+        }
 
     }
 
@@ -657,12 +665,14 @@ public class RISCBasicBlock {
 
     private void translateLoad(Instruction curInst) {
         //提前取出dst判断是否为寄存器
+        Value v = curInst.getOperandAt(0);
         RISCOperand Tdst = getOperand(curInst);
 
         if (curInst.getType() == Type.IntegerType.getType()) {
             Value op1 = curInst.getOperandAt(0);
             RISCOperand src = getOperand(op1);
             RISCOperand dst;
+
             if (Tdst instanceof Memory) {
                 dst = getNewVr();
             } else {
@@ -680,7 +690,7 @@ public class RISCBasicBlock {
                 SwInstruction sw1 = new SwInstruction(dst, Tdst);
                 instructionList.add(sw1);
             }
-        } else if ((curInst.getType().isPointerType() && ((PointerType) curInst.getType()).getPointedType().isIntegerType())) {
+        } else if (curInst.getType().isPointerType() ) {
             Value op1 = curInst.getOperandAt(0);
             RISCOperand src = getOperand(op1);
             RISCOperand dst;
@@ -722,27 +732,6 @@ public class RISCBasicBlock {
                 FswInstruction fsw1 = new FswInstruction(dst, Tdst);
                 instructionList.add(fsw1);
             }
-        } else if ((curInst.getType().isPointerType() && ((PointerType) curInst.getType()).getPointedType().isFloatType())) {
-            Value op1 = curInst.getOperandAt(0);
-            RISCOperand src = getOperand(op1);
-            //判断Tdst是否为mem
-            RISCOperand dst;
-            if (Tdst instanceof Memory) {
-                dst = getNewFvr();
-            } else {
-                dst = Tdst;
-            }
-            if (src instanceof Memory) {
-                FldInstruction fld1 = new FldInstruction(dst, src);
-                instructionList.add(fld1);
-            } else if (src instanceof Register) {
-                ;
-            }
-            riscFunction.valueRISCOperandHashMap.put(curInst, dst);
-            if (Tdst instanceof Memory) {
-                FsdInstruction fsd1 = new FsdInstruction(dst, Tdst);
-                instructionList.add(fsd1);
-            }
         }
 
 
@@ -762,28 +751,29 @@ public class RISCBasicBlock {
             instructionList.add(li1);
             SwInstruction sw1 = new SwInstruction(vr, rop2);
             instructionList.add(sw1);
-        } else if (rop1 instanceof Register) {
+        }
+        else if (rop1 instanceof Register) {
             if (op1.getType() == Type.IntegerType.getType()) {
                 SwInstruction sw1 = new SwInstruction(rop1, rop2);
                 instructionList.add(sw1);
-            } else if ((op1.getType().isPointerType() && ((PointerType) op1.getType()).getPointedType().isIntegerType())) {
+            } else if (op1.getType().isPointerType() ) {
+                System.out.println(curInst + "->SD");
                 SdInstruction sd1 = new SdInstruction(rop1, rop2);
                 instructionList.add(sd1);
             } else if (op1.getType() == Type.FloatType.getType()) {
                 FswInstruction fsw = new FswInstruction(rop1, rop2);
                 instructionList.add(fsw);
-            } else if ((op1.getType().isPointerType() && ((PointerType) op1.getType()).getPointedType().isFloatType())) {
-                FsdInstruction sd1 = new FsdInstruction(rop1, rop2);
-                instructionList.add(sd1);
             }
-        } else if (rop1 instanceof Memory) {
+        }
+
+        else if (rop1 instanceof Memory) {
             if (op1.getType() == Type.IntegerType.getType()) {
                 VirtualRegister vr = getNewVr();
                 LwInstruction lw1 = new LwInstruction(vr, rop1);
                 instructionList.add(lw1);
                 SwInstruction sw = new SwInstruction(vr, rop2);
                 instructionList.add(sw);
-            } else if ((op1.getType().isPointerType() && ((PointerType) op1.getType()).getPointedType().isIntegerType())) {
+            } else if (op1.getType().isPointerType() ) {
                 VirtualRegister vr = getNewVr();
                 LdInstruction ld1 = new LdInstruction(vr, rop1);
                 instructionList.add(ld1);
@@ -795,12 +785,6 @@ public class RISCBasicBlock {
                 instructionList.add(flw);
                 FswInstruction fsw = new FswInstruction(fvr, rop2);
                 instructionList.add(fsw);
-            } else if ((op1.getType().isPointerType() && ((PointerType) op1.getType()).getPointedType().isFloatType())) {
-                VirtualRegister vr = getNewVr();
-                FldInstruction ld1 = new FldInstruction(vr, rop1);
-                instructionList.add(ld1);
-                FsdInstruction sd = new FsdInstruction(vr, rop2);
-                instructionList.add(sd);
             }
         }
     }
@@ -904,7 +888,7 @@ public class RISCBasicBlock {
         else if (riscFunction.myfuncParameters.containsKey(value)) {
             int myPIndex = riscFunction.myfuncParameters.get(value);
             if (myPIndex < 8) {
-                if (value.getType().isIntegerType() || (value.getType().isPointerType() && ((PointerType) value.getType()).getPointedType().isIntegerType())) {
+                if (value.getType().isIntegerType() || value.getType().isPointerType() ) {
                     RISCOperand reg = new RealRegister(allocAReg(myPIndex));
                     return reg;
                 } else {
