@@ -511,8 +511,8 @@ public class RISCBasicBlock {
                         VirtualRegister vr = getNewVr();
                         LiInstruction li = new LiInstruction(vr, temp);
                         instructionList.add(li);
-                        SwInstruction sw = new SwInstruction(vr, dst);
-                        instructionList.add(sw);
+                        SdInstruction sd = new SdInstruction(vr, dst);
+                        instructionList.add(sd);
                     }
 
                 } else if (v.getType().isFloatType()) {
@@ -757,7 +757,6 @@ public class RISCBasicBlock {
                 SwInstruction sw1 = new SwInstruction(rop1, rop2);
                 instructionList.add(sw1);
             } else if (op1.getType().isPointerType() ) {
-                System.out.println(curInst + "->SD");
                 SdInstruction sd1 = new SdInstruction(rop1, rop2);
                 instructionList.add(sd1);
             } else if (op1.getType() == Type.FloatType.getType()) {
