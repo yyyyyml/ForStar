@@ -1,7 +1,9 @@
 package pass.backend.RegisterAllocator;
 
 import backend.*;
+import backend.instructions.LdInstruction;
 import backend.instructions.LwInstruction;
+import backend.instructions.SdInstruction;
 import backend.instructions.SwInstruction;
 import backend.operands.Immediate;
 import backend.operands.Memory;
@@ -126,8 +128,8 @@ public class RegisterAllocator implements BaseBackendPass {
         int index = 0; // 用于记录位置，存到live interval中
 
         // 先遍历一遍 记录变量的live interval
-        riscFunc.stackSize = riscFunc.localStackIndex + 8 * riscFunc.operandStackCounts + 4;
-        riscFunc.stackIndex = riscFunc.localStackIndex + 8 * riscFunc.operandStackCounts + 4;
+        riscFunc.stackSize = riscFunc.localStackIndex + 8 * riscFunc.operandStackCounts;
+        riscFunc.stackIndex = riscFunc.localStackIndex + 8 * riscFunc.operandStackCounts;
         System.out.println("zhan----------------------" + riscFunc.stackSize);
 
         System.out.println(riscFunc.stackSize);
@@ -227,8 +229,8 @@ public class RegisterAllocator implements BaseBackendPass {
             spillVreg.setStackLocation(curFunc.stackIndex);
 //            System.out.println("Time: " + time + " Spilling: vr_" + spillEntry.getKey() + " -> stack " + curFunc.stackIndex);
 //            System.out.println("Time: " + time + " Allocating register: vr_" + curEntry.getKey() + " -> " + spillVreg.getRealReg());
-            curFunc.stackSize += 4;
-            curFunc.stackIndex += 4;
+            curFunc.stackSize += 8;
+            curFunc.stackIndex += 8;
             // 记录spillTime
             spillVreg.setSpillTime(time);
             // 从activeList移除spill
@@ -244,8 +246,8 @@ public class RegisterAllocator implements BaseBackendPass {
 
             curVreg.setStackLocation(curFunc.stackIndex);
 //            System.out.println("Time: " + time + " Spilling: vr_" + curEntry.getKey() + " -> stack " + curFunc.stackIndex);
-            curFunc.stackSize += 4;
-            curFunc.stackIndex += 4;
+            curFunc.stackSize += 8;
+            curFunc.stackIndex += 8;
             // 记录spillTime
             curVreg.setSpillTime(time);
 
@@ -389,18 +391,18 @@ public class RegisterAllocator implements BaseBackendPass {
                                     if (!listHasReg(nowRealRegList, tempReg))
                                         nowRealRegList.add(tempReg); // 加入当前在用的寄存器
 //                                    System.out.println(tempIdFromZero);
-
-                                    var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
-                                    riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
+                                    riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
 //                                    System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
                                     if (riscFunc.stackSize < riscFunc.stackIndex)
                                         riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
-                                    var spillStack = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
-                                    RISCInstruction inst1 = new SwInstruction(tempReg, tempStack); // 保存原值
-                                    RISCInstruction inst2 = new LwInstruction(tempReg, spillStack); // 存入溢出的值
+                                    var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
 
-                                    RISCInstruction inst3 = new SwInstruction(tempReg, spillStack); // 写回溢出值
-                                    RISCInstruction inst4 = new LwInstruction(tempReg, tempStack); // 恢复原值
+                                    var spillStack = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
+                                    RISCInstruction inst1 = new SdInstruction(tempReg, tempStack); // 保存原值
+                                    RISCInstruction inst2 = new LdInstruction(tempReg, spillStack); // 存入溢出的值
+
+                                    RISCInstruction inst3 = new SdInstruction(tempReg, spillStack); // 写回溢出值
+                                    RISCInstruction inst4 = new LdInstruction(tempReg, tempStack); // 恢复原值
 
                                     mem.basicAddress = tempReg; // 当前指令
                                     nameMapReg.put(name, tempReg); // 记录替换成了哪个
@@ -513,18 +515,18 @@ public class RegisterAllocator implements BaseBackendPass {
                                 if (!listHasReg(nowRealRegList, tempReg))
                                     nowRealRegList.add(tempReg); // 加入当前在用的寄存器
 //                                System.out.println(tempIdFromZero);
-
-                                var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
-                                riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
+                                riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
 //                                System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
                                 if (riscFunc.stackSize < riscFunc.stackIndex)
                                     riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
-                                var spillStack = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
-                                RISCInstruction inst1 = new SwInstruction(tempReg, tempStack); // 保存原值
-                                RISCInstruction inst2 = new LwInstruction(tempReg, spillStack); // 存入溢出的值
+                                var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
 
-                                RISCInstruction inst3 = new SwInstruction(tempReg, spillStack); // 写回溢出值
-                                RISCInstruction inst4 = new LwInstruction(tempReg, tempStack); // 恢复原值
+                                var spillStack = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
+                                RISCInstruction inst1 = new SdInstruction(tempReg, tempStack); // 保存原值
+                                RISCInstruction inst2 = new LdInstruction(tempReg, spillStack); // 存入溢出的值
+
+                                RISCInstruction inst3 = new SdInstruction(tempReg, spillStack); // 写回溢出值
+                                RISCInstruction inst4 = new LdInstruction(tempReg, tempStack); // 恢复原值
 
                                 riscInst.setOpLocal(tempReg, opIndex, opPosition); // 当前指令
                                 nameMapReg.put(name, tempReg); // 记录替换成了哪个
@@ -610,14 +612,15 @@ public class RegisterAllocator implements BaseBackendPass {
                 if (riscInst.type == RISCInstruction.ITYPE.call) {
                     // TODO:记录当前时刻用到的寄存器
                     for (RealRegister reg : nowRealRegList) {
-                        var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
-                        riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
+                        riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
 //                                System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
                         if (riscFunc.stackSize < riscFunc.stackIndex)
                             riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
-                        RISCInstruction inst1 = new SwInstruction(reg, tempStack); // 保存原值
+                        var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
 
-                        RISCInstruction inst2 = new LwInstruction(reg, tempStack); // 恢复原值
+                        RISCInstruction inst1 = new SdInstruction(reg, tempStack); // 保存原值
+
+                        RISCInstruction inst2 = new LdInstruction(reg, tempStack); // 恢复原值
 
                         riscInstList.add(instIndex, inst1);
                         instIndex += 1; // 跳过加在前面的指令

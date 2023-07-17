@@ -1,7 +1,9 @@
 package pass.backend.RegisterAllocator;
 
 import backend.*;
+import backend.instructions.FldInstruction;
 import backend.instructions.FlwInstruction;
+import backend.instructions.FsdInstruction;
 import backend.instructions.FswInstruction;
 import backend.operands.FloatRealRegister;
 import backend.operands.FloatVirtualRegister;
@@ -225,8 +227,8 @@ public class FloatRegisterAllocator implements BaseBackendPass {
             spillVreg.setStackLocation(curFunc.stackIndex);
 //            System.out.println("Time: " + time + " Spilling: vr_f" + spillEntry.getKey() + " -> stack " + curFunc.stackIndex);
 //            System.out.println("Time: " + time + " Allocating register: vr_f" + curEntry.getKey() + " -> " + spillVreg.getRealReg());
-            curFunc.stackSize += 4;
-            curFunc.stackIndex += 4;
+            curFunc.stackSize += 8;
+            curFunc.stackIndex += 8;
             // 记录spillTime
             spillVreg.setSpillTime(time);
             // 从activeList移除spill
@@ -242,8 +244,8 @@ public class FloatRegisterAllocator implements BaseBackendPass {
 
             curVreg.setStackLocation(curFunc.stackIndex);
 //            System.out.println("Time: " + time + " Spilling: vr_f" + curEntry.getKey() + " -> stack " + curFunc.stackIndex);
-            curFunc.stackSize += 4;
-            curFunc.stackIndex += 4;
+            curFunc.stackSize += 8;
+            curFunc.stackIndex += 8;
             // 记录spillTime
             curVreg.setSpillTime(time);
 
@@ -387,18 +389,18 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                     if (!listHasReg(nowRealRegList, tempReg))
                                         nowRealRegList.add(tempReg); // 加入当前在用的寄存器
 //                                    System.out.println(tempIdFromZero);
-
-                                    var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
-                                    riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
+                                    riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
 //                                    System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
                                     if (riscFunc.stackSize < riscFunc.stackIndex)
                                         riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
-                                    var spillStack = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
-                                    RISCInstruction inst1 = new FswInstruction(tempReg, tempStack); // 保存原值
-                                    RISCInstruction inst2 = new FlwInstruction(tempReg, spillStack); // 存入溢出的值
+                                    var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
 
-                                    RISCInstruction inst3 = new FswInstruction(tempReg, spillStack); // 写回溢出值
-                                    RISCInstruction inst4 = new FlwInstruction(tempReg, tempStack); // 恢复原值
+                                    var spillStack = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
+                                    RISCInstruction inst1 = new FsdInstruction(tempReg, tempStack); // 保存原值
+                                    RISCInstruction inst2 = new FldInstruction(tempReg, spillStack); // 存入溢出的值
+
+                                    RISCInstruction inst3 = new FsdInstruction(tempReg, spillStack); // 写回溢出值
+                                    RISCInstruction inst4 = new FldInstruction(tempReg, tempStack); // 恢复原值
 
                                     mem.basicAddress = tempReg; // 当前指令
                                     nameMapReg.put(name, tempReg); // 记录替换成了哪个
@@ -511,18 +513,18 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                 if (!listHasReg(nowRealRegList, tempReg))
                                     nowRealRegList.add(tempReg); // 加入当前在用的寄存器
 //                                System.out.println(tempIdFromZero);
-
-                                var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
-                                riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
+                                riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
 //                                System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
                                 if (riscFunc.stackSize < riscFunc.stackIndex)
                                     riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
-                                var spillStack = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
-                                RISCInstruction inst1 = new FswInstruction(tempReg, tempStack); // 保存原值
-                                RISCInstruction inst2 = new FlwInstruction(tempReg, spillStack); // 存入溢出的值
+                                var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
 
-                                RISCInstruction inst3 = new FswInstruction(tempReg, spillStack); // 写回溢出值
-                                RISCInstruction inst4 = new FlwInstruction(tempReg, tempStack); // 恢复原值
+                                var spillStack = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
+                                RISCInstruction inst1 = new FsdInstruction(tempReg, tempStack); // 保存原值
+                                RISCInstruction inst2 = new FldInstruction(tempReg, spillStack); // 存入溢出的值
+
+                                RISCInstruction inst3 = new FsdInstruction(tempReg, spillStack); // 写回溢出值
+                                RISCInstruction inst4 = new FldInstruction(tempReg, tempStack); // 恢复原值
 
                                 riscInst.setOpLocal(tempReg, opIndex, opPosition); // 当前指令
                                 nameMapReg.put(name, tempReg); // 记录替换成了哪个
@@ -610,14 +612,15 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                 if (riscInst.type == RISCInstruction.ITYPE.call) {
                     // TODO:记录当前时刻用到的寄存器
                     for (FloatRealRegister reg : nowRealRegList) {
-                        var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
-                        riscFunc.stackIndex += 4; // 开辟出临时保存寄存器值的位置
+                        riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
 //                                System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
                         if (riscFunc.stackSize < riscFunc.stackIndex)
                             riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
-                        RISCInstruction inst1 = new FswInstruction(reg, tempStack); // 保存原值
+                        var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
 
-                        RISCInstruction inst2 = new FlwInstruction(reg, tempStack); // 恢复原值
+                        RISCInstruction inst1 = new FsdInstruction(reg, tempStack); // 保存原值
+
+                        RISCInstruction inst2 = new FldInstruction(reg, tempStack); // 恢复原值
 
                         riscInstList.add(instIndex, inst1);
                         instIndex += 1; // 跳过加在前面的指令
