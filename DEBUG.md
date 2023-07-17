@@ -5,8 +5,7 @@
 
 ### 69_expr_eval WA
 
--11
-单独跑是段错误
+段错误
 
 ### 71_full_conn WA
 
@@ -48,12 +47,6 @@ cat
 
 -11
 
-### 89_many_globals WA
-
-2830192
-应为：
-2812118
-
 ### 93_nested_calls WA
 
 0
@@ -63,42 +56,6 @@ cat
 ### 95_float RE
 
 前端问题
-
-### 96_matrix_add WA
-
-024
-024
-000
-0
-应为：
-024
-024
-024
-0
-
-### 98_matrix_mul WA
-
-036
-036
-000
-0
-应为：
-036
-036
-036
-0
-
-### 99_matrix_trans WA
-
-200
-211
-000
-0
-应为：
-000
-111
-222
-0
 
 
 ## hidden_functional
