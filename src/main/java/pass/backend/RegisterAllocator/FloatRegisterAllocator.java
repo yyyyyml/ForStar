@@ -2,9 +2,7 @@ package pass.backend.RegisterAllocator;
 
 import backend.*;
 import backend.instructions.FldInstruction;
-import backend.instructions.FlwInstruction;
 import backend.instructions.FsdInstruction;
-import backend.instructions.FswInstruction;
 import backend.operands.FloatRealRegister;
 import backend.operands.FloatVirtualRegister;
 import backend.operands.Immediate;
@@ -319,10 +317,10 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                 // 说明这时需要把那个被替换的寄存器溢出到相应栈中
                                 // 需要被换的寄存器
                                 FloatRealRegister realReg = new FloatRealRegister(vRegReplaced.getRealReg());
-                                // 添加写回内存的指令 sw
+                                // 添加写回内存的指令 sd
                                 var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
-                                RISCInstruction swInst = new FswInstruction(realReg, stack); // 存入栈
-                                riscInstList.add(instIndex, swInst); // 在当前这条指令之前，入栈
+                                RISCInstruction sdInst = new FsdInstruction(realReg, stack); // 存入栈
+                                riscInstList.add(instIndex, sdInst); // 在当前这条指令之前，入栈
                                 instIndex++; // 跳过加的指令
 
                             }
@@ -356,18 +354,18 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                     // 记录替换成了哪个
                                     nameMapReg.put(name, tempReg);
 //                                    System.out.println("put" + name + "--" + tempReg);
-                                    // 添加写回内存的指令 sw
+                                    // 添加写回内存的指令 sd
                                     var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
-                                    RISCInstruction lwInst = new FlwInstruction(tempReg, stack); // 存入溢出的值
-                                    RISCInstruction swInst = new FswInstruction(tempReg, stack); // 写回溢出值
+                                    RISCInstruction ldInst = new FldInstruction(tempReg, stack); // 存入溢出的值
+                                    RISCInstruction sdInst = new FsdInstruction(tempReg, stack); // 写回溢出值
                                     if (vReg.getSpillTime() < position) {
-                                        riscInstList.add(instIndex + 1, swInst);
-                                        riscInstList.add(instIndex, lwInst); // 之前存过才需要这个
+                                        riscInstList.add(instIndex + 1, sdInst);
+                                        riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
                                         instIndex += 1; // 跳过加的指令
                                     } else {
-                                        riscInstList.add(instIndex + 1, swInst);
+                                        riscInstList.add(instIndex + 1, sdInst);
                                     }
-//                                    System.out.println(swInst.emit());
+//                                    System.out.println(sdInst.emit());
 
                                 } else {
                                     // 没有空闲，需要临时替换一个，保存里面的值再替换回去
@@ -443,10 +441,10 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                             // 说明这时需要把那个被替换的寄存器溢出到相应栈中
                             // 需要被换的寄存器
                             FloatRealRegister realReg = new FloatRealRegister(vRegReplaced.getRealReg());
-                            // 添加写回内存的指令 sw
+                            // 添加写回内存的指令 sd
                             var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
-                            RISCInstruction swInst = new FswInstruction(realReg, stack); // 存入栈
-                            riscInstList.add(instIndex, swInst); // 在当前这条指令之前，入栈
+                            RISCInstruction sdInst = new FsdInstruction(realReg, stack); // 存入栈
+                            riscInstList.add(instIndex, sdInst); // 在当前这条指令之前，入栈
                             instIndex++; // 跳过加的指令
 
                         }
@@ -480,18 +478,18 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                 // 记录替换成了哪个
                                 nameMapReg.put(name, tempReg);
 //                                System.out.println("put" + name + "--" + tempReg);
-                                // 添加写回内存的指令 sw
+                                // 添加写回内存的指令 sd
                                 var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
-                                RISCInstruction lwInst = new FlwInstruction(tempReg, stack); // 存入溢出的值
-                                RISCInstruction swInst = new FswInstruction(tempReg, stack); // 写回溢出值
+                                RISCInstruction ldInst = new FldInstruction(tempReg, stack); // 存入溢出的值
+                                RISCInstruction sdInst = new FsdInstruction(tempReg, stack); // 写回溢出值
                                 if (vReg.getSpillTime() < position) {
-                                    riscInstList.add(instIndex + 1, swInst);
-                                    riscInstList.add(instIndex, lwInst); // 之前存过才需要这个
+                                    riscInstList.add(instIndex + 1, sdInst);
+                                    riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
                                     instIndex += 1; // 跳过加的指令
                                 } else {
-                                    riscInstList.add(instIndex + 1, swInst);
+                                    riscInstList.add(instIndex + 1, sdInst);
                                 }
-//                                System.out.println(swInst.emit());
+//                                System.out.println(sdInst.emit());
 
                             } else {
                                 // 没有空闲，需要临时替换一个，保存里面的值再替换回去
