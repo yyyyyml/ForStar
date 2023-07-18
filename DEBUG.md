@@ -7,20 +7,13 @@
 
 段错误
 
-
-
-### 74_kmp WA
-
--11
-
 ### 83_long_array WA
 
 -11
 
-### 84_long_array2 WA（貌似AC了）
 ### 85_long_code WA
 
-### 86_long_code2 WA
+### 86_long_code2 WA （但是测评机上AC了...）
 
 前端左递归？
 
@@ -28,9 +21,6 @@
 
 -11
 
-### 88_many_params2 WA
-
--11
 
 ### 93_nested_calls WA
 
@@ -46,9 +36,6 @@
 ## hidden_functional
 
 ### 11_BST WA
-
-
-### 17_maximal_clique WA
 
 ### 23_json CE
 
