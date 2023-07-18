@@ -33,9 +33,9 @@ cat
 
 -11
 
-### 84_long_array2 RE
+### 84_long_array2 WA（貌似AC了）
 
-### 86_long_code2 RE
+### 86_long_code2 WA
 
 前端左递归？
 
@@ -72,11 +72,11 @@ cat
 
 ### 29_long_line WA
 
-### 30_many_dimensions RE
+### 30_many_dimensions WA
 
 前端WA
 
-### 31_many indirections RE
+### 31_many indirections WA
 
 ### 32_many_params3 WA
 
