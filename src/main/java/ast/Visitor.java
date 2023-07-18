@@ -111,11 +111,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         );
         // void starttime()
         scope.addSymbol("starttime",
-                builder.buildFunction("starttime", new FunctionType(voidType, emptyArgTypeList), true)
+                builder.buildFunction("_sysy_starttime", new FunctionType(voidType, intArgTypeList), true)
         );
         // void stoptime()
         scope.addSymbol("stoptime",
-                builder.buildFunction("stoptime", new FunctionType(voidType, emptyArgTypeList), true)
+                builder.buildFunction("_sysy_stoptime", new FunctionType(voidType, intArgTypeList), true)
         );
 
         scope.addSymbol("memset",
