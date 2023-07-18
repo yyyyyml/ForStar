@@ -394,13 +394,15 @@ public class RegisterAllocator implements BaseBackendPass {
                                     if (riscFunc.stackSize < riscFunc.stackIndex)
                                         riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
                                     var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
+                                    var tempStack_same = new Memory(-riscFunc.stackIndex, 1); // 临时栈
 
                                     var spillStack = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
+                                    var spillStack_same = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
                                     RISCInstruction inst1 = new SdInstruction(tempReg, tempStack); // 保存原值
                                     RISCInstruction inst2 = new LdInstruction(tempReg, spillStack); // 存入溢出的值
 
-                                    RISCInstruction inst3 = new SdInstruction(tempReg, spillStack); // 写回溢出值
-                                    RISCInstruction inst4 = new LdInstruction(tempReg, tempStack); // 恢复原值
+                                    RISCInstruction inst3 = new SdInstruction(tempReg, spillStack_same); // 写回溢出值
+                                    RISCInstruction inst4 = new LdInstruction(tempReg, tempStack_same); // 恢复原值
 
                                     mem.basicAddress = tempReg; // 当前指令
                                     nameMapReg.put(name, tempReg); // 记录替换成了哪个
@@ -518,13 +520,15 @@ public class RegisterAllocator implements BaseBackendPass {
                                 if (riscFunc.stackSize < riscFunc.stackIndex)
                                     riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
                                 var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
+                                var tempStack_same = new Memory(-riscFunc.stackIndex, 1); // 临时栈
 
                                 var spillStack = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
+                                var spillStack_same = new Memory(-vReg.getStackLocation(), 1); // 之前溢出保存的栈
                                 RISCInstruction inst1 = new SdInstruction(tempReg, tempStack); // 保存原值
                                 RISCInstruction inst2 = new LdInstruction(tempReg, spillStack); // 存入溢出的值
 
-                                RISCInstruction inst3 = new SdInstruction(tempReg, spillStack); // 写回溢出值
-                                RISCInstruction inst4 = new LdInstruction(tempReg, tempStack); // 恢复原值
+                                RISCInstruction inst3 = new SdInstruction(tempReg, spillStack_same); // 写回溢出值
+                                RISCInstruction inst4 = new LdInstruction(tempReg, tempStack_same); // 恢复原值
 
                                 riscInst.setOpLocal(tempReg, opIndex, opPosition); // 当前指令
                                 nameMapReg.put(name, tempReg); // 记录替换成了哪个
@@ -617,10 +621,11 @@ public class RegisterAllocator implements BaseBackendPass {
                         if (riscFunc.stackSize < riscFunc.stackIndex)
                             riscFunc.stackSize = riscFunc.stackIndex; // 容量是否需要更新
                         var tempStack = new Memory(-riscFunc.stackIndex, 1); // 临时栈
+                        var tempStack_same = new Memory(-riscFunc.stackIndex, 1); // 临时栈
 
                         RISCInstruction inst1 = new SdInstruction(reg, tempStack); // 保存原值
 
-                        RISCInstruction inst2 = new LdInstruction(reg, tempStack); // 恢复原值
+                        RISCInstruction inst2 = new LdInstruction(reg, tempStack_same); // 恢复原值
 
                         riscInstList.add(instIndex, inst1);
                         instIndex += 1; // 跳过加在前面的指令

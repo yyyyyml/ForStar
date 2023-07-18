@@ -13,6 +13,7 @@ import java.util.LinkedList;
 public class LargeNumberPass implements BaseBackendPass {
     public int position = 0; // 表示当前t0的值为s0加position
     public RealRegister nowBasicAddress;
+    public boolean visitCall = false; // 暂时废弃了
 
     @Override
     public void run(RISCModule riscModule) {
@@ -23,6 +24,13 @@ public class LargeNumberPass implements BaseBackendPass {
                 LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
                 for (int instIndex = 0; instIndex < riscInstList.size(); instIndex++) {
                     RISCInstruction riscInst = riscInstList.get(instIndex);
+
+                    // 如果读到call，后面的第一个t0必须重新更新
+                    if (riscInst.type == RISCInstruction.ITYPE.call) {
+//                        visitCall = true;
+                        position = 0;
+
+                    }
                     if (!riscInst.isNumber12bit()) continue; // 没有12bit数的不需要处理
                     LinkedList<RISCOperand> operandList = riscInst.getOperandList();
                     for (int opIndex = 0; opIndex < operandList.size(); opIndex++) {
@@ -42,11 +50,13 @@ public class LargeNumberPass implements BaseBackendPass {
 
                                 if (isLegal(imm, this.position) &&
                                         ((RealRegister) memOp.basicAddress).regType == nowBasicAddress.regType) { // 直接用t0
+
                                     int offset = imm - this.position; // 新的偏移量
                                     memOp.setOffset(offset); // 设置新的偏移量
                                     memOp.basicAddress = new RealRegister(0, 9); // t0为基地址
 
                                 } else { //需要更新t0
+
                                     nowBasicAddress = (RealRegister) memOp.basicAddress; // 记录这次要用的是s0还是sp
                                     this.position = imm; // 修改t0
                                     var t0 = new RealRegister(0, 9);
@@ -58,6 +68,7 @@ public class LargeNumberPass implements BaseBackendPass {
                                     riscInstList.add(instIndex, addInst);
                                     riscInstList.add(instIndex, liInst);
                                     instIndex += 2; // 跳过加在前面的指令
+//                                    visitCall = false;
 
                                 }
                             }
