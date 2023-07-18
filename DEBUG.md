@@ -7,23 +7,7 @@
 
 段错误
 
-### 71_full_conn WA
 
-dog
-dog
-dog
-dog
-dog
-cat
-0
-应为：
-dog
-cat
-dog
-dog
-cat
-cat
-0
 
 ### 74_kmp WA
 
@@ -34,6 +18,7 @@ cat
 -11
 
 ### 84_long_array2 WA（貌似AC了）
+### 85_long_code WA
 
 ### 86_long_code2 WA
 
@@ -62,7 +47,6 @@ cat
 
 ### 11_BST WA
 
-### 15_graph_coloring WA
 
 ### 17_maximal_clique WA
 
@@ -75,8 +59,6 @@ cat
 ### 30_many_dimensions WA
 
 前端WA
-
-### 31_many indirections WA
 
 ### 32_many_params3 WA
 

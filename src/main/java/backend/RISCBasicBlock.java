@@ -251,6 +251,10 @@ public class RISCBasicBlock {
             Value vop1 = curInst.getOperandAt(0);
             Value vop2 = curInst.getOperandAt(1);
 
+            int totalSize = 1;
+            if(((PointerType)vop1.getType()).getPointedType().isArrayType()){
+                totalSize = ((ArrayType) ((PointerType) curInst.getOperandAt(0).getType()).getPointedType()).getTotalSize();
+            }
 
             RISCOperand basicAddress = getOperand(vop1);
             if (basicAddress instanceof Register) {
@@ -260,7 +264,7 @@ public class RISCBasicBlock {
             if (basicAddress instanceof Memory) {
                 if (vop2 instanceof Constant.ConstantInt) {
                     int index = ((Constant.ConstantInt) vop2).getVal();
-                    int addIndex = index * 4;
+                    int addIndex = index * totalSize * 4;
                     int newAddress = ((Memory) basicAddress).getOffset() + addIndex;
                     Memory mem = new Memory(newAddress, ((Memory) basicAddress).basicAddress);
 
@@ -284,7 +288,7 @@ public class RISCBasicBlock {
                     RISCOperand index = getOperand(vop2);
                     Register basicAdd = ((Memory) basicAddress).basicAddress;
                     RISCOperand dst = getOperand(curInst);
-                    int s = 4;
+                    int s = 4 * totalSize;
                     VirtualRegister vr1 = getNewVr();
                     LiInstruction li1 = new LiInstruction(vr1, new Immediate(s));
                     instructionList.add(li1);
