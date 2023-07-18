@@ -12,6 +12,7 @@ import java.util.LinkedList;
 
 public class LargeNumberPass implements BaseBackendPass {
     public int position = 0; // 表示当前t0的值为s0加position
+    public RealRegister nowBasicAddress;
 
     @Override
     public void run(RISCModule riscModule) {
@@ -32,19 +33,21 @@ public class LargeNumberPass implements BaseBackendPass {
                         if (riscOp.isMemory()) {
 
                             Memory memOp = (Memory) riscOp; // 转换类型
-                            int imm = memOp.getOffset(); // s0/sp的原始偏移量
+                            int imm = memOp.getOffset(); // s0的原始偏移量
 
                             // 如果合法，不用处理
                             if (isLegal(imm, 0)) {
                                 continue;
                             } else {
 
-                                if (isLegal(imm, this.position)) { // 直接用t0
+                                if (isLegal(imm, this.position) &&
+                                        ((RealRegister) memOp.basicAddress).regType == nowBasicAddress.regType) { // 直接用t0
                                     int offset = imm - this.position; // 新的偏移量
                                     memOp.setOffset(offset); // 设置新的偏移量
                                     memOp.basicAddress = new RealRegister(0, 9); // t0为基地址
 
                                 } else { //需要更新t0
+                                    nowBasicAddress = (RealRegister) memOp.basicAddress; // 记录这次要用的是s0还是sp
                                     this.position = imm; // 修改t0
                                     var t0 = new RealRegister(0, 9);
 
