@@ -33,7 +33,7 @@ cat
 
 -11
 
-### 84_long_array2 WA
+### 84_long_array2 WA（貌似AC了）
 
 ### 86_long_code2 WA
 
