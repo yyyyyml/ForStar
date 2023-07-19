@@ -5,9 +5,13 @@
 
 ### 69_expr_eval WA
 
-段错误
+答案错
 
-### 83_long_array WA
+### 74_kmp WA
+
+原来AC现在WA
+
+### 83_long_array TLE
 
 -11
 
@@ -15,31 +19,19 @@
 
 -11
 
-### 86_long_code2 WA （但是测评机上AC了...）
-
-前端左递归？
 
 ### 87_many_params WA
 
 -11
 
 
-### 93_nested_calls WA
 
-0
-应为：
-250
+### 95_float WA
 
-### 95_float RE
-
-前端问题
+前端CE
 
 
 ## hidden_functional
-
-### 11_BST WA
-
--11
 
 
 ### 23_json CE
@@ -56,21 +48,25 @@
 
 答案错
 
-### 35_math RE
+### 34_multi_loop TLE（后端测试能过）
 
-前端CE
 
-### 36_rotate RE
 
-前端CE
+### 35_math WA
 
-### 37_dct RE
 
-前端CE
 
-### 38_light2d RE
+### 36_rotate WA
 
-前端CE
+
+
+### 37_dct WA
+
+
+
+### 38_light2d WA
+
+
 
 ### 39_fp_params CE
 
