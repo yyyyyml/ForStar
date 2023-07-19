@@ -18,7 +18,7 @@ import java.util.*;
  */
 public class FloatRegisterAllocator implements BaseBackendPass {
 
-    public boolean lessRegSave = false;
+    public boolean lessRegSave = true;
 
     private HashMap<Integer, LiveInterval> liveIntervalMapList;
     private List<Map.Entry<Integer, LiveInterval>> sortedLiveIntervalList;
@@ -737,10 +737,11 @@ public class FloatRegisterAllocator implements BaseBackendPass {
     }
 
     private boolean listHasReg(ArrayList<FloatRealRegister> list, FloatRealRegister tempReg) {
-        for (FloatRealRegister reg : list) {
-            if (tempReg.regType == reg.regType) return true;
-        }
-        return false;
+        return true;
+//        for (FloatRealRegister reg : list) {
+//            if (tempReg.regType == reg.regType) return true;
+//        }
+//        return false;
     }
 
 
