@@ -3,21 +3,8 @@
 ## functional
 
 
-### 69_expr_eval WA
-
--11
-
-### 74_kmp WA
-
-原来AC现在WA
 
 ### 83_long_array TLE
-
-
-
-### 85_long_code WA
-
--11
 
 
 
@@ -29,20 +16,7 @@
 ## hidden_functional
 
 
-### 29_long_line WA
 
-输出斐波那契数列，但只有前两个有值
-
-
-### 30_many_dimensions WA
-
-前端WA
-
-### 32_many_params3 WA
-
-223
-应为：
-133
 
 
 ### 34_multi_loop TLE（后端测试能过）
