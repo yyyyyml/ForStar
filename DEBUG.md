@@ -5,7 +5,7 @@
 
 ### 69_expr_eval WA
 
-答案错
+-11
 
 ### 74_kmp WA
 
@@ -20,26 +20,14 @@
 -11
 
 
-### 87_many_params WA
-
-332496
-0
-应为:
-331024
-0
-
 
 ### 95_float WA
 
-前端CE
+-11
 
 
 ## hidden_functional
 
-
-### 23_json CE
-
-前端CE
 
 ### 29_long_line WA
 
@@ -79,5 +67,5 @@
 
 ### 39_fp_params CE
 
-前端CE
+
 
