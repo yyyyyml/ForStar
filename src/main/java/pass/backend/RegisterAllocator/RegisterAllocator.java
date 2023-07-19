@@ -128,9 +128,9 @@ public class RegisterAllocator implements BaseBackendPass {
         int index = 0; // 用于记录位置，存到live interval中
 
         // 先遍历一遍 记录变量的live interval
-        riscFunc.stackSize = riscFunc.localStackIndex;
-        riscFunc.stackIndex = riscFunc.localStackIndex;
-        System.out.println("zhan----------------------" + riscFunc.stackSize);
+        riscFunc.stackSize = riscFunc.localStackIndex + 8;
+        riscFunc.stackIndex = riscFunc.localStackIndex + 8;
+//        System.out.println("zhan----------------------" + riscFunc.stackSize);
 
         System.out.println(riscFunc.stackSize);
         LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
