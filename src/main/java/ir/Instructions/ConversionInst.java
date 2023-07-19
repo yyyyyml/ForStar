@@ -63,8 +63,9 @@ public class ConversionInst {
         public String toString() {
             StringBuilder sb = new StringBuilder();
             // "%1 = sitofp i32 %0 to float"
-            sb.append(this.getName()).append(" = sitofp i32 ").
-                    append(this.getOperandAt(0).getName()).append(" to float");
+            Value cur = this.getOperandAt(0);
+            sb.append(this.getName()).append(" = sitofp ").append(cur.getType()+" ").
+                    append(cur.getName()).append(" to float");
             return sb.toString();
         }
     }
@@ -73,8 +74,8 @@ public class ConversionInst {
      * 指针转换 整数指针转浮点指针？
      */
     public static class Ptrcast extends Instruction {
-        public Ptrcast(Value cur) {
-            super(new PointerType(Type.IntegerType.getType()), TAG.PTRCAST, 1);
+        public Ptrcast(Value cur,PointerType dstType) {
+            super(dstType, TAG.PTRCAST, 1);
             this.setOperand(cur, 0);
         }
 
@@ -82,8 +83,9 @@ public class ConversionInst {
         public String toString() {
             StringBuilder sb = new StringBuilder();
             // "%1 = ptrcast i32* %0 to float*"
-            sb.append(this.getName()).append(" = ptrcast i32* ").
-                    append(this.getOperandAt(0).getName()).append(" to float*");
+            Value cur = this.getOperandAt(0);
+            sb.append(this.getName()).append(" = bitcast ").append(cur.getType()).append(" "+cur.getName()).
+                    append(" to ").append(this.getType());
             return sb.toString();
         }
     }

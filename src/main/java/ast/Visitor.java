@@ -407,23 +407,26 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             }
         }
         else {
+
+            System.out.println(retVal_);
+            System.out.println(retVal_.getType());
             visit(ctx.unaryExp());
             if (retVal_.getType().isIntegerType()) {
-
-
                 switch (ctx.unaryOp().getText()) {
                     case "-" -> retVal_ = builder.buildSub(builder.buildConstant(0), retVal_);
                     case "!" -> retVal_ = builder.buildComparison("==", builder.buildConstant(0), retVal_);
                     case "+" -> {}
                 }
             }
-            // Float.
-            else {
-                if (retVal_.getType().isBoolType()) {
-                    retVal_ = builder.buildZExt(retVal_);
-                    retVal_ = builder.buildSitofp(retVal_);
+            else if(retVal_.getType().isBoolType()){
+                retVal_ = builder.buildZExt(retVal_);
+                switch (ctx.unaryOp().getText()) {
+                    case "-" -> retVal_ = builder.buildSub(builder.buildConstant(0), retVal_);
+                    case "!" -> retVal_ = builder.buildComparison("==", builder.buildConstant(0), retVal_);
+                    case "+" -> {}
                 }
-
+            }
+            else{
                 switch (ctx.unaryOp().getText()) {
                     case "-" -> retVal_ = builder.buildFneg(Instruction.TAG.FNEG, retVal_);
                     case "!" -> retVal_ = builder.buildComparison("==", builder.buildConstant(.0f), retVal_);
@@ -778,6 +781,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         }
         // The final result is stored in the last left operand.
         retVal_ = lOp;
+
 
         return null;
     }
@@ -1469,7 +1473,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     str = startPoint;
                 }
                 else {
-                    str = builder.buildPtrcast(startPoint);
+                    str = builder.buildPtrcast(startPoint,PointerType.getType(IntegerType.getType()));
                 }
                 Constant.ConstantInt c = builder.buildConstant(0);
                 // For arg n: In SysY, both supported data types (int/float) are 4 bytes.

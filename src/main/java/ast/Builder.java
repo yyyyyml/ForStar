@@ -127,21 +127,21 @@ public class Builder {
     }
 
     public ConversionInst.Sitofp buildSitofp(Value preVal) {
-        if (!preVal.getType().isIntegerType()) {
-            throw new RuntimeException("A non-floatingPoint src Value is given.");
+        if (!preVal.getType().isIntegerType()&&!preVal.getType().isBoolType()) {
+            throw new RuntimeException("A non-IntPoint src Value is given.");
         }
         ConversionInst.Sitofp inst = new ConversionInst.Sitofp(preVal);
         getCurBB().list.addLast(inst.node);
         return inst;
     }
 
-    public ConversionInst.Ptrcast buildPtrcast(Value srcVal) {
+    public ConversionInst.Ptrcast buildPtrcast(Value srcVal, PointerType dstType) {
         // Security checks.
         if (!srcVal.getType().isPointerType()) {
             throw new RuntimeException("A non-pointer src Value is given.");
         }
         // Construct, insert, and return.
-        ConversionInst.Ptrcast ptrcast = new ConversionInst.Ptrcast(srcVal);
+        ConversionInst.Ptrcast ptrcast = new ConversionInst.Ptrcast(srcVal,dstType);
         getCurBB().list.addLast(ptrcast.node) ;
         return ptrcast;
     }
