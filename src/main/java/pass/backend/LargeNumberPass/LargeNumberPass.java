@@ -52,8 +52,10 @@ public class LargeNumberPass implements BaseBackendPass {
                                         ((RealRegister) memOp.basicAddress).regType == nowBasicAddress.regType) { // 直接用t0
 
                                     int offset = imm - this.position; // 新的偏移量
-                                    memOp.setOffset(offset); // 设置新的偏移量
-                                    memOp.basicAddress = new RealRegister(0, 9); // t0为基地址
+                                    var newMem = new Memory(offset, 6);
+//                                    memOp.setOffset(offset); // 设置新的偏移量
+//                                    memOp.basicAddress = new RealRegister(0, 9); // t0为基地址
+                                    riscInst.setOpLocal(newMem, opIndex, opPosition); // 要换掉操作数，不然后面遇到同样的虚拟寄存器分到的同一个寄存器会有问题
 
                                 } else { //需要更新t0
 
@@ -61,10 +63,14 @@ public class LargeNumberPass implements BaseBackendPass {
                                     this.position = imm; // 修改t0
                                     var t0 = new RealRegister(0, 9);
 
+                                    var newMem = new Memory(0, t0);
+
                                     RISCInstruction liInst = new LiInstruction(t0, new Immediate(imm));
                                     RISCInstruction addInst = new AddInstruction(t0, t0, memOp.basicAddress);
-                                    memOp.setOffset(0); // 设置新的偏移量
-                                    memOp.basicAddress = t0;
+//                                    memOp.setOffset(0); // 设置新的偏移量
+//                                    memOp.basicAddress = t0;
+                                    riscInst.setOpLocal(newMem, opIndex, opPosition); // 要换掉操作数，不然后面遇到同样的虚拟寄存器分到的同一个寄存器会有问题
+
                                     riscInstList.add(instIndex, addInst);
                                     riscInstList.add(instIndex, liInst);
                                     instIndex += 2; // 跳过加在前面的指令
