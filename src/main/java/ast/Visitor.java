@@ -1404,7 +1404,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
          */
         if (scope.isGlobal()) {
             // With initialization.
-            if (ctx.initVal() != null) {
+
+            if (ctx.initVal() != null&& ctx.initVal().getChildCount() != 2 ) {
                 // Pass down dim info.
                 // Visit child to retrieve the initialized Value list (stored in retValList_).
                 ctx.initVal().dimLens = dimLens;
@@ -1417,12 +1418,12 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 // Convert the Values returned into Constants.
                 ArrayList<Constant> initList = new ArrayList<>();
                 for (Value val : retValList_) {
-                    initList.add((Constant) val);
+                    initList.add((Constant)val);
                 }
                 // Build the const array, set it to be a global variable and put it into the symbol table.
 
                 Constant.ConstantArray initArr = builder.buildConstArr(arrType, initList);
-                System.out.println(initArr.isAllZero);
+                //System.out.println(initArr.isAllZero);
                 //System.out.println(initArr)
                 GlobalVariable arr = builder.buildGlobalVar(ctx.Ident().getText(), initArr);
                 scope.addSymbol(ctx.Ident().getText(), arr, "constarray") ;
