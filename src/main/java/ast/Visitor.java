@@ -5,6 +5,7 @@ import frontend.SysY2022Parser;
 import frontend.SysY2022Parser.ReturnStmtContext;
 import ir.Instruction;
 import ir.Instructions.MemoryInst;
+import ir.Instructions.BinaryInst;
 import ir.Module;
 import ir.Type;
 import ir.Type.FloatType;
@@ -626,203 +627,155 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
 
     @Override
-    public Void visitLOr2(SysY2022Parser.LOr2Context ctx) {
+    public Void visitLOrExp(SysY2022Parser.LOrExpContext ctx) {
         //<editor-fold desc="For first N-1 lAndExp blocks.">
-
-        BasicBlock curLOrBlk = builder.getCurBB();
-        BasicBlock nxtLOrBlk = builder.buildBB("lornext");
+        for(int i = 0; i < ctx.lAndExp().size() - 1; i++) {
+            BasicBlock curLOrBlk = builder.getCurBB();
+            BasicBlock nxtLOrBlk = builder.buildBB("nxtLor");
 
             // Pass down blocks as inherited attributes for short-circuit evaluation.
-        ctx.lOrExp().falseBlk = nxtLOrBlk;
-        ctx.lOrExp().trueBlk = ctx.trueBlk;
+            ctx.lAndExp(i).falseBlk = nxtLOrBlk;
+            ctx.lAndExp(i).trueBlk = ctx.trueBlk;
 
-        builder.setCurBB(curLOrBlk);
-        visit(ctx.lOrExp());
-        builder.setCurBB(nxtLOrBlk);
-
+            builder.setCurBB(curLOrBlk);
+            visit(ctx.lAndExp(i));
+            builder.setCurBB(nxtLOrBlk);
+        }
         //</editor-fold>
 
 
         //<editor-fold desc="For the last lAndExp block.">
-        ctx.lAndExp().falseBlk = ctx.falseBlk;
-        ctx.lAndExp().trueBlk = ctx.trueBlk;
-        visit(ctx.lAndExp());
+        ctx.lAndExp(ctx.lAndExp().size() - 1).falseBlk = ctx.falseBlk;
+        ctx.lAndExp(ctx.lAndExp().size() - 1).trueBlk = ctx.trueBlk;
+        visit(ctx.lAndExp(ctx.lAndExp().size() - 1));
         //</editor-fold>
 
         return null;
     }
 
-    @Override
-    public Void visitLOr1(SysY2022Parser.LOr1Context ctx) {
-
-        BasicBlock curLOrBlk = builder.getCurBB();
-
-
-        // Pass down blocks as inherited attributes for short-circuit evaluation.
-        ctx.lAndExp().falseBlk = ctx.falseBlk;
-        ctx.lAndExp().trueBlk = ctx.trueBlk;
-
-        builder.setCurBB(curLOrBlk);
-        visit(ctx.lAndExp());
-        return null;
-    }
 
 
 
     @Override
-    public Void visitLAnd2(SysY2022Parser.LAnd2Context ctx) {
-        ctx.Ident = "land2";
-        BasicBlock originBlk = builder.getCurBB();
-        BasicBlock nxtAndBlk = builder.buildBB("land2nxt");
-        // Add a branch instruction to terminate this block.
-        builder.setCurBB(originBlk);
-        ctx.lAndExp().falseBlk = ctx.falseBlk;
-        ctx.lAndExp().trueBlk = nxtAndBlk;
-        visit(ctx.lAndExp());
-        if(retVal_.getType().isIntegerType()) { // i32 -> i1
+    public Void visitLAndExp(SysY2022Parser.LAndExpContext ctx) {
+        for(int i = 0; i < ctx.eqExp().size(); i++) {
+            visit(ctx.eqExp(i));
+
+            /*
+            Type conversions of the condition.
+             */
+            if(retVal_.getType().isIntegerType()) { // i32 -> i1
                 // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
-            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantInt.getConstantInt(0));
-        }
-        else if (retVal_.getType().isFloatType()) { // float -> i1
-            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
-        }
-        /*
-           Build the branching.
-        */
-        // For the first N-1 eqExp blocks.
+                retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantInt.getConstantInt(0) );
+            }
+            else if (retVal_.getType().isFloatType()) { // float -> i1
+                retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
+            }
 
-        // Build following blocks for short-circuit evaluation.
-        if(ctx.lAndExp().Ident.equals("land1")) {
-            builder.buildBr(retVal_, nxtAndBlk, ctx.falseBlk);
-        }
-        builder.setCurBB(nxtAndBlk);
-
-        visit(ctx.eqExp());
-        if(retVal_.getType().isIntegerType() ) { // i32 -> i1
-            // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
-            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantInt.getConstantInt(0));
-        }
-        else if (retVal_.getType().isFloatType()) { // float -> i1
-            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
-        }
-        // For the last eqExp blocks.
-        builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
-
-        return null;
-    }
-
-    @Override
-    public Void visitLAnd1(SysY2022Parser.LAnd1Context ctx) {
-        ctx.Ident = "land1";
-        visit(ctx.eqExp());
-        if(retVal_.getType().isIntegerType() ) { // i32 -> i1
-            // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
-            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantInt.getConstantInt(0));
-        }
-        else if (retVal_.getType().isFloatType()) { // float -> i1
-            retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
-        }
-        // For the last eqExp blocks.
-
-        if(ctx.getParent().getChild(1) != null)
-        {
-            boolean islor = ctx.getParent().getChild(1).getText().equals( "||" );
-            if( islor )
-            {
+            /*
+            Build the branching.
+             */
+            // For the first N-1 eqExp blocks.
+            if(i < ctx.eqExp().size() - 1) {
+                // Build following blocks for short-circuit evaluation.
+                BasicBlock originBlk = builder.getCurBB();
+                BasicBlock nxtAndBlk = builder.buildBB("nxtLand");
+                // Add a branch instruction to terminate this block.
+                builder.setCurBB(originBlk);
+                builder.buildBr(retVal_, nxtAndBlk, ctx.falseBlk);
+                builder.setCurBB(nxtAndBlk);
+            }
+            // For the last eqExp blocks.
+            else {
                 builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
             }
         }
-        else{
-            builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
-        }
+
         return null;
     }
 
+
     @Override
-    public Void visitEq2(SysY2022Parser.Eq2Context ctx) {
+    public Void visitEqExp(SysY2022Parser.EqExpContext ctx) {
         // Retrieve left operand by visiting child.
-        visit(ctx.eqExp());
+        visit(ctx.relExp(0));
         Value lOp = retVal_;
 
-
+        for (int i = 1; i < ctx.relExp().size(); i++) {
             // Retrieve the next relExp as the right operand by visiting child.
-        visit(ctx.relExp());
-        Value rOp = retVal_;
+            visit(ctx.relExp(i));
+            Value rOp = retVal_;
 
             /*
             Implicit type conversions.
              */
-        if (lOp.getType().isFloatType() && !rOp.getType().isFloatType()) {
-            rOp = builder.buildSitofp(rOp);
-        }
-        else if (!lOp.getType().isFloatType() && rOp.getType().isFloatType()) {
-            lOp = builder.buildSitofp(lOp);
-        }
-        else {
+            if (lOp.getType().isFloatType() && !rOp.getType().isFloatType()) {
+                rOp = builder.buildSitofp(rOp);
+            }
+            else if (!lOp.getType().isFloatType() && rOp.getType().isFloatType()) {
+                lOp = builder.buildSitofp(lOp);
+            }
+            else {
                 // Extend if one Opd is i32 and another is i1.
-            if(lOp.getType().isIntegerType() && rOp.getType().isBoolType() ) {
-                rOp = builder.buildZExt(rOp);
+                if(lOp.getType().isIntegerType() && rOp.getType().isBoolType()) {
+                    rOp = builder.buildZExt(rOp);
+                }
+                if(rOp.getType().isIntegerType() && lOp.getType().isBoolType()) {
+                    lOp = builder.buildZExt(lOp);
+                }
             }
-            if(rOp.getType().isIntegerType() && lOp.getType().isBoolType()) {
-                lOp = builder.buildZExt(lOp);
-            }
-        }
 
             /*
             Build a comparison instruction, which yields a result
             to be the left operand for the next round.
              */
-        String opr = ctx.getChild(1).getText(); // The comparison operator.
-        lOp = builder.buildComparison(opr, lOp, rOp);
-
+            String opr = ctx.getChild(2 * i - 1).getText(); // The comparison operator.
+            lOp = builder.buildComparison(opr, lOp, rOp);
+        }
         // The final result is stored in the last left operand.
         retVal_ = lOp;
 
         return null;
     }
 
-    @Override
-    public Void visitEq1(SysY2022Parser.Eq1Context ctx) {
-        visit(ctx.relExp());
-        return null;
-    }
 
     @Override
-    public Void visitRel2(SysY2022Parser.Rel2Context ctx) {
+    public Void visitRelExp(SysY2022Parser.RelExpContext ctx) {
         // Retrieve left operand by visiting child.
-        visit(ctx.relExp());
+        visit(ctx.addExp(0));
         Value lOp = retVal_;
 
+        for (int i = 1; i < ctx.addExp().size(); i++) {
+            // Retrieve the next addExp as the right operand by visiting child.
+            visit(ctx.addExp(i));
+            Value rOp = retVal_;
 
-        // Retrieve the next addExp as the right operand by visiting child.
-        visit(ctx.addExp());
-        Value rOp = retVal_;
-
-        /*
-           Implicit type conversions.
-        */
-        if (lOp.getType().isFloatType() && !rOp.getType().isFloatType()) {
-            rOp = builder.buildSitofp(rOp);
-        }
-        else if (!lOp.getType().isFloatType() && rOp.getType().isFloatType()) {
-            lOp = builder.buildSitofp(lOp);
-        }
-        else {
-            // Same as visitEqExp above: Extend if one Opd is i32 and another is i1.
-            if (lOp.getType().isIntegerType() && rOp.getType().isBoolType()) {
-                rOp = builder.buildZExt(rOp);
+            /*
+            Implicit type conversions.
+             */
+            if (lOp.getType().isFloatType() && !rOp.getType().isFloatType()) {
+                rOp = builder.buildSitofp(rOp);
             }
-            if (rOp.getType().isIntegerType() && lOp.getType().isBoolType()) {
-                lOp = builder.buildZExt(lOp);
+            else if (!lOp.getType().isFloatType() && rOp.getType().isFloatType()) {
+                lOp = builder.buildSitofp(lOp);
             }
-        }
+            else {
+                // Same as visitEqExp above: Extend if one Opd is i32 and another is i1.
+                if (lOp.getType().isIntegerType() && rOp.getType().isBoolType()) {
+                    rOp = builder.buildZExt(rOp);
+                }
+                if (rOp.getType().isIntegerType() && lOp.getType().isBoolType()) {
+                    lOp = builder.buildZExt(lOp);
+                }
+            }
 
-        /*
-           Build a comparison instruction, which yields a result
-           to be the left operand for the next round.
-        */
-        String opr = ctx.getChild(1).getText(); // The comparison operator.
-        lOp = builder.buildComparison(opr, lOp, rOp);
+            /*
+            Build a comparison instruction, which yields a result
+            to be the left operand for the next round.
+             */
+            String opr = ctx.getChild(2 * i - 1).getText(); // The comparison operator.
+            lOp = builder.buildComparison(opr, lOp, rOp);
+        }
         // The final result is stored in the last left operand.
         retVal_ = lOp;
 
@@ -1002,103 +955,106 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
 
     @Override
-    public Void visitAdd2(SysY2022Parser.Add2Context ctx) {
+    public Void visitAddExp(SysY2022Parser.AddExpContext ctx) {
         if (this.inConstFolding()) {
-            visit(ctx.addExp());
-
-            switch(getConveyedType()){
-                case INT->{
-
-                    int lop = retInt_;
-                    visit(ctx.mulExp());
-                    switch(getConveyedType()){
-                        case INT->{
-
-                            int rop = retInt_;
-                            if (ctx.getChild(1).getText().equals("+")) {
-                                retInt_ = lop + rop;
-
-                                setConveyedType(DataType.INT);
-                            } else if (ctx.getChild(1).getText().equals("-")) {
-                                retInt_ = lop - rop;
-                                setConveyedType(DataType.INT);
+            int rOpInt = 0;
+            float rOpFloat = 0;
+            visit(ctx.mulExp(0));
+            var curType = this.getConveyedType();
+            switch (curType) {
+                case INT -> {
+                    rOpInt = retInt_;
+                    for (int i = 1; i < ctx.mulExp().size(); i++) {
+                        visit(ctx.mulExp(i));
+                        if (this.getConveyedType() == DataType.FLT) {
+                            if (curType == DataType.INT) {
+                                rOpFloat = rOpInt;
+                                curType = DataType.FLT;
                             }
-
-                        }
-                        case FLT->{
-                            float rop = retFloat_;
-                            if (ctx.getChild(1).getText().equals("+")) {
-                                retFloat_ = (float) lop + rop;
-                                setConveyedType(DataType.FLT);
-                            } else if (ctx.getChild(1).getText().equals("-")) {
-                                retFloat_ = (float) lop - rop;
-                                setConveyedType(DataType.FLT);
+                            switch (ctx.getChild(i * 2 - 1).getText()) {
+                                case "+" -> rOpFloat += retFloat_;
+                                case "-" -> rOpFloat -= retFloat_;
+                                default -> throw new RuntimeException("Unsupported operation in visitMulExp().");
                             }
                         }
-                    }
-                }
-                case FLT->{
-                    float lop = retFloat_;
-                    visit(ctx.mulExp());
-                    switch(getConveyedType()){
-                        case INT->{
-                            int rop = retInt_;
-                            if (ctx.getChild(1).getText().equals("+")) {
-                                retFloat_ = lop + (float) rop;
-                                setConveyedType(DataType.FLT);
-                            } else if (ctx.getChild(1).getText().equals("-")) {
-                                retFloat_ = lop - (float) rop;
-                                setConveyedType(DataType.FLT);
+                        else {
+                            if (curType == DataType.INT) {
+                                switch (ctx.getChild(i * 2 - 1).getText()) {
+                                    case "+" -> rOpInt += retInt_;
+                                    case "-" -> rOpInt -= retInt_;
+                                }
                             }
-                        }
-                        case FLT->{
-                            float rop = retFloat_;
-                            if (ctx.getChild(1).getText().equals("+")) {
-                                retFloat_ = lop + rop;
-                                setConveyedType(DataType.FLT);
-                            } else if (ctx.getChild(1).getText().equals("-")) {
-                                retFloat_ = lop - rop;
-                                setConveyedType(DataType.FLT);
+                            else {
+                                switch (ctx.getChild(i * 2 - 1).getText()) {
+                                    case "+" -> rOpFloat += retInt_;
+                                    case "-" -> rOpFloat -= retInt_;
+                                    default -> throw new RuntimeException("Unsupported operation in visitMulExp().");
+                                }
                             }
                         }
                     }
                 }
+                case FLT -> {
+                    rOpFloat = retFloat_;
+                    for (int i = 1; i < ctx.mulExp().size(); i++) {
+                        visit(ctx.mulExp(i));
+
+                        if (this.getConveyedType() == DataType.INT) {
+                            switch (ctx.getChild(i * 2 - 1).getText()) {
+                                case "+" -> rOpFloat += retInt_;
+                                case "-" -> rOpFloat -= retInt_;
+                            }
+                        } else {
+                            switch (ctx.getChild(i * 2 - 1).getText()) {
+                                case "+" -> rOpFloat += retFloat_;
+                                case "-" -> rOpFloat -= retFloat_;
+                            }
+                        }
+                    }
+                }
+                default ->
+                        throw new RuntimeException("Unsupported Datatype in visitMulExp().");
+            }
+            this.setConveyedType(curType);
+            switch (curType) {
+                case INT -> retInt_ = rOpInt;
+                case FLT -> retFloat_ = rOpFloat;
             }
         }
-
         else {
-            visit(ctx.addExp());
+            visit(ctx.mulExp(0));
             Value lOp = retVal_;
-            visit(ctx.mulExp());
-            Value rOp = retVal_;
-            //如果是指针类型先load出来；
-            if (lOp.getType().isPointerType()) {
-                lOp = builder.buildLoad(((PointerType) lOp.getType()).getPointedType(), lOp);
-            }
-            if (rOp.getType().isPointerType()) {
-                rOp = builder.buildLoad(((PointerType) rOp.getType()).getPointedType(), rOp);
-            }
-            //类型转换
-
-            if (lOp.getType().isBoolType()) {
-                lOp = builder.buildZExt(lOp);
-            }
-            if (rOp.getType().isBoolType()) {
-                rOp = builder.buildZExt(rOp);
-            }
-            if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
-                lOp = builder.buildSitofp(lOp);
-            } else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
-                rOp = builder.buildSitofp(rOp);
-            }
-            switch (ctx.getChild(1).getText()) {
-                case "+" -> lOp = builder.buildAdd(lOp, rOp);
-                case "-" -> lOp = builder.buildSub(lOp, rOp);
-                default -> {
+            for (int i = 1; i < ctx.mulExp().size(); i++) {
+                visit(ctx.mulExp(i));
+                Value rOp = retVal_;
+                if (lOp.getType().isPointerType()) {
+                    lOp = builder.buildLoad(((PointerType) lOp.getType()).getPointedType(), lOp);
+                }
+                if (rOp.getType().isPointerType()) {
+                    rOp = builder.buildLoad(((PointerType) rOp.getType()).getPointedType(), rOp);
+                }
+                if (lOp.getType().isBoolType()) {
+                    lOp = builder.buildZExt(lOp);
+                }
+                if (rOp.getType().isBoolType() ) {
+                    rOp = builder.buildZExt(rOp);
+                }
+                if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
+                    lOp = builder.buildSitofp(lOp);
+                }
+                else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType()) {
+                    rOp = builder.buildSitofp(rOp);
+                }
+                switch (ctx.getChild(2 * i - 1).getText()) {
+                    case "+" -> lOp = builder.buildAdd(lOp, rOp);
+                    case "-" -> lOp = builder.buildSub(lOp, rOp);
+                    default -> {}
                 }
             }
+
             retVal_ = lOp;
         }
+
         return null;
     }
 
@@ -1106,116 +1062,112 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
 
     @Override
-    public Void visitMul2(SysY2022Parser.Mul2Context ctx) {
+    public Void visitMulExp(SysY2022Parser.MulExpContext ctx) {
         if (this.inConstFolding()) {
-            visit(ctx.mulExp());
-            switch(getConveyedType()){
-                case INT->{
-                    int lop = retInt_;
-                    visit(ctx.unaryExp());
-                    switch(getConveyedType()){
-                        case INT->{
-                            int rop = retInt_;
-                            if (ctx.getChild(1).getText().equals("*")) {
-                                retInt_ = lop * rop;
-                                setConveyedType(DataType.INT);
-                            } else if (ctx.getChild(1).getText().equals("/")) {
-                                retInt_ = lop / rop;
-                                setConveyedType(DataType.INT);
-                            } else if (ctx.getChild(1).getText().equals("%")) {
-                                retInt_ = lop % rop;
-                                setConveyedType(DataType.INT);
+            int rOpInt = 0;
+            float rOpFloat = 0;
+            visit(ctx.unaryExp(0));
+            var curType = this.getConveyedType();
+
+            switch (curType) {
+                case INT -> {
+                    rOpInt = retInt_;
+                    for (int i = 1; i < ctx.unaryExp().size(); i++) {
+                        visit(ctx.unaryExp(i));
+                        if (this.getConveyedType() == DataType.FLT) {
+                            if (curType == DataType.INT) {
+                                rOpFloat = rOpInt;
+                                curType = DataType.FLT;
+                            }
+                            switch (ctx.getChild(i * 2 - 1).getText()) {
+                                case "*" -> rOpFloat *= retFloat_;
+                                case "/" -> rOpFloat /= retFloat_;
+                                default -> throw new RuntimeException("Unsupported operation in visitMulExp().");
                             }
                         }
-                        case FLT->{
-                            float rop = retFloat_;
-                            if (ctx.getChild(1).getText().equals("*")) {
-                                retFloat_ = (float) lop * rop;
-                                setConveyedType(DataType.FLT);
-                            } else if (ctx.getChild(1).getText().equals("/")) {
-                                retFloat_ = (float) lop / rop;
-                                setConveyedType(DataType.FLT);
-                            } else if (ctx.getChild(1).getText().equals("%")) {
-                                throw new RuntimeException("Float number can not use operator %!!");
+                        else {
+                            if (curType == DataType.INT) {
+                                switch (ctx.getChild(i * 2 - 1).getText()) {
+                                    case "*" -> rOpInt *= retInt_;
+                                    case "/" -> rOpInt /= retInt_;
+                                    case "%" -> rOpInt %= retInt_;
+                                }
+                            }
+                            else {
+                                switch (ctx.getChild(i * 2 - 1).getText()) {
+                                    case "*" -> rOpFloat *= retInt_;
+                                    case "/" -> rOpFloat /= retInt_;
+                                    default -> throw new RuntimeException("Unsupported operation in visitMulExp().");
+                                }
                             }
                         }
                     }
                 }
-                case FLT->{
-                    float lop = retFloat_;
-                    visit(ctx.unaryExp());
-                    switch(getConveyedType()){
-                        case INT->{
-                            int rop = retInt_;
-                            if (ctx.getChild(1).getText().equals("*")) {
-                                retFloat_ = lop * (float) rop;
-                                setConveyedType(DataType.FLT);
-                            } else if (ctx.getChild(1).getText().equals("/")) {
-                                retFloat_ = lop / (float) rop;
-                                setConveyedType(DataType.FLT);
-                            } else if (ctx.getChild(1).getText().equals("%")) {
-                                throw new RuntimeException("Float number can not use operator %!!");
+                case FLT -> {
+                    rOpFloat = retFloat_;
+                    for (int i = 1; i < ctx.unaryExp().size(); i++) {
+                        visit(ctx.unaryExp(i));
+
+                        if (this.getConveyedType() == DataType.INT) {
+                            switch (ctx.getChild(i * 2 - 1).getText()) {
+                                case "*" -> rOpFloat *= retInt_;
+                                case "/" -> rOpFloat /= retInt_;
+                            }
+                        } else {
+                            switch (ctx.getChild(i * 2 - 1).getText()) {
+                                case "*" -> rOpFloat *= retFloat_;
+                                case "/" -> rOpFloat /= retFloat_;
                             }
                         }
-                        case FLT->{
-                            float rop = retFloat_;
-                            if (ctx.getChild(1).getText().equals("*")) {
-                                retFloat_ = lop * rop;
-                                setConveyedType(DataType.FLT);
-                            } else if (ctx.getChild(1).getText().equals("/")) {
-                                retFloat_ = lop / rop;
-                                setConveyedType(DataType.FLT);
-                            } else if (ctx.getChild(1).getText().equals("%")) {
-                                throw new RuntimeException("Float number can not use operator %!!");
-                            }
-                        }
+                    }
+                }
+                default ->
+                        throw new RuntimeException("Unsupported Datatype in visitMulExp().");
+            }
+            this.setConveyedType(curType);
+            switch (curType) {
+                case INT -> retInt_ = rOpInt;
+                case FLT -> retFloat_ = rOpFloat;
+            }
+        }
+        else {
+            Value lOp;
+            visit(ctx.unaryExp(0));
+            lOp = retVal_;
+            for (int i = 1; i < ctx.unaryExp().size(); i++) {
+                visit(ctx.unaryExp(i));
+                Value rOp = retVal_;
+                if (lOp.getType().isPointerType()) {
+                    lOp = builder.buildLoad(((PointerType) lOp.getType()).getPointedType(), lOp);
+                }
+                if (rOp.getType().isPointerType()) {
+                    rOp = builder.buildLoad(((PointerType) rOp.getType()).getPointedType(), rOp);
+                }
+                if (lOp.getType().isBoolType()) {
+                    lOp = builder.buildZExt(lOp);
+                }
+                if (rOp.getType().isBoolType()) {
+                    rOp = builder.buildZExt(rOp);
+                }
+                if (lOp.getType().isIntegerType() && rOp.getType().isFloatType()) {
+                    lOp = builder.buildSitofp(lOp);
+                }
+                else if (lOp.getType().isFloatType() && rOp.getType().isIntegerType() ) {
+                    rOp = builder.buildSitofp(rOp);
+                }
+                switch (ctx.getChild(2 * i - 1).getText()) {
+                    case "/" -> lOp = builder.buildDiv(lOp, rOp);
+                    case "*" -> lOp = builder.buildMul(lOp, rOp);
+                    case "%" -> {
+                        BinaryInst div = builder.buildDiv(lOp, rOp); // l/r
+                        BinaryInst mul = builder.buildMul(div, rOp); // (l/r)*r
+                        lOp = builder.buildSub(lOp, mul);
                     }
                 }
             }
+            retVal_ = lOp;
         }
 
-        else {
-            visit(ctx.mulExp());
-            Value lop = retVal_;
-            visit(ctx.unaryExp());
-            Value rop = retVal_;
-            if (lop.getType().isPointerType()) {
-                lop = builder.buildLoad(((PointerType) lop.getType()).getPointedType(), lop);
-            }
-            if (rop.getType().isPointerType()) {
-                rop = builder.buildLoad(((PointerType) rop.getType()).getPointedType(), rop);
-            }
-            //I1的转换还没写。
-            if (lop.getType().isBoolType()) {
-                lop = builder.buildZExt(lop);
-            }
-            if (rop.getType().isBoolType()) {
-                rop = builder.buildZExt(rop);
-            }
-            if (lop.getType().isIntegerType() && rop.getType().isFloatType()) {
-                lop = builder.buildSitofp(lop);
-            } else if (lop.getType().isFloatType() && rop.getType().isIntegerType()) {
-                rop = builder.buildSitofp(rop);
-            }
-            switch (ctx.getChild(1).getText()) {
-                case "*" -> lop = builder.buildMul(lop, rop);
-                case "/" -> lop = builder.buildDiv(lop, rop);
-                case "%" -> {
-                    if(lop.getType().isIntegerType()&&rop.getType().isIntegerType()) {
-                        Value tmp = lop;
-                        lop = builder.buildDiv(lop, rop);
-                        lop = builder.buildMul(lop, rop);
-                        lop = builder.buildSub(tmp, lop);
-                    }
-                    else {
-                        throw new RuntimeException("Float number can not use operator %!!");
-                    }
-                }
-                default -> {
-                }
-            }
-            retVal_ = lop;
-        }
         return null;
     }
 
@@ -1267,11 +1219,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 retVal_ = builder.buildConstant(retInt_);
             }
         } else {
-            System.out.println(ctx.getChild(0).getText());
             float ret = Float.parseFloat(ctx.getChild(0).getText());
             setConveyedType(DataType.FLT);
             retFloat_ = ret;
-            System.out.println(ret);
             if (!this.inConstFolding()) {
                 retVal_ = builder.buildConstant(retFloat_);
             }
@@ -1297,8 +1247,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             int dimLen = ((Constant.ConstantInt) retVal_).getVal();
             dimLens.add(dimLen);
         }
-
-        // The type of the basic element in the array.
         Type tmpType = null;
         // Retrieve the basic element type.
         String bType = ctx.getParent().getChild(1).getText();
@@ -1306,8 +1254,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             case "int" -> tmpType = IntegerType.getType();
             case "float" -> tmpType = FloatType.getType();
         }
-        // Build the final type of the array
-        // by looping through the dimLens from the inside out.
         for (int i = dimLens.size(); i > 0; i--) {
             tmpType = ArrayType.getType(tmpType, dimLens.get(i - 1));
         }

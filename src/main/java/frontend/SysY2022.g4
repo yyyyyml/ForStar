@@ -91,32 +91,27 @@ funcRParam
     ;
 
 mulExp
-    : unaryExp                                          # mul1
-    | mulExp ('*' | '/' | '%') unaryExp                 # mul2
+    : unaryExp (('*' | '/' | '%') unaryExp)*
     ;
 
 addExp
-    : mulExp                                            # add1
-    | addExp ('+' | '-') mulExp                         # add2
+    : mulExp (('+' | '-') mulExp)*
     ;
 
 relExp
-    : addExp                                            # rel1
-    | relExp ('<' | '>' | '<=' | '>=') addExp           # rel2
+    : addExp (('<' | '>' | '<=' | '>=') addExp)*
     ;
+
 eqExp
-    : relExp                                            # eq1
-    | eqExp ('==' | '!=') relExp                        # eq2
+    : relExp (('==' | '!=') relExp)*
     ;
 
 lAndExp
-    : eqExp                                             # lAnd1
-    | lAndExp '&&' eqExp                                # lAnd2
+    : eqExp ('&&' eqExp)*
     ;
 
 lOrExp
-    : lAndExp                                           # lOr1
-    | lOrExp '||' lAndExp                               # lOr2
+    : lAndExp ('||' lAndExp)*
     ;
 
 constExp : addExp;

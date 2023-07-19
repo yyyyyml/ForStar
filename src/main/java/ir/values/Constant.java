@@ -187,11 +187,13 @@ public class Constant extends User {
 
         public static ConstantFloat getConstantFloat(float value) {
             return new ConstantFloat(Type.FloatType.getType(), value);
-
         }
         @Override
         public String toString() {
-            return this.getType().toString() +" "+ this.val;
+
+            int Value = Float.floatToRawIntBits(this.val);
+            String hexString = Integer.toHexString(Value);
+            return this.getType().toString() +" "+ hexString;
         }
         public float getVal() {
             return val;
