@@ -3,16 +3,6 @@
 ## functional
 
 
-
-### 83_long_array TLE
-
-
-
-### 95_float WA
-
--11
-
-
 ## hidden_functional
 
 
@@ -39,7 +29,6 @@
 
 -11
 
-### 39_fp_params CE
 
 
 
