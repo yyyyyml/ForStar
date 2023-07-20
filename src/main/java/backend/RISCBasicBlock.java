@@ -378,7 +378,7 @@ public class RISCBasicBlock {
         Instruction cond = curInst;
         Value vop1 = cond.getOperandAt(0);
         Value vop2 = cond.getOperandAt(1);
-
+        System.out.println(curInst+"\n"+vop1+" "+vop2);
         //获得存放两个数的RISCOperand
         RISCOperand op1 = getOperand(vop1);
         RISCOperand temp1 = null;
@@ -395,6 +395,7 @@ public class RISCBasicBlock {
             instructionList.add(li);
             temp1 = vr;
         }
+        System.out.println(op1.emit()+" "+temp1.emit());
 
         RISCOperand op2 = getOperand(vop2);
         RISCOperand temp2 = null;
@@ -410,7 +411,7 @@ public class RISCBasicBlock {
             instructionList.add(li);
             temp2 = vr;
         }
-
+        System.out.println(op2.emit()+" "+temp2.emit());
         RISCOperand dst = getOperand(curInst);
 
         switch (cond.getTag()) {
@@ -988,24 +989,26 @@ public class RISCBasicBlock {
             return riscFunction.valueRISCOperandHashMap.get(value);
         }
         //判断为call中的参数
-        else if (riscFunction.funcParameters.containsKey(value)) {
-//            int opeIndex = riscFunction.funcParameters.get(value);
-//            if (opeIndex < 8) {
-            if (value.getType().isIntegerType() || value.getType().isPointerType()) {
-
-                return getNewVr();
-            } else {
-                //fa0 = f10
-                //RISCOperand reg = new FloatRealRegister(opeIndex + 10);
-                return getNewFvr();
-            }
-            // }
-            //超出部分放栈里
-//            else {
-//                RISCOperand mem = new Memory((opeIndex - 8) * 8, 2);
-//                return mem;
+//        else if (riscFunction.funcParameters.containsKey(value)) {
+//            System.out.println(value+"i am call");
+////            int opeIndex = riscFunction.funcParameters.get(value);
+////            if (opeIndex < 8) {
+//            if (value.getType().isIntegerType() || value.getType().isPointerType()) {
+//                if(value instanceof Constant)
+//
+//                return getNewVr();
+//            } else {
+//                //fa0 = f10
+//                //RISCOperand reg = new FloatRealRegister(opeIndex + 10);
+//                return getNewFvr();
 //            }
-        }
+//            // }
+//            //超出部分放栈里
+////            else {
+////                RISCOperand mem = new Memory((opeIndex - 8) * 8, 2);
+////                return mem;
+////            }
+//        }
         //判断为本函数的参数
         else if (riscFunction.myfuncParameters.containsKey(value)) {
             int myPIndex = riscFunction.myfuncParameters.get(value);
