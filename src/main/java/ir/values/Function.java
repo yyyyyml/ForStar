@@ -39,6 +39,7 @@ public class Function extends Value {
         return this.isBuiltin;
     }
 
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

@@ -78,8 +78,9 @@ public class Builder {
 
 
     public MemoryInst.Alloca buildAlloca(Type allocatedType) {
+        var entryBlk = getCurFunc().list.getFirst().getElement();
         MemoryInst.Alloca inst = new MemoryInst.Alloca(allocatedType);
-        getCurBB().list.addFirst(inst.node);
+        entryBlk.list.addFirst(inst.node);
         return inst;
     }
 
