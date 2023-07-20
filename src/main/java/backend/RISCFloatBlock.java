@@ -10,7 +10,7 @@ public class RISCFloatBlock {
     }
 
     public String emit() {
-        return name + ":" + "\n\t" + ".word\t" + value;
+        return "\t.align\t2\n"+name + ":" + "\n\t" + ".word\t" + value;
     }
 
     public String getName() {

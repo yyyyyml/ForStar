@@ -24,7 +24,7 @@ public class FcvtInstruction extends RISCInstruction {
     public String emit() {
 //        return this.type.name()+" "+op1.emit()+","+op2.emit();
         if(isFtoI) {
-            return this.type.name() + ".w.s " + getOperandAt(0).emit() + "," + getOperandAt(1).emit();
+            return this.type.name() + ".w.s " + getOperandAt(0).emit() + "," + getOperandAt(1).emit()+",rtz";
         }
         else {
             return this.type.name() + ".s.w " + getOperandAt(0).emit() + "," + getOperandAt(1).emit();
