@@ -378,7 +378,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             }
         }
 
-        // starttime和stoptime函数？
+        else if (funcName.equals("starttime") || funcName.equals("stoptime")) {
+            args.add(Constant.ConstantInt.getConstantInt(0) );
+        }
         retVal_ = builder.buildCall(func, args);
         setBuildFCall(OFF);
         return null;
@@ -790,6 +792,8 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     public Void visitWhileStmt(SysY2022Parser.WhileStmtContext ctx) {
         // Deepen by one layer of nested loop.
         bpStk.push(new ArrayList<>());
+
+
 
         /*
         - Store current block to add on it a Br to entryBlk.
