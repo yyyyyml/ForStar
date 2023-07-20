@@ -42,7 +42,7 @@ public class Compiler {
                         System.out.println("Error: Output file not specified");
                         return;
                     }
-                } else if (args[i].equals("-O2")) {
+                } else if (args[i].equals("-O1")) {
                     isPass = true;
                     System.out.println("加入优化");
                 } else {
