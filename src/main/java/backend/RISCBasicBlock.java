@@ -106,9 +106,16 @@ public class RISCBasicBlock {
                 case SITOFP -> translateItoF(curInst);
                 case ZEXT -> translateZext(curInst);
                 case FNEG -> translateFneg(curInst);
+                case PTRCAST -> translatePtrcast(curInst);
             }
 
         }
+    }
+
+    private void translatePtrcast(Instruction curInst) {
+        Value v = curInst.getOperandAt(0);
+        RISCOperand op = getOperand(v);
+        riscFunction.valueRISCOperandHashMap.put(curInst,op);
     }
 
     private void translateFneg(Instruction curInst) {
