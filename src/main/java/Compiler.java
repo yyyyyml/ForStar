@@ -95,6 +95,12 @@ public class Compiler {
         Emitter emitter = new Emitter(midOutputFile);
         emitter.emit(module);
 
+//        // 运行IR优化
+//        PassDriver passDriver = new PassDriver();
+//        passDriver.runIR(module);
+
+        if (outputFile == null) return;
+
         // 生成RISC代码
         RISCBuilder mcBuilder = RISCBuilder.get();
         mcBuilder.loadModule(module);
