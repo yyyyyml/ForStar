@@ -7,7 +7,7 @@ import pass.backend.LargeNumberPass.LargeNumberPass;
 import pass.backend.RegisterAllocator.FloatRegisterAllocator;
 import pass.backend.RegisterAllocator.RegisterAllocator;
 import pass.ir.BaseIRPass;
-import pass.ir.DeadCodePass.DeadCodePass;
+import pass.ir.MultiRetEliminate.MultiRetEliminate;
 
 import java.util.ArrayList;
 
@@ -22,7 +22,7 @@ public class PassDriver {
         irPassList = new ArrayList<>();
         backendPassList = new ArrayList<>();
 
-        irPassList.add(new DeadCodePass());
+        irPassList.add(new MultiRetEliminate());
 
         backendPassList.add(new RegisterAllocator());
         backendPassList.add(new FloatRegisterAllocator());

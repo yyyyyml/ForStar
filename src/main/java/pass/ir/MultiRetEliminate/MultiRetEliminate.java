@@ -1,4 +1,4 @@
-package pass.ir.DeadCodePass;
+package pass.ir.MultiRetEliminate;
 
 import ir.Instruction;
 import ir.Module;
@@ -7,7 +7,7 @@ import ir.values.Function;
 import pass.ir.BaseIRPass;
 import util.IList;
 
-public class DeadCodePass implements BaseIRPass {
+public class MultiRetEliminate implements BaseIRPass {
     @Override
     public void run(Module module) {
         for (IList.INode<Function, Module> funcInode : module.functionList) {
