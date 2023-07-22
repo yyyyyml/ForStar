@@ -12,6 +12,7 @@ public class MultiRetEliminate implements BaseIRPass {
     public void run(Module module) {
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
+            if (func.isBuiltin()) continue;
             for (IList.INode<BasicBlock, Function> bbInode : func.list) {
                 BasicBlock bb = bbInode.getElement();
                 boolean flag = false; // 是否出现ret
@@ -19,7 +20,7 @@ public class MultiRetEliminate implements BaseIRPass {
                     Instruction inst = instInode.getElement();
                     if (flag) {
                         instInode.removeSelf();
-                        System.out.println("删掉：" + inst);
+//                        System.out.println("删掉：" + inst);
                     }
                     if (inst.getTag() == Instruction.TAG.RET) {
                         flag = true;
