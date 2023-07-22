@@ -42,13 +42,11 @@ public abstract class User extends Value {
         }
 
         if (existingUse != null) { // 当前位置有操作数，替换
-            existingUse.getValue().useList.remove(existingUse);
+            existingUse.getValue().removeUse(existingUse);
             existingUse.setValue(v);
             v.addInUseList(existingUse);
         } else { // 当前位置没有操作数，新建
             Use newUse = new Use(this, v, i);
-            this.addInOperandList(newUse);
-            v.addInUseList(newUse);
         }
 //        System.out.println(this.getOperandAt(0));
     }

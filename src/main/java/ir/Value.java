@@ -39,6 +39,16 @@ public abstract class Value {
             v.useList.add(use);
         }
     }
+
+    public void removeUse(Use use) {
+
+        for (int index = 0; index < useList.size(); index++) {
+            if (use == useList.get(index)) {
+                useList.remove(index);
+                break;
+            }
+        }
+    }
 //    public boolean isConst() {
 //        if (this instanceof Constant) {
 //            if (this instanceof Constant.ConstantArray) {
