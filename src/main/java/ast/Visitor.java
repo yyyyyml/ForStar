@@ -4,8 +4,8 @@ import frontend.SysY2022BaseVisitor;
 import frontend.SysY2022Parser;
 import frontend.SysY2022Parser.ReturnStmtContext;
 import ir.Instruction;
-import ir.Instructions.MemoryInst;
 import ir.Instructions.BinaryInst;
+import ir.Instructions.MemoryInst;
 import ir.Module;
 import ir.Type;
 import ir.Type.FloatType;
@@ -928,7 +928,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         Value addr = retVal_;
         if(isConstantVar){
             this.isConstantVar = false;
-            throw new RuntimeException("Constant variable "+ctx.getChild(0).getText() +"'s"+" value can not be changed!");
+//            throw new RuntimeException("Constant variable "+ctx.getChild(0).getText() +"'s"+" value can not be changed!");
         }
         visit(ctx.exp());
         Value val = retVal_;
@@ -1192,7 +1192,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 setConveyedType(DataType.FLT);
             }
             else {
-                throw new RuntimeException("Unsupported folding type: " + retVal_.getType());
+//                throw new RuntimeException("Unsupported folding type: " + retVal_.getType());
             }
         }
         else{
