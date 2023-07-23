@@ -1,10 +1,7 @@
 package ast;
 
-import ir.Instructions.BinaryInst;
-import ir.Instructions.ConversionInst;
-import ir.Instructions.MemoryInst;
-import ir.Instructions.TerminatorInst;
-import ir.Instructions.FnegInst;
+import ir.Instruction;
+import ir.Instructions.*;
 import ir.Module;
 import ir.Type;
 import ir.Value;
@@ -15,7 +12,6 @@ import ir.values.BasicBlock;
 import ir.values.Constant;
 import ir.values.Function;
 import ir.values.GlobalVariable;
-import ir.Instruction;
 
 import java.util.ArrayList;
 public class Builder {
@@ -106,6 +102,9 @@ public class Builder {
 
     public BasicBlock buildBB(String name) {
         BasicBlock bb = new BasicBlock(name);
+
+//        getCurBB().nextList.add(bb);
+//        bb.preList.add(getCurBB());
         curFunc.list.addLast(bb.node);
         this.setCurBB(bb);
         return bb;
@@ -268,6 +267,10 @@ public class Builder {
         // Create and insert a block.
         TerminatorInst.Br condBr = new TerminatorInst.Br(cond, trueBlk, falseBlk);
         getCurBB().list.addLast(condBr.node);
+        getCurBB().nextList.add(trueBlk);
+        trueBlk.preList.add(getCurBB());
+        getCurBB().nextList.add(falseBlk);
+        falseBlk.preList.add(getCurBB());
 
         return condBr;
     }
@@ -282,6 +285,8 @@ public class Builder {
         // Create and insert a block.
         TerminatorInst.Br uncondBr = new TerminatorInst.Br(blk);
         getCurBB().list.addLast(uncondBr.node);
+        getCurBB().nextList.add(blk);
+        blk.preList.add(getCurBB());
 
         return uncondBr;
     }
