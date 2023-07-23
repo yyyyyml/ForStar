@@ -2,11 +2,16 @@ package ir.Instructions;
 
 import ir.Instruction;
 import ir.Type;
+import ir.Use;
 import ir.Value;
 import ir.types.ArrayType;
 import ir.types.PointerType;
+import ir.values.BasicBlock;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * 表示内存有关的指令
@@ -136,6 +141,100 @@ public class MemoryInst {
         public Phi(Type type, int numOP) {
             super(type, TAG.PHI, numOP);
         }
+
+        Map<BasicBlock, Integer> opMap = new HashMap<>();
+        int nextMapId = 0;
+
+
+        public Value findValue(BasicBlock basicBlock) {
+            return getOperandAt(opMap.get(basicBlock));
+        }
+
+        public void addMapping(BasicBlock basicBlock, Value value) {
+            if (opMap.containsKey(basicBlock)) {
+                var currentValue = getOperandAt(opMap.get(basicBlock));
+                if (!Objects.equals(currentValue, value)) {
+                    throw new RuntimeException("Trying to assign a different value to an entry block already exists in PHI.");
+                }
+                return;
+            }
+            this.setOperand(value, nextMapId);
+            this.setOperand(basicBlock, nextMapId + 1);
+            opMap.put(basicBlock, nextMapId);
+            nextMapId += 2;
+            super.numOP += 2;
+        }
+
+        //        public void removeMapping(BasicBlock basicBlock){
+//            if(!opMap.containsKey(basicBlock)){
+//                throw new RuntimeException("Trying to remove a mapping that does not exists");
+//            }
+//            int id = opMap.get(basicBlock);
+//            this.removeOperandAt(id);
+//            this.removeOperandAt(id+1);
+//            operandMapping.remove(basicBlock);
+//        }
+//        public void setPhiMapping(Map<BasicBlock, Value> phiMapping){
+//            opMap.keySet().forEach(this::removeMapping);
+//            phiMapping.forEach(this::addMapping);
+//        }
+        // 重写方法，因为可能是BasicBlock
+        @Override
+        public void setOperand(Value value, int position) {
+            if (value instanceof BasicBlock) {
+
+                Use existingUse = null;
+                for (Use use : operandList) {
+                    if (use.getPosition() == position) {
+                        existingUse = use;
+                        break;
+                    }
+                }
+
+                if (existingUse != null) { // 当前位置有操作数，替换
+
+                    var oldBlock = (BasicBlock) existingUse.getValue();
+                    var newBlock = (BasicBlock) value;
+                    Integer pos = opMap.get(oldBlock);
+                    opMap.remove(oldBlock);
+                    opMap.put(newBlock, pos);
+                    oldBlock.removeUse(existingUse);
+                    existingUse.setValue(newBlock);
+                    value.addInUseList(existingUse);
+                } else { // 当前位置没有操作数，新建
+                    Use newUse = new Use(this, value, position);
+                }
+
+            } else {
+                System.out.println("phi操作数不是基本块的话应该是：" + value);
+                super.setOperand(value, position);
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+
+            // Append the result name and type
+            builder.append(getName());
+            builder.append(" = phi ");
+            builder.append(getType().toString());
+
+            // Append the incoming branches
+            for (int i = 0; i < this.operandList.size(); i += 2) {
+                String valueName = getOperandAt(i).getName();
+                String blockName = "%" + getOperandAt(i + 1).getName();
+                if (i == 0) {
+                    builder.append(" ");
+                } else {
+                    builder.append(", ");
+                }
+                builder.append(String.format("[%s, %s]", valueName, blockName));
+            }
+
+            return builder.toString();
+        }
+
 
     }
 }

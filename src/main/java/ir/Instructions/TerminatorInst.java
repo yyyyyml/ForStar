@@ -55,6 +55,7 @@ public class TerminatorInst {
             setOperand(trueBlock, 1);
             setOperand(falseBlock, 2);
             needName = false;
+
         }
 
         //无条件跳转

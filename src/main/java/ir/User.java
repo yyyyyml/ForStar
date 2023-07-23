@@ -10,7 +10,7 @@ import java.util.LinkedList;
  */
 public abstract class User extends Value {
     public LinkedList<Use> operandList = new LinkedList<>();
-    private int numOP = 0;//操作数的数量
+    public int numOP = 0;//操作数的数量
 
     public User(Type type) {
         super(type);
@@ -57,6 +57,10 @@ public abstract class User extends Value {
 
     public int getNumOP() {
         return numOP;
+    }
+
+    public void setNumOP(int num) {
+        numOP = num;
     }
 
 
