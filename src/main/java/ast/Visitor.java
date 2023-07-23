@@ -849,10 +849,16 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         // Pop the back-patching layer out.
         for (ir.Instructions.TerminatorInst.Br br : bpStk.pop()) {
             if (br.getOperandAt(0) == BREAK) {
-                br.setOperand(exitBlk,0);
+                br.setOperand(exitBlk, 0);
+//                // 块的前后序关系
+//                builder.getCurBB().nextList.add(exitBlk);
+//                exitBlk.preList.add(builder.getCurBB());
             }
             else if (br.getOperandAt(0) == CONTINUE) {
-                br.setOperand(condEntryBlk,0);
+                br.setOperand(condEntryBlk, 0);
+//                // 块的前后序关系
+//                builder.getCurBB().nextList.add(condEntryBlk);
+//                condEntryBlk.preList.add(builder.getCurBB());
             }
             else {
                 throw new RuntimeException("Invalid block placeholder occurs in the stack.");

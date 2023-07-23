@@ -265,12 +265,9 @@ public class Builder {
 
     public TerminatorInst.Br buildBr(Value cond, BasicBlock trueBlk, BasicBlock falseBlk) {
         // Create and insert a block.
-        TerminatorInst.Br condBr = new TerminatorInst.Br(cond, trueBlk, falseBlk);
+        TerminatorInst.Br condBr = new TerminatorInst.Br(cond, trueBlk, falseBlk, getCurBB());
         getCurBB().list.addLast(condBr.node);
-        getCurBB().nextList.add(trueBlk);
-        trueBlk.preList.add(getCurBB());
-        getCurBB().nextList.add(falseBlk);
-        falseBlk.preList.add(getCurBB());
+
 
         return condBr;
     }
@@ -283,10 +280,9 @@ public class Builder {
             throw new RuntimeException("Cannot insert a Br after another Br.");
         }*/
         // Create and insert a block.
-        TerminatorInst.Br uncondBr = new TerminatorInst.Br(blk);
+        TerminatorInst.Br uncondBr = new TerminatorInst.Br(blk, getCurBB());
         getCurBB().list.addLast(uncondBr.node);
-        getCurBB().nextList.add(blk);
-        blk.preList.add(getCurBB());
+
 
         return uncondBr;
     }

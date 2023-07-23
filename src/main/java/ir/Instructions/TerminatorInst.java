@@ -2,6 +2,7 @@ package ir.Instructions;
 
 import ir.Instruction;
 import ir.Type;
+import ir.Use;
 import ir.Value;
 import ir.types.FunctionType;
 import ir.values.BasicBlock;
@@ -49,20 +50,57 @@ public class TerminatorInst {
      */
     public static class Br extends Instruction {
         //有条件跳转
-        public Br(Value cond, BasicBlock trueBlock, BasicBlock falseBlock) {
+        public BasicBlock curBlock;
+
+        public Br(Value cond, BasicBlock trueBlock, BasicBlock falseBlock, BasicBlock curBlock) {
             super(Type.LabelType.getType(), TAG.BR, 3);
             setOperand(cond, 0);
             setOperand(trueBlock, 1);
             setOperand(falseBlock, 2);
             needName = false;
+            this.curBlock = curBlock;
+            curBlock.nextList.add(trueBlock);
+            trueBlock.preList.add(curBlock);
+            curBlock.nextList.add(falseBlock);
+            falseBlock.preList.add(curBlock);
 
         }
 
         //无条件跳转
-        public Br(BasicBlock trueBlock) {
+        public Br(BasicBlock trueBlock, BasicBlock curBlock) {
             super(Type.LabelType.getType(), TAG.BR, 1);
             setOperand(trueBlock, 0);
             needName = false;
+            this.curBlock = curBlock;
+            curBlock.nextList.add(trueBlock);
+            trueBlock.preList.add(curBlock);
+        }
+
+        @Override
+        public void setOperand(Value v, int i) {
+            if (numOP == 3) {
+                super.setOperand(v, i);
+            } else {
+                assert i < numOP && i >= 0;
+                var bb = (BasicBlock) v;
+                if (operandList.isEmpty()) {
+                    // 没有操作数，新建
+                    Use newUse = new Use(this, v, i);
+                } else {
+                    Use existingUse = operandList.get(0); // 只可能有一个操作数
+                    existingUse.getValue().removeUse(existingUse);
+                    existingUse.setValue(v);
+                    v.addInUseList(existingUse);
+
+                    BasicBlock preBlock = (BasicBlock) getOperandAt(0);
+                    preBlock.preList.remove(curBlock);
+                    curBlock.nextList.remove(preBlock);
+                    curBlock.nextList.add(bb);
+                    bb.preList.add(curBlock);
+                }
+            }
+
+
         }
 
         @Override
