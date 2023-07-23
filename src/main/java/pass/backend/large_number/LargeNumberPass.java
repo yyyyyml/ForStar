@@ -1,4 +1,4 @@
-package pass.backend.LargeNumberPass;
+package pass.backend.large_number;
 
 import backend.*;
 import backend.instructions.AddInstruction;

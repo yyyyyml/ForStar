@@ -1,4 +1,4 @@
-package pass.backend.RegisterAllocator;
+package pass.backend.register_allocator;
 
 /**
  * live interval类

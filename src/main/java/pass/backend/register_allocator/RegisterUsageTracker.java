@@ -1,4 +1,4 @@
-package pass.backend.RegisterAllocator;
+package pass.backend.register_allocator;
 
 import java.util.HashMap;
 

@@ -1,4 +1,4 @@
-package pass.ir.MultiRetEliminate;
+package pass.ir.multiret_eliminate;
 
 import ir.Instruction;
 import ir.Module;

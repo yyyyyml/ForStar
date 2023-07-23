@@ -1,4 +1,4 @@
-package pass.backend.RegisterAllocator;
+package pass.backend.register_allocator;
 
 /**
  * 寄存器使用情况类

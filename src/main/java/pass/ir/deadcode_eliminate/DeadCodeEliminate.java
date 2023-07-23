@@ -1,4 +1,4 @@
-package pass.ir.DeadCodeEliminate;
+package pass.ir.deadcode_eliminate;
 
 import ir.Instruction;
 import ir.Module;
