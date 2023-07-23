@@ -27,28 +27,28 @@ public class Mem2Reg implements BaseIRPass {
 
             // 获取所有可提升的Alloca
             getPromotableAllocaSet(func);
-            System.out.println("已获取所有可提升的Alloca");
+//            System.out.println("已获取所有可提升的Alloca");
 //            System.out.println(allocaSet);
 
             // 收集每个基本块中的使用和定义信息
             collectInformation(func);
-            System.out.println("已收集每个基本块中的使用和定义信息");
+//            System.out.println("已收集每个基本块中的使用和定义信息");
 
             // 向每个基本块插入空的phi指令
             insertEmptyPhi(func);
-            System.out.println("已向每个基本块插入空的phi指令");
+//            System.out.println("已向每个基本块插入空的phi指令");
 
             // 处理基本块内的指令，替换load指令的使用，并记录store指令的结果
             processInstructions(func);
-            System.out.println("已处理基本块内的指令，替换load指令的使用，并记录store指令的结果");
+//            System.out.println("已处理基本块内的指令，替换load指令的使用，并记录store指令的结果");
 
             // 完成phi指令的填充
             fillEmptyPhi(func);
-            System.out.println("已完成phi指令的填充");
+//            System.out.println("已完成phi指令的填充");
 
             // 移除基本块中多余的load和store指令，然后移除入口块多余的alloca指令
             removeInst(func);
-            System.out.println("已移除基本块中多余的load和store指令，然后移除入口块多余的alloca指令");
+//            System.out.println("已移除基本块中多余的load和store指令，然后移除入口块多余的alloca指令");
         }
     }
 
@@ -118,7 +118,6 @@ public class Mem2Reg implements BaseIRPass {
             Queue<BasicBlock> basicBlocks = entry.getValue();
 
             // 使用一个额外的队列用于记录要添加的基本块，避免在循环中修改 basicBlocks
-            Queue<BasicBlock> newBasicBlocks = new LinkedList<>();
 
             while (!basicBlocks.isEmpty()) {
                 BasicBlock basicBlock = basicBlocks.remove();
@@ -129,14 +128,11 @@ public class Mem2Reg implements BaseIRPass {
                     // 将需要在前一个基本块中定义的变量加入前一个基本块的 npdVar 集合中，并继续传播
                     previousBasicBlock.npdVar.add(variable);
                     // 将前一个基本块添加到 newBasicBlocks 中，待下一轮继续传播
-                    newBasicBlocks.add(previousBasicBlock);
+                    basicBlocks.add(previousBasicBlock);
                 }
             }
 
-            // 将 newBasicBlocks 中的基本块添加回原始的 basicBlocks 中
-            basicBlocks.addAll(newBasicBlocks);
         }
-
     }
 
 
@@ -187,7 +183,8 @@ public class Mem2Reg implements BaseIRPass {
                     var address = inst.getOperandAt(0);
                     if (address instanceof MemoryInst.Alloca && bb.nowDefMap.containsKey(address)) {
                         var register = bb.nowDefMap.get(address);
-                        inst.useList.forEach(use -> use.setValue(register));
+//                        inst.useList.forEach(use -> use.setValue(register));
+                        inst.replaceAllUseWith(register); // 我感觉这样应该可以
                         System.out.println("load变为nowDefMap中的变量:" + inst + "->" + register);
                     }
                 }
@@ -212,9 +209,9 @@ public class Mem2Reg implements BaseIRPass {
                 var alloca = entry.getKey();
                 var phiInst = entry.getValue();
                 for (BasicBlock previousBasicBlock : bb.preList) {
-                    if (previousBasicBlock.nowDefMap.get(alloca) == null) {
-                        continue;
-                    }
+//                    if (previousBasicBlock.nowDefMap.get(alloca) == null) {
+//                        continue;
+//                    }
                     System.out.println("fillEmptyPhi中，要把map对(%" + previousBasicBlock.getName() + "," + previousBasicBlock.nowDefMap.get(alloca) + ")加入phi");
                     phiInst.addMapping(previousBasicBlock, previousBasicBlock.nowDefMap.get(alloca));
                 }
