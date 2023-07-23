@@ -3,12 +3,11 @@ package pass;
 import backend.RISCModule;
 import ir.Module;
 import pass.backend.BaseBackendPass;
-import pass.backend.LargeNumberPass.LargeNumberPass;
-import pass.backend.RegisterAllocator.FloatRegisterAllocator;
-import pass.backend.RegisterAllocator.RegisterAllocator;
+import pass.backend.large_number.LargeNumberPass;
+import pass.backend.register_allocator.FloatRegisterAllocator;
+import pass.backend.register_allocator.RegisterAllocator;
 import pass.ir.BaseIRPass;
-import pass.ir.DeadCodeEliminate.DeadCodeEliminate;
-import pass.ir.MultiRetEliminate.MultiRetEliminate;
+import pass.ir.multiret_eliminate.MultiRetEliminate;
 
 import java.util.ArrayList;
 
@@ -24,7 +23,8 @@ public class PassDriver {
         backendPassList = new ArrayList<>();
 
         irPassList.add(new MultiRetEliminate());
-        irPassList.add(new DeadCodeEliminate()); // TODO:好像mem2reg之前还不能做这个优化，有问题
+//        irPassList.add(new Mem2Reg());
+//        irPassList.add(new DeadCodeEliminate()); // TODO:好像mem2reg之前还不能做这个优化，有问题
 
         backendPassList.add(new RegisterAllocator());
         backendPassList.add(new FloatRegisterAllocator());
