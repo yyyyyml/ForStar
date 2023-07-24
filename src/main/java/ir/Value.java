@@ -1,6 +1,11 @@
 package ir;
 
+import ir.Instructions.MemoryInst;
+import ir.values.BasicBlock;
+
+import java.util.AbstractMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 /**
  * Value类
@@ -34,10 +39,32 @@ public abstract class Value {
     }
 
     public void replaceAllUseWith(Value v) {
+
         for (Use use : useList) {
             use.setValue(v);
             v.useList.add(use);
         }
+    }
+
+    public void replaceAllUseWith(Value v, BasicBlock bb, BasicBlock curBB) {
+
+        for (Use use : useList) {
+            var user = use.getUser();
+            if (user instanceof MemoryInst.Phi) {
+                // phi用map,map都要替换
+
+                Map.Entry<BasicBlock, Value> oldMap = new AbstractMap.SimpleEntry<>(curBB, this);
+                Map.Entry<BasicBlock, Value> newMap = new AbstractMap.SimpleEntry<>(bb, v);
+                ((MemoryInst.Phi) user).setMapEntry(oldMap, newMap);
+
+            } else {
+                use.setValue(v);
+                v.useList.add(use);
+            }
+
+        }
+
+
     }
 
     public void removeUse(Use use) {

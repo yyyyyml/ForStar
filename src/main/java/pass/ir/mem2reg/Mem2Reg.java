@@ -45,8 +45,13 @@ public class Mem2Reg implements BaseIRPass {
 
             // 移除基本块中多余的load和store指令，然后移除入口块多余的alloca指令
             removeInst(func);
+
+            // 消除单分支的phi
+            // TODO:貌似不可行
+//            deriveSinglePhi(func);
         }
     }
+
 
     private void getPromotableAllocaSet(Function func) {
         var firstBBInode = func.list.getFirst();
@@ -243,6 +248,22 @@ public class Mem2Reg implements BaseIRPass {
             if (inst instanceof MemoryInst.Alloca && allocaSet.contains(inst)) {
                 // 移除alloca
                 instInode.removeSelf();
+            }
+        }
+    }
+
+    private void deriveSinglePhi(Function func) {
+        for (IList.INode<BasicBlock, Function> bbInode : func.list) {
+            var bb = bbInode.getElement();
+            for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
+                var inst = instInode.getElement();
+                // 找单分支的phi
+                if (inst.getTag() == Instruction.TAG.PHI && inst.getNumOP() == 2) {
+                    var newVal = inst.getOperandAt(0);
+                    var newBB = (BasicBlock) inst.getOperandAt(1);
+
+                    inst.replaceAllUseWith(newVal, newBB, bb);
+                }
             }
         }
     }

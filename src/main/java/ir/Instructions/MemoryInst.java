@@ -165,7 +165,7 @@ public class MemoryInst {
             super.numOP += 2;
         }
 
-        //        public void removeMapping(BasicBlock basicBlock){
+//        public void removeMapping(BasicBlock basicBlock){
 //            if(!opMap.containsKey(basicBlock)){
 //                throw new RuntimeException("Trying to remove a mapping that does not exists");
 //            }
@@ -174,10 +174,19 @@ public class MemoryInst {
 //            this.removeOperandAt(id+1);
 //            operandMapping.remove(basicBlock);
 //        }
-//        public void setPhiMapping(Map<BasicBlock, Value> phiMapping){
-//            opMap.keySet().forEach(this::removeMapping);
-//            phiMapping.forEach(this::addMapping);
-//        }
+public void setMapEntry(Map.Entry<BasicBlock, Value> oldEntry, Map.Entry<BasicBlock, Value> newEntry) {
+    BasicBlock oldBB = oldEntry.getKey();
+    Value oldVal = oldEntry.getValue();
+    BasicBlock newBB = newEntry.getKey();
+    Value newVal = newEntry.getValue();
+    var pos = opMap.get(oldBB);
+    opMap.remove(oldBB);
+    opMap.put(newBB, pos);
+    this.setOperand(newVal, nextMapId);
+    this.setOperand(newBB, nextMapId + 1);
+
+}
+
         // 重写方法，因为可能是BasicBlock
         @Override
         public void setOperand(Value value, int position) {
