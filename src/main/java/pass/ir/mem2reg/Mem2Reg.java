@@ -48,7 +48,7 @@ public class Mem2Reg implements BaseIRPass {
 
             // 消除单分支的phi
             // TODO:貌似不可行
-//            deriveSinglePhi(func);
+            deriveSinglePhi(func);
         }
     }
 
@@ -253,19 +253,39 @@ public class Mem2Reg implements BaseIRPass {
     }
 
     private void deriveSinglePhi(Function func) {
-        for (IList.INode<BasicBlock, Function> bbInode : func.list) {
-            var bb = bbInode.getElement();
-            for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
-                var inst = instInode.getElement();
-                // 找单分支的phi
-                if (inst.getTag() == Instruction.TAG.PHI && inst.getNumOP() == 2) {
-                    var newVal = inst.getOperandAt(0);
-                    var newBB = (BasicBlock) inst.getOperandAt(1);
+        boolean needDerive = true;
+        while (needDerive) {
+            needDerive = false;
+            for (IList.INode<BasicBlock, Function> bbInode : func.list) {
+                var bb = bbInode.getElement();
+                for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
+                    var inst = instInode.getElement();
+                    // 找单分支的phi
+                    if (inst.getTag() == Instruction.TAG.PHI && inst.getNumOP() == 2) {
+                        var newVal = inst.getOperandAt(0);
+                        var newBB = (BasicBlock) inst.getOperandAt(1);
+                        if (canDerive(inst)) {
+                            inst.replaceAllUseWith(newVal);
+                            inst.node.removeSelf();
+                            needDerive = true;
+                        }
 
-                    inst.replaceAllUseWith(newVal, newBB, bb);
+                    }
                 }
             }
         }
+
+    }
+
+    private boolean canDerive(Instruction inst) {
+        for (Use use : inst.useList) {
+            var user = use.getUser();
+            if (user instanceof MemoryInst.Phi) {
+                return false;
+            }
+        }
+        System.out.println("phi可消除：" + inst);
+        return true;
     }
 
 }
