@@ -740,7 +740,7 @@ public class RISCBasicBlock {
         switch (curInst.getTag()) {
             case ADD -> {
                 if(op2 instanceof Immediate){
-                    instructionList.pop();
+                    instructionList.removeLast();
                     AddiInstruction cal = new AddiInstruction((Register) dst, (Register) temp1, (Immediate) op2);
                     instructionList.add(cal);
                 }
