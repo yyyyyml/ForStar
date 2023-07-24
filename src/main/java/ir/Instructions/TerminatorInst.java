@@ -87,16 +87,18 @@ public class TerminatorInst {
                     // 没有操作数，新建
                     Use newUse = new Use(this, v, i);
                 } else {
-                    Use existingUse = operandList.get(0); // 只可能有一个操作数
-                    existingUse.getValue().removeUse(existingUse);
-                    existingUse.setValue(v);
-                    v.addInUseList(existingUse);
-
                     BasicBlock preBlock = (BasicBlock) getOperandAt(0);
                     preBlock.preList.remove(curBlock);
                     curBlock.nextList.remove(preBlock);
                     curBlock.nextList.add(bb);
                     bb.preList.add(curBlock);
+
+                    Use existingUse = operandList.get(0); // 只可能有一个操作数
+                    existingUse.getValue().removeUse(existingUse);
+                    existingUse.setValue(v);
+                    v.addInUseList(existingUse);
+
+
                 }
             }
 

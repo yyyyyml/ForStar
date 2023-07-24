@@ -98,6 +98,9 @@ public class Compiler {
 //        // 运行IR优化
 //        PassDriver passDriver = new PassDriver();
 //        passDriver.runIR(module);
+//
+//        Emitter emitter2 = new Emitter("testcase2.ll");
+//        emitter2.emit(module);
 
         if (outputFile == null) return;
 

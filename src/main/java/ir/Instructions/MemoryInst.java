@@ -206,7 +206,7 @@ public class MemoryInst {
                 }
 
             } else {
-                System.out.println("phi操作数不是基本块的话应该是：" + value);
+//                System.out.println("phi操作数不是基本块的话应该是：" + value);
                 super.setOperand(value, position);
             }
         }

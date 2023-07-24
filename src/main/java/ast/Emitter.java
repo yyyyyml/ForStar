@@ -84,6 +84,17 @@ public class Emitter {
                     if (!func.list.getFirst().equals(bbInode)) {
                         sb.append(bb.getName());
                         sb.append(":");
+
+//                        bb.preList.forEach(preBB -> {
+//                            sb.append(preBB.getName());
+//                            sb.append(" ");
+//                        });
+//                        sb.append("| ");
+//                        bb.nextList.forEach(preBB -> {
+//                            sb.append(preBB.getName());
+//                            sb.append(" ");
+//                        });
+
                         sb.append("\n");
                     }
                     for (IList.INode<Instruction, BasicBlock> instInode : bbInode.getElement().list) {

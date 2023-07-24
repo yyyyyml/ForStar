@@ -26,21 +26,18 @@ public class Mem2Reg implements BaseIRPass {
             if (func.isBuiltin()) continue;
 
             // 获取所有可提升的Alloca
+            allocaSet.clear();
             getPromotableAllocaSet(func);
-//            System.out.println("已获取所有可提升的Alloca");
 //            System.out.println(allocaSet);
 
             // 收集每个基本块中的使用和定义信息
             collectInformation(func);
-//            System.out.println("已收集每个基本块中的使用和定义信息");
 
             // 向每个基本块插入空的phi指令
             insertEmptyPhi(func);
-//            System.out.println("已向每个基本块插入空的phi指令");
 
             // 处理基本块内的指令，替换load指令的使用，并记录store指令的结果
             processInstructions(func);
-//            System.out.println("已处理基本块内的指令，替换load指令的使用，并记录store指令的结果");
 
             // 完成phi指令的填充
             fillEmptyPhi(func);
@@ -48,7 +45,6 @@ public class Mem2Reg implements BaseIRPass {
 
             // 移除基本块中多余的load和store指令，然后移除入口块多余的alloca指令
             removeInst(func);
-//            System.out.println("已移除基本块中多余的load和store指令，然后移除入口块多余的alloca指令");
         }
     }
 
@@ -152,7 +148,7 @@ public class Mem2Reg implements BaseIRPass {
                     } else if (npdVar.allocatedType.isFloatType()) {
                         constant = Constant.ConstantFloat.getConstantFloat(0);
                     } else {
-                        throw new RuntimeException("无法为类型 " + npdVar.allocatedType + " 生成默认值");
+                        throw new RuntimeException("基本块关系有问题"); // 不会有这种情况
                     }
                     bb.nowDefMap.put(npdVar, constant);
                 }
@@ -160,7 +156,7 @@ public class Mem2Reg implements BaseIRPass {
                 for (MemoryInst.Alloca npdVar : bb.npdVar) {
                     // 在基本块的开头插入一个新的phi指令，类型为npdVar的类型
                     var phiInst = new MemoryInst.Phi(npdVar.allocatedType, 0);
-                    System.out.println("phi:" + phiInst);
+//                    System.out.println("phi:" + phiInst);
                     bb.list.addFirst(phiInst.node);
                     // 将phi指令加入phiMap
                     bb.phiMap.put(npdVar, phiInst);
@@ -185,7 +181,7 @@ public class Mem2Reg implements BaseIRPass {
                         var register = bb.nowDefMap.get(address);
 //                        inst.useList.forEach(use -> use.setValue(register));
                         inst.replaceAllUseWith(register); // 我感觉这样应该可以
-                        System.out.println("load变为nowDefMap中的变量:" + inst + "->" + register);
+//                        System.out.println("load变为nowDefMap中的变量:" + inst + "->" + register);
                     }
                 }
                 // 记录store指令的结果
@@ -193,7 +189,7 @@ public class Mem2Reg implements BaseIRPass {
                     var value = inst.getOperandAt(0);
                     var address = inst.getOperandAt(1);
                     if (address instanceof MemoryInst.Alloca) {
-                        System.out.println("store存入nowDefMap:" + "map对(" + (MemoryInst.Alloca) address + "," + value + ")");
+//                        System.out.println("store存入nowDefMap:" + "map对(" + (MemoryInst.Alloca) address + "," + value + ")");
                         bb.nowDefMap.put((MemoryInst.Alloca) address, value);
                     }
                 }
@@ -209,10 +205,7 @@ public class Mem2Reg implements BaseIRPass {
                 var alloca = entry.getKey();
                 var phiInst = entry.getValue();
                 for (BasicBlock previousBasicBlock : bb.preList) {
-//                    if (previousBasicBlock.nowDefMap.get(alloca) == null) {
-//                        continue;
-//                    }
-                    System.out.println("fillEmptyPhi中，要把map对(%" + previousBasicBlock.getName() + "," + previousBasicBlock.nowDefMap.get(alloca) + ")加入phi");
+//                    System.out.println("fillEmptyPhi中，要把map对(%" + previousBasicBlock.getName() + "," + previousBasicBlock.nowDefMap.get(alloca) + ")加入phi");
                     phiInst.addMapping(previousBasicBlock, previousBasicBlock.nowDefMap.get(alloca));
                 }
             }

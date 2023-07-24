@@ -153,8 +153,8 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
 //            if (this.parentList == null) {
 //                throw new RuntimeException("不存在父");
 //            }
-            this.next.prev = this.prev;
-            this.prev.next = this.next;
+            if (this.next != null) this.next.prev = this.prev;
+            if (this.prev != null) this.prev.next = this.next;
             this.parentList = null;
         }
     }
