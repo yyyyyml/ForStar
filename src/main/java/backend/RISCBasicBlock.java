@@ -11,6 +11,8 @@ import ir.values.BasicBlock;
 import ir.values.Constant;
 import ir.values.Function;
 import ir.values.GlobalVariable;
+import org.antlr.v4.runtime.misc.Pair;
+import pass.PassDriver;
 import util.IList;
 
 import java.util.HashMap;
@@ -19,6 +21,7 @@ import java.util.LinkedList;
 public class RISCBasicBlock {
     public int parameterStackCount = 0;
     private LinkedList<RISCInstruction> instructionList = new LinkedList<>();
+    public LinkedList<Value> myParaPhi = new LinkedList<>();
     private Function irFunction;
     private RISCFunction riscFunction;
     private String blockName;
@@ -82,6 +85,33 @@ public class RISCBasicBlock {
         this.riscFunction = riscFunc;
         this.irFunction = irFunc;
         this.blockName = irFunc.getName() + irBB.getName();
+        //每个块开始为phi参数中的值赋个值
+        if(riscFunction.blockPhiMap.containsKey(irBB)){
+            LinkedList<Pair<Value,Value>> list = riscFunction.blockPhiMap.get(irBB);
+            for (Pair<Value,Value> pair : list){
+                Value vd = pair.a;
+                Value vs = pair.b;
+                RISCOperand dst = getOperand(vd);
+                RISCOperand src = getOperand(vs);
+                if(src instanceof Immediate){
+                    LiInstruction liInstruction = new LiInstruction(dst,src);
+                    instructionList.add(liInstruction);
+                }
+                else if(src instanceof FloatVirtualRegister){
+                    FmvInstruction fmvInstruction = new FmvInstruction(dst,src);
+                    instructionList.add(fmvInstruction);
+                }
+                else if(src instanceof Memory){
+                    LdInstruction ldInstruction = new LdInstruction(dst,src);
+                    instructionList.add(ldInstruction);
+                }
+                else {
+                    MvInstruction mvInstruction = new MvInstruction(dst,src);
+                    instructionList.add(mvInstruction);
+                }
+            }
+        }
+
         for (IList.INode<Instruction, BasicBlock> Inode : irBB.list) {
 
             Instruction curInst = Inode.getElement();
@@ -108,7 +138,22 @@ public class RISCBasicBlock {
                 case FNEG -> translateFneg(curInst);
                 case PTRCAST -> translatePtrcast(curInst);
             }
+            if(riscFunction.phiMap.containsKey(curInst)){
+                LinkedList<Value> list = riscFunction.phiMap.get(curInst);
+                for (Value vd : list)
+                {
+                    RISCOperand dst = getOperand(vd);
+                    RISCOperand src = getOperand(curInst);
+                    if (curInst.getType().isFloatType()) {
+                        FmvInstruction fmv = new FmvInstruction(dst, src);
+                        instructionList.add(fmv);
+                    } else {
+                        MvInstruction mvInstruction = new MvInstruction(dst, src);
+                        instructionList.add(mvInstruction);
+                    }
+                }
 
+            }
         }
     }
 

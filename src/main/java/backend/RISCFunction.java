@@ -1,10 +1,15 @@
 package backend;
 
+import backend.operands.FloatVirtualRegister;
+import backend.operands.Immediate;
+import backend.operands.VirtualRegister;
 import ir.Instruction;
 import ir.Value;
 import ir.types.PointerType;
 import ir.values.BasicBlock;
+import ir.values.Constant;
 import ir.values.Function;
+import org.antlr.v4.runtime.misc.Pair;
 import util.IList;
 
 import java.util.HashMap;
@@ -25,6 +30,8 @@ public class RISCFunction {
     public HashMap<RISCOperand, Value> riscOperandValueHashMap;
     public HashMap<Value, Integer> funcParameters;
     public HashMap<Value, Integer> myfuncParameters;
+    public HashMap<Value,LinkedList<Value>> phiMap;
+    public HashMap<Value,LinkedList<Pair<Value,Value>>> blockPhiMap;
     public int localStackIndex = 16;
     public int operandStackCounts = 0;
     public int stackSize;
@@ -45,6 +52,8 @@ public class RISCFunction {
 
         myfuncParameters = new HashMap<>();
         funcParameters = new HashMap<>();
+        phiMap = new HashMap<>();
+        blockPhiMap = new HashMap<>();
 
 //        valueFloatVrMap = new HashMap<>();
 //        valueVRMap = new HashMap<>();
@@ -83,8 +92,8 @@ public class RISCFunction {
             }
         }
 
-
-        //寻找函数内参数
+        //提前扫一遍，预处理
+        //寻找函数内参数，以及phi内参数
         for (IList.INode<BasicBlock, Function> bbInode : irFunc.list) {
             BasicBlock irBB = bbInode.getElement();
             for (IList.INode<Instruction, BasicBlock> Inode : irBB.list) {
@@ -113,6 +122,47 @@ public class RISCFunction {
                         }
                         //计算参数所需占用的栈空间
                         operandStackCounts = Math.max(operandStackCounts, stackIndex - 8);
+                    }
+                }
+                else if(curInst.getTag() == Instruction.TAG.PHI){
+                    RISCOperand dst;
+                    if(curInst.getType().isIntegerType()||curInst.getType().isPointerType()){
+                        dst = new VirtualRegister(virtualRegisterIndex++);
+                    }
+                    else {
+                        dst = new FloatVirtualRegister(floatVirtualRegisterIndex++);
+                    }
+                    valueRISCOperandHashMap.put(curInst,dst);
+                    int paraCount = curInst.getNumOP();
+                    if(paraCount % 2 != 0 ){
+                        throw new RuntimeException("这个phi的操作数不是偶数"+curInst);
+                    }
+                    for(int i = 0 ; i < paraCount ; i = i + 2){
+                        Value v1 = curInst.getOperandAt(i);
+                        Value v2 = curInst.getOperandAt(i+1);
+                        if((!(v1 instanceof Constant))&&(!myfuncParameters.containsKey(v1))){
+                            if ((phiMap.containsKey(v1))){
+                                phiMap.get(v1).add(curInst);
+                            }
+                            else {
+                                LinkedList<Value> list = new LinkedList<>();
+                                list.add(curInst);
+                                phiMap.put(v1,list);
+                            }
+
+                        }
+                        //判断v1为本函数参数或是常数，把curinst和v1以pair的形式存入list中
+                        else {
+                            if(blockPhiMap.containsKey(v2)){
+                                blockPhiMap.get(v2).add(new Pair<>(curInst,v1));
+
+                            }
+                            else {
+                                LinkedList<Pair<Value,Value>> list = new LinkedList<>();
+                                list.add(new Pair<>(curInst,v1));
+                                blockPhiMap.put(v2,list);
+                            }
+                        }
                     }
                 }
             }
