@@ -596,6 +596,9 @@ public class RISCBasicBlock {
     private void translateCall(Instruction curInst) {
         System.out.println(curInst);
         int paraCount = curInst.getNumOP();
+        int intCount = 0;
+        int floatCount = 0;
+        int stackIndex = 8;
         //为call内所有参数赋值
         for (int i = 1; i < paraCount; i++) {
             Value v = curInst.getOperandAt(i);
@@ -630,7 +633,27 @@ public class RISCBasicBlock {
                     }
                 }
             }
-            int opeIndex = riscFunction.funcParameters.get(v);
+            int opeIndex ;
+            if(v.getType().isIntegerType() || v.getType().isPointerType()){
+                if(intCount < 8)
+                {
+                    opeIndex = intCount++;
+                }
+                else {
+                    opeIndex = stackIndex;
+                    stackIndex += 8;
+                }
+            }
+            else  {
+                if(floatCount < 8)
+                {
+                    opeIndex = floatCount++;
+                }
+                else {
+                    opeIndex = stackIndex;
+                    stackIndex += 8;
+                }
+            }
             //获得目标寄存器a0-a10
             RISCOperand dst;
             if (opeIndex < 8) {
