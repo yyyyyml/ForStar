@@ -16,7 +16,7 @@ public class Mem2Reg implements BaseIRPass {
     private Set<MemoryInst.Alloca> allocaSet;
 
     public Mem2Reg() {
-        allocaSet = new HashSet<>();
+        allocaSet = new LinkedHashSet<>();
     }
 
     @Override
@@ -84,7 +84,7 @@ public class Mem2Reg implements BaseIRPass {
     }
 
     private void collectInformation(Function func) {
-        Map<MemoryInst.Alloca, Queue<BasicBlock>> blocksToSpread = new HashMap<>();
+        Map<MemoryInst.Alloca, Queue<BasicBlock>> blocksToSpread = new LinkedHashMap<>();
         allocaSet.forEach(variable -> blocksToSpread.put(variable, new LinkedList<>()));
 
         // 遍历每个基本块，收集每个基本块中可提升变量的信息
@@ -117,8 +117,6 @@ public class Mem2Reg implements BaseIRPass {
         for (Map.Entry<MemoryInst.Alloca, Queue<BasicBlock>> entry : blocksToSpread.entrySet()) {
             MemoryInst.Alloca variable = entry.getKey();
             Queue<BasicBlock> basicBlocks = entry.getValue();
-
-            // 使用一个额外的队列用于记录要添加的基本块，避免在循环中修改 basicBlocks
 
             while (!basicBlocks.isEmpty()) {
                 BasicBlock basicBlock = basicBlocks.remove();

@@ -22,6 +22,7 @@ public class RegisterUsageTracker {
 
     // 找这个时间点的上一个时间点的RegisterUsage
     public RegisterUsage getPreRegisterUsage(int timePoint) {
+        if (registerUsageMap.get(timePoint) != null) return registerUsageMap.get(timePoint);
         RegisterUsage registerUsage = registerUsageMap.get(timePoint - 1);
         if (registerUsage == null) return getPreRegisterUsage(timePoint - 1);
         else return registerUsage;
