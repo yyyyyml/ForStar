@@ -152,7 +152,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                             setLiveIntervalStart(name, index);
                         } else {
                             // 记录End
-                            if (riscOp.getPosition() == 0) {
+                            if (((FloatVirtualRegister) riscOp).getName() < riscFunc.floatPhiCount) {
                                 // 如果最后一次出现是定义点，说明跳转到前面的块使用，生存周期结束要延长到这个块结束
                                 int newIndex = index + riscInstList.size() - instSeq;
                                 setLiveIntervalEnd(name, newIndex);
