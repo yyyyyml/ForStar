@@ -42,6 +42,7 @@ public class RISCFunction {
     public Boolean addEndBlock = false;
     public Boolean isBuildIn = false;
     public int phiCount = 0;
+    public int floatPhiCount = 0;
 
     /**
      * Function生成函数
@@ -126,12 +127,14 @@ public class RISCFunction {
                     }
                 }
                 else if(curInst.getTag() == Instruction.TAG.PHI){
-                    phiCount++;
+
                     RISCOperand dst;
                     if(curInst.getType().isIntegerType()||curInst.getType().isPointerType()){
+                        phiCount++;
                         dst = new VirtualRegister(virtualRegisterIndex++);
                     }
                     else {
+                        floatPhiCount++;
                         dst = new FloatVirtualRegister(floatVirtualRegisterIndex++);
                     }
                     valueRISCOperandHashMap.put(curInst,dst);
