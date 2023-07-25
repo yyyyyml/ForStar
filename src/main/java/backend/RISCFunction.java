@@ -41,6 +41,7 @@ public class RISCFunction {
     public RISCModule riscModule;
     public Boolean addEndBlock = false;
     public Boolean isBuildIn = false;
+    public int phiCount = 0;
 
     /**
      * Function生成函数
@@ -125,6 +126,7 @@ public class RISCFunction {
                     }
                 }
                 else if(curInst.getTag() == Instruction.TAG.PHI){
+                    phiCount++;
                     RISCOperand dst;
                     if(curInst.getType().isIntegerType()||curInst.getType().isPointerType()){
                         dst = new VirtualRegister(virtualRegisterIndex++);
@@ -167,7 +169,6 @@ public class RISCFunction {
                 }
             }
         }
-
         //记录结束块位置
         Stack<Integer> stack = new Stack<>();
         Integer blockIndex = 0;
