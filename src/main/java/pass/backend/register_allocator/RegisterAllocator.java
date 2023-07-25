@@ -135,6 +135,7 @@ public class RegisterAllocator implements BaseBackendPass {
         LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
         for (RISCBasicBlock riscBB : riscBBList) {
             LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
+            int instSeq = 0; // 块内顺序
             for (RISCInstruction riscInst : riscInstList) {
                 time2Function.add(index, riscFunc);
                 riscInst.setId(index); // 记录每条指令的标号
@@ -148,7 +149,14 @@ public class RegisterAllocator implements BaseBackendPass {
                             setLiveIntervalStart(name, index);
                         } else {
                             // 记录End
-                            setLiveIntervalEnd(name, index + 1);
+                            if (riscOp.getPosition() == 0) {
+                                // 如果最后一次出现是定义点，说明跳转到前面的块使用，生存周期结束要延长到这个块结束
+                                int newIndex = index + riscInstList.size() - instSeq;
+                                setLiveIntervalEnd(name, newIndex);
+                            } else {
+                                setLiveIntervalEnd(name, index + 1);
+                            }
+
                         }
                     } else if (riscOp.isMemory()) {
                         var mem = (Memory) riscOp;
@@ -166,6 +174,7 @@ public class RegisterAllocator implements BaseBackendPass {
                     }
                 }
                 index += 1;
+                instSeq += 1;
             }
         }
 
