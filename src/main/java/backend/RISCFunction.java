@@ -23,9 +23,7 @@ public class RISCFunction {
     public int parameterSize;
     public int virtualRegisterIndex = 0;
     public int floatVirtualRegisterIndex = 0;
-    //    public HashMap<Value, FloatVirtualRegister> valueFloatVrMap;
-//    public HashMap<Value, VirtualRegister> valueVRMap;
-//    public HashMap<Value, Memory> valueMemoryHashMap;
+
     public HashMap<Value, RISCOperand> valueRISCOperandHashMap;
     public HashMap<RISCOperand, Value> riscOperandValueHashMap;
     public HashMap<Value, Integer> funcParameters;
@@ -43,6 +41,11 @@ public class RISCFunction {
     public Boolean isBuildIn = false;
     public int phiCount = 0;
     public int floatPhiCount = 0;
+    public HashMap<String,RISCBasicBlock> blockHashMap;
+    //第二版phi
+    public HashMap<Value,LinkedList<Value>> preBlockMap;
+
+
 
     /**
      * Function生成函数
@@ -56,7 +59,7 @@ public class RISCFunction {
         funcParameters = new HashMap<>();
         phiMap = new HashMap<>();
         blockPhiMap = new HashMap<>();
-
+        blockHashMap = new HashMap<>();
 //        valueFloatVrMap = new HashMap<>();
 //        valueVRMap = new HashMap<>();
 //        valueMemoryHashMap = new HashMap<>();
@@ -128,6 +131,10 @@ public class RISCFunction {
                 }
                 else if(curInst.getTag() == Instruction.TAG.PHI){
 
+
+
+
+                     //phi初版
                     RISCOperand dst;
                     if(curInst.getType().isIntegerType()||curInst.getType().isPointerType()){
                         phiCount++;
@@ -187,6 +194,23 @@ public class RISCFunction {
             }
         }
 
+        for (RISCBasicBlock BB : BasicBlockList) {
+            for (String BBName : BB.nextBlocknameList){
+                RISCBasicBlock nextBB = blockHashMap.get(BBName);
+                BB.nextlist.add(nextBB);
+                nextBB.prelist.add(BB);
+            }
+        }
+//        for (RISCBasicBlock BB : BasicBlockList) {
+//            System.out.println("THE "+BB.getBlockName()+" nextlist is ");
+//            for (RISCBasicBlock nextBB : BB.nextlist){
+//                System.out.println(nextBB.getBlockName());
+//            }
+//            System.out.println("THE "+BB.getBlockName()+" prelist is ");
+//            for (RISCBasicBlock preBB : BB.prelist){
+//                System.out.println(preBB.getBlockName());
+//            }
+//        }
         //倒序加入结束块
         while (!stack.empty()) {
             RISCBasicBlock lastBB = new RISCBasicBlock(1, irFunc, this);
@@ -195,6 +219,8 @@ public class RISCFunction {
 
         RISCBasicBlock firstBB = new RISCBasicBlock(0, irFunc, this);
         BasicBlockList.add(0, firstBB);
+
+
 
 
     }

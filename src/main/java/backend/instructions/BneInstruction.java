@@ -1,14 +1,16 @@
 package backend.instructions;
 
+import backend.RISCBasicBlock;
 import backend.RISCInstruction;
 import backend.RISCOperand;
+import backend.operands.MyString;
 
 public class BneInstruction extends RISCInstruction {
     public RISCOperand op1;
     public RISCOperand op2;
     public RISCOperand op3;
 
-    public BneInstruction(RISCOperand op1, RISCOperand op2, RISCOperand op3) {
+    public BneInstruction(RISCOperand op1, RISCOperand op2, RISCOperand op3, RISCBasicBlock BB) {
         this.operandNum = 3;
         this.op1 = op1;
         this.setOperand(op1, 0);
@@ -17,6 +19,8 @@ public class BneInstruction extends RISCInstruction {
         this.op3 = op3;
         this.setOperand(op3, 2);
         this.type = ITYPE.bne;
+        System.out.println("ADD TO LIST " + op3.emit() );
+        BB.nextBlocknameList.add(op3.emit());
     }
 
     @Override

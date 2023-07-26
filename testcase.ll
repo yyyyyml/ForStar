@@ -204,101 +204,97 @@ define dso_local i32 @main(){
 	br label  %10
 
 10:
-	%11 = phi i32 [0, %0], [%28, %14]
+	%11 = phi i32 [0, %0], [%27, %14]
 	%12 = load i32, i32* @M
 	%13 = icmp slt i32 %11, %12
-	br i1 %13, label  %14, label  %29
+	br i1 %13, label  %14, label  %28
 
 14:
-	%15 = phi i32 [%11, %10]
-	%16= getelementptr [3 x float],[3 x float]* %9, i32 0, i32 %15
-	%17 = sitofp i32 %15 to float
-	store float %17, float* %16
-	%18= getelementptr [3 x float],[3 x float]* %8, i32 0, i32 %15
-	%19 = sitofp i32 %15 to float
-	store float %19, float* %18
-	%20= getelementptr [3 x float],[3 x float]* %7, i32 0, i32 %15
-	%21 = sitofp i32 %15 to float
-	store float %21, float* %20
-	%22= getelementptr [3 x float],[3 x float]* %6, i32 0, i32 %15
-	%23 = sitofp i32 %15 to float
-	store float %23, float* %22
-	%24= getelementptr [3 x float],[3 x float]* %5, i32 0, i32 %15
-	%25 = sitofp i32 %15 to float
-	store float %25, float* %24
-	%26= getelementptr [3 x float],[3 x float]* %4, i32 0, i32 %15
-	%27 = sitofp i32 %15 to float
-	store float %27, float* %26
-	%28 = add i32 %15, 1
+	%15= getelementptr [3 x float],[3 x float]* %9, i32 0, i32 %11
+	%16 = sitofp i32 %11 to float
+	store float %16, float* %15
+	%17= getelementptr [3 x float],[3 x float]* %8, i32 0, i32 %11
+	%18 = sitofp i32 %11 to float
+	store float %18, float* %17
+	%19= getelementptr [3 x float],[3 x float]* %7, i32 0, i32 %11
+	%20 = sitofp i32 %11 to float
+	store float %20, float* %19
+	%21= getelementptr [3 x float],[3 x float]* %6, i32 0, i32 %11
+	%22 = sitofp i32 %11 to float
+	store float %22, float* %21
+	%23= getelementptr [3 x float],[3 x float]* %5, i32 0, i32 %11
+	%24 = sitofp i32 %11 to float
+	store float %24, float* %23
+	%25= getelementptr [3 x float],[3 x float]* %4, i32 0, i32 %11
+	%26 = sitofp i32 %11 to float
+	store float %26, float* %25
+	%27 = add i32 %11, 1
 	br label  %10
 
-29:
-	%30= getelementptr [3 x float],[3 x float]* %9, i32 0, i32 0
-	%31= getelementptr [3 x float],[3 x float]* %8, i32 0, i32 0
-	%32= getelementptr [3 x float],[3 x float]* %7, i32 0, i32 0
-	%33= getelementptr [3 x float],[3 x float]* %6, i32 0, i32 0
-	%34= getelementptr [3 x float],[3 x float]* %5, i32 0, i32 0
-	%35= getelementptr [3 x float],[3 x float]* %4, i32 0, i32 0
-	%36= getelementptr [6 x float],[6 x float]* %3, i32 0, i32 0
-	%37= getelementptr [3 x float],[3 x float]* %2, i32 0, i32 0
-	%38= getelementptr [3 x float],[3 x float]* %1, i32 0, i32 0
-	%39 = call i32 @mul(float* %30, float* %31, float* %32, float* %33, float* %34, float* %35, float* %36, float* %37, float* %38)
-	br label  %40
+28:
+	%29= getelementptr [3 x float],[3 x float]* %9, i32 0, i32 0
+	%30= getelementptr [3 x float],[3 x float]* %8, i32 0, i32 0
+	%31= getelementptr [3 x float],[3 x float]* %7, i32 0, i32 0
+	%32= getelementptr [3 x float],[3 x float]* %6, i32 0, i32 0
+	%33= getelementptr [3 x float],[3 x float]* %5, i32 0, i32 0
+	%34= getelementptr [3 x float],[3 x float]* %4, i32 0, i32 0
+	%35= getelementptr [6 x float],[6 x float]* %3, i32 0, i32 0
+	%36= getelementptr [3 x float],[3 x float]* %2, i32 0, i32 0
+	%37= getelementptr [3 x float],[3 x float]* %1, i32 0, i32 0
+	%38 = call i32 @mul(float* %29, float* %30, float* %31, float* %32, float* %33, float* %34, float* %35, float* %36, float* %37)
+	br label  %39
 
-40:
-	%41 = phi i32 [%39, %29], [%49, %44]
-	%42 = load i32, i32* @N
-	%43 = icmp slt i32 %41, %42
-	br i1 %43, label  %44, label  %50
+39:
+	%40 = phi i32 [%38, %28], [%47, %43]
+	%41 = load i32, i32* @N
+	%42 = icmp slt i32 %40, %41
+	br i1 %42, label  %43, label  %48
 
-44:
-	%45 = phi i32 [%41, %40]
-	%46= getelementptr [6 x float],[6 x float]* %3, i32 0, i32 %45
-	%47 = load float, float* %46
-	%48 = fptosi float %47 to i32
-	call void @putint(i32 %48)
-	%49 = add i32 %45, 1
-	br label  %40
+43:
+	%44= getelementptr [6 x float],[6 x float]* %3, i32 0, i32 %40
+	%45 = load float, float* %44
+	%46 = fptosi float %45 to i32
+	call void @putint(i32 %46)
+	%47 = add i32 %40, 1
+	br label  %39
 
-50:
+48:
 	call void @putch(i32 10)
-	br label  %51
+	br label  %49
 
-51:
-	%52 = phi i32 [0, %50], [%60, %55]
-	%53 = load i32, i32* @N
-	%54 = icmp slt i32 %52, %53
-	br i1 %54, label  %55, label  %61
+49:
+	%50 = phi i32 [0, %48], [%57, %53]
+	%51 = load i32, i32* @N
+	%52 = icmp slt i32 %50, %51
+	br i1 %52, label  %53, label  %58
 
-55:
-	%56 = phi i32 [%52, %51]
-	%57= getelementptr [3 x float],[3 x float]* %2, i32 0, i32 %56
-	%58 = load float, float* %57
-	%59 = fptosi float %58 to i32
-	call void @putint(i32 %59)
-	%60 = add i32 %56, 1
-	br label  %51
+53:
+	%54= getelementptr [3 x float],[3 x float]* %2, i32 0, i32 %50
+	%55 = load float, float* %54
+	%56 = fptosi float %55 to i32
+	call void @putint(i32 %56)
+	%57 = add i32 %50, 1
+	br label  %49
 
-61:
+58:
 	call void @putch(i32 10)
-	br label  %62
+	br label  %59
 
-62:
-	%63 = phi i32 [0, %61], [%71, %66]
-	%64 = load i32, i32* @N
-	%65 = icmp slt i32 %63, %64
-	br i1 %65, label  %66, label  %72
+59:
+	%60 = phi i32 [0, %58], [%67, %63]
+	%61 = load i32, i32* @N
+	%62 = icmp slt i32 %60, %61
+	br i1 %62, label  %63, label  %68
 
-66:
-	%67 = phi i32 [%63, %62]
-	%68= getelementptr [3 x float],[3 x float]* %1, i32 0, i32 %67
-	%69 = load float, float* %68
-	%70 = fptosi float %69 to i32
-	call void @putint(i32 %70)
-	%71 = add i32 %67, 1
-	br label  %62
+63:
+	%64= getelementptr [3 x float],[3 x float]* %1, i32 0, i32 %60
+	%65 = load float, float* %64
+	%66 = fptosi float %65 to i32
+	call void @putint(i32 %66)
+	%67 = add i32 %60, 1
+	br label  %59
 
-72:
+68:
 	call void @putch(i32 10)
 	ret i32 0
 }
