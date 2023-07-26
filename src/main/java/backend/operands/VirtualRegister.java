@@ -10,6 +10,7 @@ public class VirtualRegister extends Register {
     private int stackLocation;
     private int spillTime = Integer.MAX_VALUE;
     private VirtualRegister vRegReplaced = null;
+    public boolean isSpilled = false;
 
     public VirtualRegister(int i, Value value) {
         this.name = i;
