@@ -97,7 +97,7 @@ public class RISCBasicBlock {
                     LiInstruction liInstruction = new LiInstruction(dst,src);
                     instructionList.add(liInstruction);
                 }
-                else if(src instanceof FloatVirtualRegister){
+                else if(src instanceof FloatVirtualRegister || src instanceof FloatRealRegister){
                     FmvInstruction fmvInstruction = new FmvInstruction(dst,src);
                     instructionList.add(fmvInstruction);
                 }
