@@ -305,7 +305,7 @@ public class NewRegAllocator implements BaseBackendPass {
                 boolean is14TempEmpty = true;
                 int tempIdFromZero = 0;
                 int tempStackIndex = riscFunc.stackIndex; // 保存这条指令分配临时栈空间之前的栈位置，用于恢复
-                boolean[] visitVReg = new boolean[100010]; // 这条指令中visit过哪些虚拟寄存器
+                boolean[] visitVReg = new boolean[1000010]; // 这条指令中visit过哪些虚拟寄存器
                 HashMap<Integer, RealRegister> nameMapReg = new HashMap<>();
 
                 for (int opIndex = 0; opIndex < operandList.size(); opIndex++) {

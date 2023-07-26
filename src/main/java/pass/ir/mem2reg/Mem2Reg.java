@@ -4,6 +4,7 @@ import ir.Instruction;
 import ir.Instructions.MemoryInst;
 import ir.Module;
 import ir.Use;
+import ir.Value;
 import ir.values.BasicBlock;
 import ir.values.Constant;
 import ir.values.Function;
@@ -48,7 +49,7 @@ public class Mem2Reg implements BaseIRPass {
 
             // 消除单分支的phi
             // TODO:貌似不可行
-//            deriveSinglePhi(func);
+            deriveSinglePhi(func);
         }
     }
 
@@ -259,7 +260,7 @@ public class Mem2Reg implements BaseIRPass {
                 for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
                     var inst = instInode.getElement();
                     // 找单分支的phi
-                    if (inst.getTag() == Instruction.TAG.PHI && inst.getNumOP() == 2) {
+                    if (inst.getTag() == Instruction.TAG.PHI) {
                         var newVal = inst.getOperandAt(0);
                         var newBB = (BasicBlock) inst.getOperandAt(1);
                         if (canDerive(inst)) {
@@ -276,11 +277,13 @@ public class Mem2Reg implements BaseIRPass {
     }
 
     private boolean canDerive(Instruction inst) {
-        for (Use use : inst.useList) {
-            var user = use.getUser();
-            if (user instanceof MemoryInst.Phi) {
-                return false;
-            }
+        if (inst.getNumOP() == 2) return true;
+        Value v = null;
+        for (Use opUse : inst.operandList) {
+            if (opUse.getPosition() % 2 != 0) continue;
+            if (v == null) v = opUse.getValue();
+            else if (v != opUse.getValue()) return false;
+
         }
         System.out.println("phi可消除：" + inst);
         return true;
