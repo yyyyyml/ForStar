@@ -4,821 +4,377 @@
 	.attribute stack_align, 16
 	.text
 	.align	1
-	.global	float_abs
-	.type	float_abs	@function
-float_abs:
+	.global	mul
+	.type	mul	@function
+mul:
 	addi sp,sp,-48
 	sd ra,40(sp)
 	sd s0,32(sp)
 	addi s0,sp,48
-.Bfloat_abs1:
-	fmv.s f0,f10
-	fmv.s f1,f10
-	li t2,0
-	fcvt.s.w f2,t2
-	flt.s t2,f10,f2
-	bne t2,zero,.Bfloat_abs6
-	j .Bfloat_abs4
-.Bfloat_abs4:
-	fmv.s f10,f0
-	ld ra,40(sp)
-	ld s0,32(sp)
-	addi sp,sp,48
-	jr ra
-.Bfloat_abs6:
-	fneg.s f0,f1
-	fmv.s f10,f0
-	ld ra,40(sp)
-	ld s0,32(sp)
-	addi sp,sp,48
-	jr ra
-	.size	float_abs, .-float_abs
-	.align	1
-	.global	circle_area
-	.type	circle_area	@function
-circle_area:
-	addi sp,sp,-48
-	sd ra,40(sp)
-	sd s0,32(sp)
-	addi s0,sp,48
-.Bcircle_area1:
-	fcvt.s.w f0,a0
-	lla t2,.F0
-	flw f1,0(t2)
-	fmul.s f2,f1,f0
-	fcvt.s.w f0,a0
-	fmul.s f1,f2,f0
-	mulw t2,a0,a0
-	fcvt.s.w f0,t2
-	lla t2,.F0
-	flw f2,0(t2)
-	fmul.s f3,f0,f2
-	fadd.s f0,f1,f3
-	li t2,2
-	fcvt.s.w f1,t2
-	fdiv.s f2,f0,f1
-	fmv.s f10,f2
-	ld ra,40(sp)
-	ld s0,32(sp)
-	addi sp,sp,48
-	jr ra
-	.size	circle_area, .-circle_area
-	.align	1
-	.global	float_eq
-	.type	float_eq	@function
-float_eq:
-	addi sp,sp,-48
-	sd ra,40(sp)
-	sd s0,32(sp)
-	addi s0,sp,48
-.Bfloat_eq2:
-	fsub.s f0,f10,f11
-	fmv.s f10,f0
-	fsd f0,-48(s0)
-	call float_abs
-	fld f0,-48(s0)
-	fmv.s f0,f10
-	lla t2,.F1
-	flw f1,0(t2)
-	flt.s t2,f0,f1
-	bne t2,zero,.Bfloat_eq6
-	j .Bfloat_eq12
-.Bfloat_eq6:
-	li t2,1
-	fcvt.s.w f0,t2
-	lla t2,.F2
-	flw f1,0(t2)
+.Bmul9:
+	flw f0,0(a0)
+	flw f1,0(a3)
 	fmul.s f2,f0,f1
-	li t2,2
-	fcvt.s.w f0,t2
-	fdiv.s f1,f2,f0
-	fcvt.w.s t2,f1,rtz
-	mv a0,t2
-	ld ra,40(sp)
-	ld s0,32(sp)
-	addi sp,sp,48
-	jr ra
-.Bfloat_eq12:
+	flw f0,4(a0)
+	flw f1,0(a4)
+	fmul.s f3,f0,f1
+	fadd.s f0,f2,f3
+	flw f1,8(a0)
+	flw f2,0(a5)
+	fmul.s f3,f1,f2
+	fadd.s f1,f0,f3
+	fsw f1,0(a6)
+	flw f0,0(a0)
+	flw f1,4(a3)
+	fmul.s f2,f0,f1
+	flw f0,4(a0)
+	flw f1,4(a4)
+	fmul.s f3,f0,f1
+	fadd.s f0,f2,f3
+	flw f1,8(a0)
+	flw f2,4(a5)
+	fmul.s f3,f1,f2
+	fadd.s f1,f0,f3
+	fsw f1,4(a6)
+	flw f0,0(a0)
+	flw f1,8(a3)
+	fmul.s f2,f0,f1
+	flw f0,4(a0)
+	flw f1,8(a4)
+	fmul.s f3,f0,f1
+	fadd.s f0,f2,f3
+	flw f1,8(a0)
+	flw f2,8(a5)
+	fmul.s f3,f1,f2
+	fadd.s f1,f0,f3
+	fsw f1,8(a6)
+	flw f0,0(a1)
+	flw f1,0(a3)
+	fmul.s f2,f0,f1
+	flw f0,4(a1)
+	flw f1,0(a4)
+	fmul.s f3,f0,f1
+	fadd.s f0,f2,f3
+	flw f1,8(a1)
+	flw f2,0(a5)
+	fmul.s f3,f1,f2
+	fadd.s f1,f0,f3
+	fsw f1,0(a7)
+	flw f0,0(a1)
+	flw f1,4(a3)
+	fmul.s f2,f0,f1
+	flw f0,4(a1)
+	flw f1,4(a4)
+	fmul.s f3,f0,f1
+	fadd.s f0,f2,f3
+	flw f1,8(a1)
+	flw f2,4(a5)
+	fmul.s f3,f1,f2
+	fadd.s f1,f0,f3
+	fsw f1,4(a7)
+	flw f0,0(a1)
+	flw f1,8(a3)
+	fmul.s f2,f0,f1
+	flw f0,4(a1)
+	flw f1,8(a4)
+	fmul.s f3,f0,f1
+	fadd.s f0,f2,f3
+	flw f1,8(a1)
+	flw f2,8(a5)
+	fmul.s f3,f1,f2
+	fadd.s f1,f0,f3
+	fsw f1,8(a7)
+	ld t2,0(s0)
+	flw f0,0(a2)
+	flw f1,0(a3)
+	fmul.s f2,f0,f1
+	flw f0,4(a2)
+	flw f1,0(a4)
+	fmul.s f3,f0,f1
+	fadd.s f0,f2,f3
+	flw f1,8(a2)
+	flw f2,0(a5)
+	fmul.s f3,f1,f2
+	fadd.s f1,f0,f3
+	fsw f1,0(t2)
+	flw f0,0(a2)
+	flw f1,4(a3)
+	fmul.s f2,f0,f1
+	flw f0,4(a2)
+	flw f1,4(a4)
+	fmul.s f3,f0,f1
+	fadd.s f0,f2,f3
+	flw f1,8(a2)
+	flw f2,4(a5)
+	fmul.s f3,f1,f2
+	fadd.s f1,f0,f3
+	fsw f1,4(t2)
+	flw f0,0(a2)
+	flw f1,8(a3)
+	fmul.s f2,f0,f1
+	flw f0,4(a2)
+	flw f1,8(a4)
+	fmul.s f3,f0,f1
+	fadd.s f0,f2,f3
+	flw f1,8(a2)
+	flw f2,8(a5)
+	fmul.s f3,f1,f2
+	fadd.s f1,f0,f3
+	fsw f1,8(t2)
 	li a0,0
 	ld ra,40(sp)
 	ld s0,32(sp)
 	addi sp,sp,48
 	jr ra
-	.size	float_eq, .-float_eq
-	.align	1
-	.global	error
-	.type	error	@function
-error:
-	addi sp,sp,-48
-	sd ra,40(sp)
-	sd s0,32(sp)
-	addi s0,sp,48
-.Berror0:
-	li a0,101
-	call putch
-	mv t2,a0
-	li a0,114
-	sd t2,-40(s0)
-	call putch
-	ld t2,-40(s0)
-	mv t2,a0
-	li a0,114
-	sd t2,-40(s0)
-	call putch
-	ld t2,-40(s0)
-	mv t2,a0
-	li a0,111
-	sd t2,-40(s0)
-	call putch
-	ld t2,-40(s0)
-	mv t2,a0
-	li a0,114
-	sd t2,-40(s0)
-	call putch
-	ld t2,-40(s0)
-	mv t2,a0
-	li a0,10
-	sd t2,-40(s0)
-	call putch
-	ld t2,-40(s0)
-	mv t2,a0
-	nop
-	ld ra,40(sp)
-	ld s0,32(sp)
-	addi sp,sp,48
-	jr ra
-	.size	error, .-error
-	.align	1
-	.global	ok
-	.type	ok	@function
-ok:
-	addi sp,sp,-48
-	sd ra,40(sp)
-	sd s0,32(sp)
-	addi s0,sp,48
-.Bok0:
-	li a0,111
-	call putch
-	mv t2,a0
-	li a0,107
-	sd t2,-40(s0)
-	call putch
-	ld t2,-40(s0)
-	mv t2,a0
-	li a0,10
-	sd t2,-40(s0)
-	call putch
-	ld t2,-40(s0)
-	mv t2,a0
-	nop
-	ld ra,40(sp)
-	ld s0,32(sp)
-	addi sp,sp,48
-	jr ra
-	.size	ok, .-ok
-	.align	1
-	.global	assert
-	.type	assert	@function
-assert:
-	addi sp,sp,-64
-	sd ra,56(sp)
-	sd s0,48(sp)
-	addi s0,sp,64
-.Bassert1:
-	li t2,0
-	subw t3,t2,a0
-	seqz t2,t3
-	bne t2,zero,.Bassert4
-	j .Bassert5
-.Bassert3:
-	nop
-	ld ra,56(sp)
-	ld s0,48(sp)
-	addi sp,sp,64
-	jr ra
-.Bassert4:
-	sd t2,-40(s0)
-	sd t3,-48(s0)
-	call error
-	ld t3,-48(s0)
-	ld t2,-40(s0)
-	mv t2,a0
-	j .Bassert3
-.Bassert5:
-	sd t2,-40(s0)
-	call ok
-	ld t2,-40(s0)
-	mv t2,a0
-	j .Bassert3
-	.size	assert, .-assert
-	.align	1
-	.global	assert_not
-	.type	assert_not	@function
-assert_not:
-	addi sp,sp,-64
-	sd ra,56(sp)
-	sd s0,48(sp)
-	addi s0,sp,64
-.Bassert_not1:
-	li t2,0
-	subw t3,a0,t2
-	seqz t2,t3
-	xori t2,t2,1
-	bne t2,zero,.Bassert_not4
-	j .Bassert_not5
-.Bassert_not3:
-	nop
-	ld ra,56(sp)
-	ld s0,48(sp)
-	addi sp,sp,64
-	jr ra
-.Bassert_not4:
-	sd t2,-40(s0)
-	sd t3,-48(s0)
-	call error
-	ld t3,-48(s0)
-	ld t2,-40(s0)
-	mv t2,a0
-	j .Bassert_not3
-.Bassert_not5:
-	sd t2,-40(s0)
-	call ok
-	ld t2,-40(s0)
-	mv t2,a0
-	j .Bassert_not3
-	.size	assert_not, .-assert_not
+	.size	mul, .-mul
 	.align	1
 	.global	main
 	.type	main	@function
 main:
-	addi sp,sp,-208
-	sd ra,200(sp)
-	sd s0,192(sp)
-	addi s0,sp,208
+	addi sp,sp,-240
+	sd ra,232(sp)
+	sd s0,224(sp)
+	addi s0,sp,240
 .Bmain0:
-	lla t2,.F3
-	flw f0,0(t2)
-	lla t2,.F3
-	flw f0,0(t2)
-	fmv.s f10,f0
-	lla t2,.F4
-	flw f1,0(t2)
-	lla t2,.F4
-	flw f1,0(t2)
-	fmv.s f11,f1
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	fsd f2,-184(s0)
-	fsd f3,-192(s0)
-	call float_eq
-	fld f3,-192(s0)
-	fld f2,-184(s0)
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	mv a0,t2
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	fsd f2,-184(s0)
-	fsd f3,-192(s0)
-	call assert_not
-	fld f3,-192(s0)
-	fld f2,-184(s0)
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	lla t2,.F5
-	flw f2,0(t2)
-	lla t2,.F5
-	flw f2,0(t2)
-	fmv.s f10,f2
-	lla t2,.F6
-	flw f3,0(t2)
-	lla t2,.F6
-	flw f0,0(t2)
-	fmv.s f11,f0
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	call float_eq
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	mv a0,t2
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	call assert_not
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	lla t2,.F6
-	flw f0,0(t2)
-	lla t2,.F6
-	flw f0,0(t2)
-	fmv.s f10,f0
-	lla t2,.F6
-	flw f0,0(t2)
-	lla t2,.F6
-	flw f0,0(t2)
-	fmv.s f11,f0
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	call float_eq
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	mv a0,t2
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	call assert
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	lla t2,.F7
-	flw f0,0(t2)
-	fcvt.w.s t2,f0,rtz
-	mv a0,t2
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	call circle_area
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	fmv.s f0,f10
-	li a0,5
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	call circle_area
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	fmv.s f1,f10
-	fmv.s f10,f0
-	fmv.s f11,f1
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	call float_eq
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	mv a0,t2
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	call assert
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	lla t2,.F8
-	flw f0,0(t2)
-	lla t2,.F8
-	flw f0,0(t2)
-	fmv.s f10,f0
-	lla t2,.F9
-	flw f0,0(t2)
-	lla t2,.F9
-	flw f0,0(t2)
-	fmv.s f11,f0
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	call float_eq
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	mv a0,t2
-	sd t2,-80(s0)
-	fsd f0,-168(s0)
-	call assert_not
-	fld f0,-168(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	lla t2,.F10
-	flw f0,0(t2)
-	lla t2,.F11
-	flw f1,0(t2)
-	feq.s t2,f0,f1
-	xori t3,t2,1
-	bne t3,zero,.Bmain11
-	j .Bmain12
-.Bmain11:
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	call ok
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	j .Bmain12
-.Bmain12:
-	lla t2,.F11
-	flw f0,0(t2)
-	lla t2,.F12
-	flw f1,0(t2)
-	feq.s t2,f0,f1
-	li t3,0
-	subw t4,t3,t2
-	seqz t2,t4
-	bne t2,zero,.Bmain16
-	j .Bmain17
-.Bmain16:
-	sd t2,-80(s0)
-	sd t4,-88(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	call ok
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld t4,-88(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	j .Bmain17
-.Bmain17:
-	lla t2,.F11
-	flw f0,0(t2)
-	lla t2,.F11
-	flw f1,0(t2)
-	feq.s t2,f0,f1
-	xori t3,t2,1
-	bne t3,zero,.Bmain20
-	j .Bmain22
-.Bmain19:
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	call error
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	mv t2,a0
-	j .Bmain22
-.Bmain20:
-	li t2,3
-	li t3,0
-	subw t4,t2,t3
-	seqz t2,t4
-	xori t2,t2,1
-	bne t2,zero,.Bmain19
-	j .Bmain22
-.Bmain22:
 	li t2,0
-	li t3,0
-	subw t4,t2,t3
-	seqz t2,t4
-	xori t2,t2,1
-	bne t2,zero,.Bmain31
-	j .Bmain32
-.Bmain24:
-	li t2,0
-	li t4,1
-	addi t5,s0,-56
-	mv a0,t5
-	li a1,0
-	li a2,40
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	sd t4,-96(s0)
-	sd t5,-104(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	call memset
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld t5,-104(s0)
-	ld t4,-96(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	mv t5,a0
-	lla t5,.F13
+	lla t3,N
+	li t4,3
+	sw t4,0(t3)
+	lla t3,M
+	li t4,3
+	sw t4,0(t3)
+	lla t3,L
+	li t4,3
+	sw t4,0(t3)
+	j .Bmain10
+.Bmain10:
+	mv t3,t2
+	lla t4,M
+	lw t5,0(t4)
+	slt t4,t2,t5
+	bne t4,zero,.Bmain14
+	j .Bmain29
+.Bmain14:
+	li t4,4
+	mulw t4,t4,t3
+	addi t4,t4,-136
+	add t5,s0,t4
+	fcvt.s.w f0,t3
+	fsw f0,0(t5)
+	li t4,4
+	mulw t4,t4,t3
+	addi t4,t4,-124
+	add t5,s0,t4
+	fcvt.s.w f1,t3
+	fsw f1,0(t5)
+	li t4,4
+	mulw t4,t4,t3
+	addi t4,t4,-112
+	add t5,s0,t4
+	fcvt.s.w f2,t3
+	fsw f2,0(t5)
+	li t4,4
+	mulw t4,t4,t3
+	addi t4,t4,-100
+	add t5,s0,t4
+	fcvt.s.w f3,t3
+	fsw f3,0(t5)
+	li t4,4
+	mulw t4,t4,t3
+	addi t4,t4,-88
+	add t5,s0,t4
+	fcvt.s.w f4,t3
+	fsw f4,0(t5)
+	li t4,4
+	mulw t4,t4,t3
+	addi t4,t4,-76
+	add t5,s0,t4
+	fcvt.s.w f5,t3
+	fsw f5,0(t5)
+	addi t4,t3,1
+	mv t2,t4
+	j .Bmain10
+.Bmain29:
+	addi t3,s0,-136
+	mv a0,t3
+	addi t3,s0,-124
+	mv a1,t3
+	addi t3,s0,-112
+	mv a2,t3
+	addi t3,s0,-100
+	mv a3,t3
+	addi t3,s0,-88
+	mv a4,t3
+	addi t3,s0,-76
+	mv a5,t3
+	addi t3,s0,-64
+	mv a6,t3
+	addi t3,s0,-40
+	mv a7,t3
+	addi t3,s0,-28
+	sd t3,0(sp)
+	sd t2,-160(s0)
+	sd t3,-168(s0)
+	fsd f0,-192(s0)
+	fsd f1,-200(s0)
+	fsd f2,-208(s0)
+	fsd f3,-216(s0)
+	fsd f4,-224(s0)
+	fsd f5,-232(s0)
+	call mul
+	fld f5,-232(s0)
+	fld f4,-224(s0)
+	fld f3,-216(s0)
+	fld f2,-208(s0)
+	fld f1,-200(s0)
+	fld f0,-192(s0)
+	ld t3,-168(s0)
+	ld t2,-160(s0)
+	mv t3,a0
+	mv t2,t3
+	j .Bmain40
+.Bmain40:
+	mv t3,t2
+	lla t4,N
+	lw t5,0(t4)
+	slt t4,t2,t5
+	bne t4,zero,.Bmain44
+	j .Bmain50
+.Bmain44:
+	li t4,4
+	mulw t4,t4,t3
+	addi t4,t4,-64
+	add t5,s0,t4
 	flw f0,0(t5)
-	fsw f0,-56(s0)
-	li t5,2
-	fcvt.s.w f0,t5
-	fsw f0,-52(s0)
-	addi t5,s0,-56
-	mv a0,t5
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	sd t4,-96(s0)
-	sd t5,-104(s0)
-	fsd f0,-168(s0)
-	call getfarray
-	fld f0,-168(s0)
-	ld t5,-104(s0)
-	ld t4,-96(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	mv t5,a0
-	mv t3,t5
-	j .Bmain34
-.Bmain31:
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	sd t4,-96(s0)
-	sd t5,-104(s0)
-	fsd f0,-168(s0)
-	call ok
-	fld f0,-168(s0)
-	ld t5,-104(s0)
-	ld t4,-96(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	mv t5,a0
-	j .Bmain24
-.Bmain32:
-	lla t5,.F14
-	flw f0,0(t5)
-	lla t5,.F11
-	flw f1,0(t5)
-	feq.s t5,f0,f1
-	xori t6,t5,1
-	bne t6,zero,.Bmain31
-	j .Bmain24
-.Bmain34:
-	mv t5,t2
-	mv t6,t3
-	mv s2,t3
-	mv s1,t4
-	li s3,1000000000
-	slt s4,t4,s3
-	bne s4,zero,.Bmain39
-	j .Bmain59
-.Bmain39:
-	mv t3,t6
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	sd t4,-96(s0)
-	sd t5,-104(s0)
-	sd t6,-112(s0)
-	sd s1,-120(s0)
-	sd s2,-128(s0)
-	sd s3,-136(s0)
-	sd s4,-144(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	call getfloat
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld s4,-144(s0)
-	ld s3,-136(s0)
-	ld s2,-128(s0)
-	ld s1,-120(s0)
-	ld t6,-112(s0)
-	ld t5,-104(s0)
-	ld t4,-96(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	fmv.s f0,f10
-	lla s3,.F0
-	flw f1,0(s3)
-	fmul.s f2,f1,f0
-	fmul.s f1,f2,f0
-	fcvt.w.s s3,f0,rtz
-	mv a0,s3
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	sd t4,-96(s0)
-	sd t5,-104(s0)
-	sd t6,-112(s0)
-	sd s1,-120(s0)
-	sd s2,-128(s0)
-	sd s3,-136(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	fsd f2,-184(s0)
-	call circle_area
-	fld f2,-184(s0)
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld s3,-136(s0)
-	ld s2,-128(s0)
-	ld s1,-120(s0)
-	ld t6,-112(s0)
-	ld t5,-104(s0)
-	ld t4,-96(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	fmv.s f2,f10
-	li s3,4
-	mulw s3,s3,t5
-	addi s3,s3,-56
-	add s4,s0,s3
-	li s3,4
-	mulw s3,s3,t5
-	addi s3,s3,-56
-	add s5,s0,s3
-	flw f3,0(s5)
-	fadd.s f4,f3,f0
-	fsw f4,0(s4)
-	fmv.s f10,f1
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	sd t4,-96(s0)
-	sd t5,-104(s0)
-	sd t6,-112(s0)
-	sd s1,-120(s0)
-	sd s2,-128(s0)
-	sd s3,-136(s0)
-	sd s4,-144(s0)
-	sd s5,-152(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	fsd f2,-184(s0)
-	fsd f3,-192(s0)
-	fsd f4,-200(s0)
-	call putfloat
-	fld f4,-200(s0)
-	fld f3,-192(s0)
-	fld f2,-184(s0)
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld s5,-152(s0)
-	ld s4,-144(s0)
-	ld s3,-136(s0)
-	ld s2,-128(s0)
-	ld s1,-120(s0)
-	ld t6,-112(s0)
-	ld t5,-104(s0)
-	ld t4,-96(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	mv s3,a0
-	li a0,32
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	sd t4,-96(s0)
-	sd t5,-104(s0)
-	sd t6,-112(s0)
-	sd s1,-120(s0)
-	sd s2,-128(s0)
-	sd s3,-136(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	fsd f2,-184(s0)
-	fsd f3,-192(s0)
-	fsd f4,-200(s0)
-	call putch
-	fld f4,-200(s0)
-	fld f3,-192(s0)
-	fld f2,-184(s0)
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld s3,-136(s0)
-	ld s2,-128(s0)
-	ld s1,-120(s0)
-	ld t6,-112(s0)
-	ld t5,-104(s0)
-	ld t4,-96(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	mv s3,a0
-	fcvt.w.s s3,f2,rtz
-	mv a0,s3
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	sd t4,-96(s0)
-	sd t5,-104(s0)
-	sd t6,-112(s0)
-	sd s1,-120(s0)
-	sd s2,-128(s0)
-	sd s3,-136(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	fsd f2,-184(s0)
-	fsd f3,-192(s0)
-	fsd f4,-200(s0)
+	fcvt.w.s t4,f0,rtz
+	mv a0,t4
+	sd t2,-160(s0)
+	sd t3,-168(s0)
+	sd t4,-176(s0)
+	fsd f0,-192(s0)
 	call putint
-	fld f4,-200(s0)
-	fld f3,-192(s0)
-	fld f2,-184(s0)
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld s3,-136(s0)
-	ld s2,-128(s0)
-	ld s1,-120(s0)
-	ld t6,-112(s0)
-	ld t5,-104(s0)
-	ld t4,-96(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	mv s3,a0
+	fld f0,-192(s0)
+	ld t4,-176(s0)
+	ld t3,-168(s0)
+	ld t2,-160(s0)
+	mv t4,a0
+	addi t4,t3,1
+	mv t2,t4
+	j .Bmain40
+.Bmain50:
+	li t2,0
 	li a0,10
-	sd t2,-80(s0)
-	sd t3,-88(s0)
-	sd t4,-96(s0)
-	sd t5,-104(s0)
-	sd t6,-112(s0)
-	sd s1,-120(s0)
-	sd s2,-128(s0)
-	sd s3,-136(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	fsd f2,-184(s0)
-	fsd f3,-192(s0)
-	fsd f4,-200(s0)
+	sd t2,-160(s0)
+	fsd f0,-192(s0)
 	call putch
-	fld f4,-200(s0)
-	fld f3,-192(s0)
-	fld f2,-184(s0)
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld s3,-136(s0)
-	ld s2,-128(s0)
-	ld s1,-120(s0)
-	ld t6,-112(s0)
-	ld t5,-104(s0)
-	ld t4,-96(s0)
-	ld t3,-88(s0)
-	ld t2,-80(s0)
-	mv s3,a0
-	lla s3,.F15
-	flw f0,0(s3)
-	fneg.s f1,f0
-	fneg.s f0,f1
-	fcvt.s.w f1,s1
-	fmul.s f2,f1,f0
-	fcvt.w.s s3,f2,rtz
-	mv t4,s3
-	addi s3,t5,1
-	mv t2,s3
-	j .Bmain34
-.Bmain59:
-	mv a0,s2
-	addi t2,s0,-56
-	mv a1,t2
-	sd t2,-80(s0)
-	sd s2,-88(s0)
-	fsd f0,-168(s0)
-	fsd f1,-176(s0)
-	fsd f2,-184(s0)
-	call putfarray
-	fld f2,-184(s0)
-	fld f1,-176(s0)
-	fld f0,-168(s0)
-	ld s2,-88(s0)
-	ld t2,-80(s0)
+	fld f0,-192(s0)
+	ld t2,-160(s0)
+	mv t3,a0
+	j .Bmain51
+.Bmain51:
+	mv t3,t2
+	lla t4,N
+	lw t5,0(t4)
+	slt t4,t2,t5
+	bne t4,zero,.Bmain55
+	j .Bmain61
+.Bmain55:
+	li t4,4
+	mulw t4,t4,t3
+	addi t4,t4,-40
+	add t5,s0,t4
+	flw f0,0(t5)
+	fcvt.w.s t4,f0,rtz
+	mv a0,t4
+	sd t2,-160(s0)
+	sd t3,-168(s0)
+	sd t4,-176(s0)
+	fsd f0,-192(s0)
+	call putint
+	fld f0,-192(s0)
+	ld t4,-176(s0)
+	ld t3,-168(s0)
+	ld t2,-160(s0)
+	mv t4,a0
+	addi t4,t3,1
+	mv t2,t4
+	j .Bmain51
+.Bmain61:
+	li t2,0
+	li a0,10
+	sd t2,-160(s0)
+	fsd f0,-192(s0)
+	call putch
+	fld f0,-192(s0)
+	ld t2,-160(s0)
+	mv t3,a0
+	j .Bmain62
+.Bmain62:
+	mv t3,t2
+	lla t4,N
+	lw t5,0(t4)
+	slt t4,t2,t5
+	bne t4,zero,.Bmain66
+	j .Bmain72
+.Bmain66:
+	li t4,4
+	mulw t4,t4,t3
+	addi t4,t4,-28
+	add t5,s0,t4
+	flw f0,0(t5)
+	fcvt.w.s t4,f0,rtz
+	mv a0,t4
+	sd t2,-160(s0)
+	sd t3,-168(s0)
+	sd t4,-176(s0)
+	fsd f0,-192(s0)
+	call putint
+	fld f0,-192(s0)
+	ld t4,-176(s0)
+	ld t3,-168(s0)
+	ld t2,-160(s0)
+	mv t4,a0
+	addi t4,t3,1
+	mv t2,t4
+	j .Bmain62
+.Bmain72:
+	li a0,10
+	sd t2,-160(s0)
+	sd t3,-168(s0)
+	sd t4,-176(s0)
+	fsd f0,-192(s0)
+	call putch
+	fld f0,-192(s0)
+	ld t4,-176(s0)
+	ld t3,-168(s0)
+	ld t2,-160(s0)
 	mv t2,a0
 	li a0,0
-	ld ra,200(sp)
-	ld s0,192(sp)
-	addi sp,sp,208
+	ld ra,232(sp)
+	ld s0,224(sp)
+	addi sp,sp,240
 	jr ra
 	.size	main, .-main
+	.global	M
+	.bss
 	.align	2
-.F0:
-	.word	1078530011
+	.type	M,@object
+	.size	M,4
+M:
+	.zero	4
+	.global	L
+	.bss
 	.align	2
-.F1:
-	.word	897988541
+	.type	L,@object
+	.size	L,4
+L:
+	.zero	4
+	.global	N
+	.bss
 	.align	2
-.F2:
-	.word	1073741824
-	.align	2
-.F3:
-	.word	1033895936
-	.align	2
-.F4:
-	.word	-956241920
-	.align	2
-.F5:
-	.word	1119752446
-	.align	2
-.F6:
-	.word	1107966695
-	.align	2
-.F7:
-	.word	1085276160
-	.align	2
-.F8:
-	.word	1130954752
-	.align	2
-.F9:
-	.word	1166012416
-	.align	2
-.F10:
-	.word	1069547520
-	.align	2
-.F11:
-	.word	0
-	.align	2
-.F12:
-	.word	1079194419
-	.align	2
-.F13:
-	.word	1065353216
-	.align	2
-.F14:
-	.word	1050253722
-	.align	2
-.F15:
-	.word	1092616192
+	.type	N,@object
+	.size	N,4
+N:
+	.zero	4
 	.ident	"ForStar"
 	.section	.note.GNU-stack,"",@progbits

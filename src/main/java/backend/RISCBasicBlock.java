@@ -1101,7 +1101,11 @@ public class RISCBasicBlock {
             //超出部分放栈里
             else {
                 RISCOperand mem = new Memory((myPIndex - 8) * 8, 1);
-                return mem;
+                VirtualRegister virtualRegister = getNewVr();
+                LdInstruction ldInstruction = new LdInstruction(virtualRegister,mem);
+                instructionList.add(ldInstruction);
+                riscFunction.valueRISCOperandHashMap.put(value,virtualRegister);
+                return virtualRegister;
             }
         }
         //判断为浮点类型
