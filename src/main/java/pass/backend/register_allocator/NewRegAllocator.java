@@ -15,7 +15,7 @@ import java.util.*;
  * 简单的线性扫描寄存器分配
  * 目前改成了以函数为单位的
  */
-public class RegisterAllocator implements BaseBackendPass {
+public class NewRegAllocator implements BaseBackendPass {
 
     public boolean lessRegSave = true;
 
@@ -31,12 +31,12 @@ public class RegisterAllocator implements BaseBackendPass {
     private ArrayList<RISCFunction> time2Function; // 时间点对应的函数，其实现在这个没什么用了，因为以函数为单位了，但是不改了
 
 
-    public RegisterAllocator() {
+    public NewRegAllocator() {
         liveIntervalMapList = new HashMap<>();
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>(); // 编号对应的虚拟寄存器对象
         time2Function = new ArrayList<>();
-        regNum = 15;
+        regNum = 13;
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
@@ -127,8 +127,8 @@ public class RegisterAllocator implements BaseBackendPass {
         int index = 0; // 用于记录位置，存到live interval中
 
         // 先遍历一遍 记录变量的live interval
-        riscFunc.stackSize = riscFunc.localStackIndex + 8;
-        riscFunc.stackIndex = riscFunc.localStackIndex + 8;
+        riscFunc.stackSize = riscFunc.localStackIndex + 16;
+        riscFunc.stackIndex = riscFunc.localStackIndex + 16;
 //        System.out.println("zhan----------------------" + riscFunc.stackSize);
 
         System.out.println(riscFunc.stackSize);
@@ -244,7 +244,7 @@ public class RegisterAllocator implements BaseBackendPass {
             curFunc.stackSize += 8;
             curFunc.stackIndex += 8;
             // 记录spillTime
-            spillVreg.setSpillTime(time);
+            spillVreg.setSpillTime(0);
             // 从activeList移除spill
             activeList.remove(spillEntry);
             // 将curEntry加入activeList，并按End排序
@@ -301,6 +301,8 @@ public class RegisterAllocator implements BaseBackendPass {
                     continue;
                 }
                 LinkedList<RISCOperand> operandList = riscInst.getOperandList();
+                boolean is13TempEmpty = true;
+                boolean is14TempEmpty = true;
                 int tempIdFromZero = 0;
                 int tempStackIndex = riscFunc.stackIndex; // 保存这条指令分配临时栈空间之前的栈位置，用于恢复
                 boolean[] visitVReg = new boolean[100010]; // 这条指令中visit过哪些虚拟寄存器
@@ -327,20 +329,6 @@ public class RegisterAllocator implements BaseBackendPass {
 //                            System.out.println("visit" + name + "--" + register);
                             }
 
-                            // 判断这个时刻当前vReg要使用的寄存器是不是之前有别的vReg在用，如果是需要把之前的值溢出到栈中
-                            var vRegReplaced = vReg.getvRegReplaced();
-                            if (vRegReplaced != null && vRegReplaced.getSpillTime() == position && vRegReplaced.getRealReg() != -1) {
-                                // 说明这时需要把那个被替换的寄存器溢出到相应栈中
-                                // 需要被换的寄存器
-                                RealRegister realReg = new RealRegister(vRegReplaced.getRealReg(), 11);
-                                // 添加写回内存的指令 sd
-                                var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
-                                RISCInstruction sdInst = new SdInstruction(realReg, stack); // 存入栈
-                                riscInstList.add(instIndex, sdInst); // 在当前这条指令之前，入栈
-                                instIndex++; // 跳过加的指令
-
-                            }
-
                             if (vReg.getSpillTime() > position) {
                                 // spillTime > 当前位置，说明分配过寄存器
                                 var id = vReg.getRealReg();
@@ -354,11 +342,19 @@ public class RegisterAllocator implements BaseBackendPass {
                                 System.out.println("put" + name + "--" + newReg.emit());
 
                             } else {
-                                // 说明此时这个虚拟寄存器中的变量已经在栈中（spillTime < 当前位置）
-                                // 或是第一次出现就需要溢出到栈里，即没有分配过寄存器（spillTime == 当前位置）
+                                // 说明这个变量一直在栈中
                                 // 需要暂时替换一个寄存器，用完后再换回
                                 var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
-                                var tempRegID = curRegUsage.getNextFreeRegister();
+                                int tempRegID;
+                                if (is14TempEmpty) {
+                                    tempRegID = 14;
+                                    is14TempEmpty = false;
+                                } else if (is13TempEmpty) {
+                                    tempRegID = 13;
+                                    is13TempEmpty = false;
+                                } else {
+                                    tempRegID = curRegUsage.getNextFreeRegister();
+                                }
 
                                 if (tempRegID != -1) {
                                     // 有空闲，分配成功
@@ -452,22 +448,6 @@ public class RegisterAllocator implements BaseBackendPass {
 //                            System.out.println("visit" + name + "--" + register);
                         }
 
-
-                        // 判断这个时刻当前vReg要使用的寄存器是不是之前有别的vReg在用，如果是需要把之前的值溢出到栈中
-                        var vRegReplaced = vReg.getvRegReplaced();
-                        if (vRegReplaced != null && (vRegReplaced.getSpillTime() <= position && !vRegReplaced.isSpilled) && vRegReplaced.getRealReg() != -1) {
-                            // 说明这时需要把那个被替换的寄存器溢出到相应栈中
-                            vRegReplaced.isSpilled = true; // 下次再遇到不会再做一次spill操作
-                            // 需要被换的寄存器
-                            RealRegister realReg = new RealRegister(vRegReplaced.getRealReg(), 11);
-                            // 添加写回内存的指令 sd
-                            var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
-                            RISCInstruction sdInst = new SdInstruction(realReg, stack); // 存入栈
-                            riscInstList.add(instIndex, sdInst); // 在当前这条指令之前，入栈
-                            instIndex++; // 跳过加的指令
-
-                        }
-
                         if (vReg.getSpillTime() > position) {
                             // spillTime > 当前位置，说明分配过寄存器
                             var id = vReg.getRealReg();
@@ -481,11 +461,19 @@ public class RegisterAllocator implements BaseBackendPass {
                             System.out.println("put" + name + "--" + newReg.emit());
 
                         } else {
-                            // 说明此时这个虚拟寄存器中的变量已经在栈中（spillTime < 当前位置）
-                            // 或是第一次出现就需要溢出到栈里，即没有分配过寄存器（spillTime == 当前位置）
+                            // 说明这个变量一直在栈中
                             // 需要暂时替换一个寄存器，用完后再换回
                             var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
-                            var tempRegID = curRegUsage.getNextFreeRegister();
+                            int tempRegID;
+                            if (is14TempEmpty) {
+                                tempRegID = 14;
+                                is14TempEmpty = false;
+                            } else if (is13TempEmpty) {
+                                tempRegID = 13;
+                                is13TempEmpty = false;
+                            } else {
+                                tempRegID = curRegUsage.getNextFreeRegister();
+                            }
 
                             if (tempRegID != -1) {
                                 // 有空闲，分配成功
@@ -565,69 +553,7 @@ public class RegisterAllocator implements BaseBackendPass {
                             }
                         }
                     }
-//                        for (RISCOperand op : operandList) {
-//                            System.out.println(op.emit() + " " + op.getPosition());
-//                        }
-//                        System.out.println(opPosition);
-//                        System.out.println("---------------------" + riscInst.emit());
                 }
-
-//                // 找return位置，修改return的上面3条有关栈空间的指令
-//                if (instIndex == riscInstList.size() - 1 && riscInst.type == RISCInstruction.ITYPE.jr) {
-//                    riscFunc.stackSize += 8 * riscFunc.operandStackCounts; // 给参数留位置
-//                    if (riscFunc.stackSize % 16 == 12) {
-//                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
-//                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//                        raMemory.setOffset(riscFunc.stackSize - 8 + 4);
-//
-//                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
-//                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//                        s0Memory.setOffset(riscFunc.stackSize - 16 + 4);
-//
-//                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
-//                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
-//                        addiMemory.setVal(riscFunc.stackSize + 4);
-//                    } else if (riscFunc.stackSize % 16 == 8) {
-//                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
-//                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//                        raMemory.setOffset(riscFunc.stackSize - 8 + 8);
-//
-//                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
-//                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//                        s0Memory.setOffset(riscFunc.stackSize - 16 + 8);
-//
-//                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
-//                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
-//                        addiMemory.setVal(riscFunc.stackSize + 8);
-//                    } else if (riscFunc.stackSize % 16 == 4) {
-//                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
-//                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//                        raMemory.setOffset(riscFunc.stackSize - 8 + 12);
-//
-//                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
-//                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//                        s0Memory.setOffset(riscFunc.stackSize - 16 + 12);
-//
-//                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
-//                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
-//                        addiMemory.setVal(riscFunc.stackSize + 12);
-//                    } else {
-//                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
-//                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//                        raMemory.setOffset(riscFunc.stackSize - 8);
-//
-//                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
-//                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//                        s0Memory.setOffset(riscFunc.stackSize - 16);
-//
-//                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
-//                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
-//                        addiMemory.setVal(riscFunc.stackSize);
-//                    }
-//                    riscFunc.stackSize -= 8 * riscFunc.operandStackCounts; // 恢复
-//
-//                }
-
                 // 找call指令，处理寄存器的保存
                 if (riscInst.type == RISCInstruction.ITYPE.call) {
                     //
@@ -675,79 +601,10 @@ public class RegisterAllocator implements BaseBackendPass {
                 }
 
                 riscFunc.stackIndex = tempStackIndex; // 恢复栈的位置
+
             }
         }
 
-//        // 修改函数的前4条指令
-//        var firstInstList = riscBBList.get(0).getInstructionList();
-//
-//        riscFunc.stackSize += 8 * riscFunc.operandStackCounts; // 给参数留位置
-//        if (riscFunc.stackSize % 16 == 12) {
-//            RISCInstruction addispInst = firstInstList.get(0);
-//            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
-//            addisp.setVal(-riscFunc.stackSize - 4);
-//
-//            RISCInstruction ldraInst = firstInstList.get(1);
-//            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//            raMemory.setOffset(riscFunc.stackSize - 8 + 4);
-//
-//            RISCInstruction lds0Inst = firstInstList.get(2);
-//            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//            s0Memory.setOffset(riscFunc.stackSize - 16 + 4);
-//
-//            RISCInstruction addis0Inst = firstInstList.get(3);
-//            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-//            addis0.setVal(riscFunc.stackSize + 4);
-//        } else if (riscFunc.stackSize % 16 == 8) {
-//            RISCInstruction addispInst = firstInstList.get(0);
-//            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
-//            addisp.setVal(-riscFunc.stackSize - 8);
-//
-//            RISCInstruction ldraInst = firstInstList.get(1);
-//            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//            raMemory.setOffset(riscFunc.stackSize - 8 + 8);
-//
-//            RISCInstruction lds0Inst = firstInstList.get(2);
-//            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//            s0Memory.setOffset(riscFunc.stackSize - 16 + 8);
-//
-//            RISCInstruction addis0Inst = firstInstList.get(3);
-//            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-//            addis0.setVal(riscFunc.stackSize + 8);
-//        } else if (riscFunc.stackSize % 16 == 4) {
-//            RISCInstruction addispInst = firstInstList.get(0);
-//            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
-//            addisp.setVal(-riscFunc.stackSize - 12);
-//
-//            RISCInstruction ldraInst = firstInstList.get(1);
-//            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//            raMemory.setOffset(riscFunc.stackSize - 8 + 12);
-//
-//            RISCInstruction lds0Inst = firstInstList.get(2);
-//            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//            s0Memory.setOffset(riscFunc.stackSize - 16 + 12);
-//
-//            RISCInstruction addis0Inst = firstInstList.get(3);
-//            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-//            addis0.setVal(riscFunc.stackSize + 12);
-//        } else {
-//            RISCInstruction addispInst = firstInstList.get(0);
-//            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
-//            addisp.setVal(-riscFunc.stackSize);
-//
-//            RISCInstruction ldraInst = firstInstList.get(1);
-//            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//            raMemory.setOffset(riscFunc.stackSize - 8);
-//
-//            RISCInstruction lds0Inst = firstInstList.get(2);
-//            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//            s0Memory.setOffset(riscFunc.stackSize - 16);
-//
-//            RISCInstruction addis0Inst = firstInstList.get(3);
-//            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-//            addis0.setVal(riscFunc.stackSize);
-//        }
-//        riscFunc.stackSize -= 8 * riscFunc.operandStackCounts; // 恢复
 
     }
 

@@ -48,7 +48,7 @@ public class Mem2Reg implements BaseIRPass {
 
             // 消除单分支的phi
             // TODO:貌似不可行
-            deriveSinglePhi(func);
+//            deriveSinglePhi(func);
         }
     }
 
