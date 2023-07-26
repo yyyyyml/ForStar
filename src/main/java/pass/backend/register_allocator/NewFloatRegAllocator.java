@@ -31,6 +31,8 @@ public class NewFloatRegAllocator implements BaseBackendPass {
     private RegisterUsage curRegUsage;
     private ArrayList<RISCFunction> time2Function; // 时间点对应的函数，其实现在这个没什么用了，因为以函数为单位了，但是不改了
 
+    int index;
+
 
     public NewFloatRegAllocator() {
         liveIntervalMapList = new HashMap<>();
@@ -96,6 +98,7 @@ public class NewFloatRegAllocator implements BaseBackendPass {
             intMapVreg.clear();
             time2Function.clear();
             regUsageTracker = new RegisterUsageTracker(regNum);
+            index = 0;
 
 
             // 初始化LiveInterval
@@ -104,18 +107,6 @@ public class NewFloatRegAllocator implements BaseBackendPass {
             // 线性扫描
             linearScan();
 
-//            // 打印寄存器分配情况
-//            for (Map.Entry<Integer, RegisterUsage> entry : regUsageTracker.getRegisterUsageMap().entrySet()) {
-//                int timePoint = entry.getKey();
-//                RegisterUsage registerUsage = entry.getValue();
-//
-//                System.out.println("Time Point: " + timePoint);
-//                for (int register = 0; register < registerUsage.getRegNum(); register++) {
-//                    boolean isUsed = registerUsage.isRegisterUsed(register);
-//                    System.out.println("Register " + register + ": " + (isUsed ? "Used" : "Free"));
-//                }
-//                System.out.println("-------------------");
-//            }
 
             // 生成新的MIR
             renameRegister(riscFunc);
@@ -127,70 +118,75 @@ public class NewFloatRegAllocator implements BaseBackendPass {
     }
 
 
-    private void initializeLiveInterval(RISCFunction riscFunc) {
-        int index = 0; // 用于记录位置，存到live interval中
+    private void dfs(RISCBasicBlock riscBB, RISCFunction riscFunc) {
+        if (riscBB.visitedLiveFloat) {
+            return;
+        }
+        riscBB.visitedLiveFloat = true;
+        LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
+        for (RISCInstruction riscInst : riscInstList) {
+            time2Function.add(index, riscFunc);
+            riscInst.setId(index); // 记录每条指令的标号
+            LinkedList<RISCOperand> operandList = riscInst.getOperandList();
+            for (RISCOperand riscOp : operandList) {
+                if (riscOp.isFloatVirtualRegister()) {
+                    var name = ((FloatVirtualRegister) riscOp).getName();
+                    intMapVreg.put(name, (FloatVirtualRegister) riscOp);
+                    if (!liveIntervalMapList.containsKey(name)) {
+                        // 记录Start
+                        setLiveIntervalStart(name, index);
 
-        // 先遍历一遍 记录变量的live interval 这里用的是寄存器分配后新的stackSize
-        riscFunc.stackSize += 8;
+                    } else {
+                        // 记录End
+                        setLiveIntervalEnd(name, index + 1);
+
+                    }
+                } else if (riscOp.isMemory()) {
+                    var mem = (Memory) riscOp;
+                    if (mem.basicAddress.isFloatVirtualRegister()) {
+                        var name = ((FloatVirtualRegister) mem.basicAddress).getName();
+                        intMapVreg.put(name, (FloatVirtualRegister) mem.basicAddress);
+                        if (!liveIntervalMapList.containsKey(name)) {
+                            // 记录Start
+                            setLiveIntervalStart(name, index);
+                        } else {
+                            // 记录End
+                            setLiveIntervalEnd(name, index + 1);
+                        }
+                    }
+                }
+            }
+            index += 1;
+        }
+
+        // Recursively process successors in depth-first manner
+        for (RISCBasicBlock succ : riscBB.nextlist) {
+            dfs(succ, riscFunc);
+        }
+
+    }
+
+    private void initializeLiveInterval(RISCFunction riscFunc) {
+
+
+        // 先遍历一遍 记录变量的live interval
+        riscFunc.stackSize = riscFunc.stackSize + 16;
         riscFunc.stackIndex = riscFunc.stackSize;
+        // System.out.println("zhan----------------------" + riscFunc.stackSize);
 
         System.out.println(riscFunc.stackSize);
         LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
         for (RISCBasicBlock riscBB : riscBBList) {
-            LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
-            int instSeq = 0; // 块内顺序
-            for (RISCInstruction riscInst : riscInstList) {
-                time2Function.add(index, riscFunc);
-                riscInst.setId(index); // 记录每条指令的标号
-                LinkedList<RISCOperand> operandList = riscInst.getOperandList();
-                for (RISCOperand riscOp : operandList) {
-                    if (riscOp.isFloatVirtualRegister()) {
-                        var name = ((FloatVirtualRegister) riscOp).getName();
-                        intMapVreg.put(name, (FloatVirtualRegister) riscOp);
-                        if (!liveIntervalMapList.containsKey(name)) {
-                            // 记录Start
-                            if (((FloatVirtualRegister) riscOp).getName() < riscFunc.phiCount) {
-                                setLiveIntervalStart(name, index - instSeq);
-                            } else {
-                                setLiveIntervalStart(name, index);
-                            }
-                        } else {
-                            // 记录End
-                            if (((FloatVirtualRegister) riscOp).getName() < riscFunc.floatPhiCount) {
-                                // 如果最后一次出现是定义点，说明跳转到前面的块使用，生存周期结束要延长到这个块结束
-                                int newIndex = index + riscInstList.size() - instSeq;
-                                setLiveIntervalEnd(name, newIndex);
-                            } else {
-                                setLiveIntervalEnd(name, index + 1);
-                            }
-                        }
-                    } else if (riscOp.isMemory()) {
-                        var mem = (Memory) riscOp;
-                        if (mem.basicAddress.isFloatVirtualRegister()) {
-                            var name = ((FloatVirtualRegister) mem.basicAddress).getName();
-                            intMapVreg.put(name, (FloatVirtualRegister) mem.basicAddress);
-                            if (!liveIntervalMapList.containsKey(name)) {
-                                // 记录Start
-                                setLiveIntervalStart(name, index);
-                            } else {
-                                // 记录End
-                                setLiveIntervalEnd(name, index + 1);
-                            }
-                        }
-                    }
-                }
-                index += 1;
-                instSeq += 1;
-            }
+            dfs(riscBB, riscFunc);
         }
 
         sortedLiveIntervalList = sortByStart();
-//        for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
-//            System.out.println("Register: vr_f" + entry.getKey().toString());
-//            System.out.println("Start: " + entry.getValue().getStart());
-//            System.out.println("End: " + entry.getValue().getEnd());
-//            System.out.println();
-//        }
+        for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
+            System.out.println("Register: vr_" + entry.getKey().toString());
+            System.out.println("Start: " + entry.getValue().getStart());
+            System.out.println("End: " + entry.getValue().getEnd());
+            System.out.println();
+        }
     }
 
     private void linearScan() {

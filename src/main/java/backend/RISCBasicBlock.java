@@ -12,7 +12,6 @@ import ir.values.Constant;
 import ir.values.Function;
 import ir.values.GlobalVariable;
 import org.antlr.v4.runtime.misc.Pair;
-import pass.PassDriver;
 import util.IList;
 
 import java.util.HashMap;
@@ -28,6 +27,10 @@ public class RISCBasicBlock {
     public Boolean isEndblock = false;
     public HashMap<Value, Instruction> condInstructionMap = new HashMap<>();
     public int i;
+    public boolean visitedLive = false;
+    public boolean visitedLiveFloat = false;
+    public LinkedList<RISCBasicBlock> prelist;
+    public LinkedList<RISCBasicBlock> nextlist;
 
     public String getBlockName() {
         return blockName;

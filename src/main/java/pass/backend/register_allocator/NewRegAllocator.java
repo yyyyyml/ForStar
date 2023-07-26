@@ -30,6 +30,8 @@ public class NewRegAllocator implements BaseBackendPass {
     private RegisterUsage curRegUsage;
     private ArrayList<RISCFunction> time2Function; // 时间点对应的函数，其实现在这个没什么用了，因为以函数为单位了，但是不改了
 
+    private int index;
+
 
     public NewRegAllocator() {
         liveIntervalMapList = new HashMap<>();
@@ -94,6 +96,7 @@ public class NewRegAllocator implements BaseBackendPass {
             intMapVreg.clear();
             time2Function.clear();
             regUsageTracker = new RegisterUsageTracker(regNum);
+            index = 0; // 用于记录位置，存到live interval中
 
 
             // 初始化LiveInterval
@@ -123,63 +126,66 @@ public class NewRegAllocator implements BaseBackendPass {
     }
 
 
+    private void dfs(RISCBasicBlock riscBB, RISCFunction riscFunc) {
+        if (riscBB.visitedLive) {
+            return;
+        }
+        riscBB.visitedLive = true;
+        LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
+        for (RISCInstruction riscInst : riscInstList) {
+            time2Function.add(index, riscFunc);
+            riscInst.setId(index); // 记录每条指令的标号
+            LinkedList<RISCOperand> operandList = riscInst.getOperandList();
+            for (RISCOperand riscOp : operandList) {
+                if (riscOp.isVirtualRegister()) {
+                    var name = ((VirtualRegister) riscOp).getName();
+                    intMapVreg.put(name, (VirtualRegister) riscOp);
+                    if (!liveIntervalMapList.containsKey(name)) {
+                        // 记录Start
+                        setLiveIntervalStart(name, index);
+
+                    } else {
+                        // 记录End
+                        setLiveIntervalEnd(name, index + 1);
+
+                    }
+                } else if (riscOp.isMemory()) {
+                    var mem = (Memory) riscOp;
+                    if (mem.basicAddress.isVirtualRegister()) {
+                        var name = ((VirtualRegister) mem.basicAddress).getName();
+                        intMapVreg.put(name, (VirtualRegister) mem.basicAddress);
+                        if (!liveIntervalMapList.containsKey(name)) {
+                            // 记录Start
+                            setLiveIntervalStart(name, index);
+                        } else {
+                            // 记录End
+                            setLiveIntervalEnd(name, index + 1);
+                        }
+                    }
+                }
+            }
+            index += 1;
+        }
+
+        // Recursively process successors in depth-first manner
+        for (RISCBasicBlock succ : riscBB.nextlist) {
+            dfs(succ, riscFunc);
+        }
+
+    }
+
     private void initializeLiveInterval(RISCFunction riscFunc) {
-        int index = 0; // 用于记录位置，存到live interval中
+
 
         // 先遍历一遍 记录变量的live interval
         riscFunc.stackSize = riscFunc.localStackIndex + 16;
         riscFunc.stackIndex = riscFunc.localStackIndex + 16;
-//        System.out.println("zhan----------------------" + riscFunc.stackSize);
+        // System.out.println("zhan----------------------" + riscFunc.stackSize);
 
         System.out.println(riscFunc.stackSize);
         LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
         for (RISCBasicBlock riscBB : riscBBList) {
-            LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
-            int instSeq = 0; // 块内顺序
-            for (RISCInstruction riscInst : riscInstList) {
-                time2Function.add(index, riscFunc);
-                riscInst.setId(index); // 记录每条指令的标号
-                LinkedList<RISCOperand> operandList = riscInst.getOperandList();
-                for (RISCOperand riscOp : operandList) {
-                    if (riscOp.isVirtualRegister()) {
-                        var name = ((VirtualRegister) riscOp).getName();
-                        intMapVreg.put(name, (VirtualRegister) riscOp);
-                        if (!liveIntervalMapList.containsKey(name)) {
-                            // 记录Start
-                            if (((VirtualRegister) riscOp).getName() < riscFunc.phiCount) {
-                                setLiveIntervalStart(name, index - instSeq);
-                            } else {
-                                setLiveIntervalStart(name, index);
-                            }
-                        } else {
-                            // 记录End
-                            if (((VirtualRegister) riscOp).getName() < riscFunc.phiCount) {
-                                // 如果最后一次出现是phi的虚拟寄存器，说明跳转到前面的块使用，生存周期结束要延长到这个块结束
-                                int newIndex = index + riscInstList.size() - instSeq;
-                                setLiveIntervalEnd(name, newIndex);
-                            } else {
-                                setLiveIntervalEnd(name, index + 1);
-                            }
-
-                        }
-                    } else if (riscOp.isMemory()) {
-                        var mem = (Memory) riscOp;
-                        if (mem.basicAddress.isVirtualRegister()) {
-                            var name = ((VirtualRegister) mem.basicAddress).getName();
-                            intMapVreg.put(name, (VirtualRegister) mem.basicAddress);
-                            if (!liveIntervalMapList.containsKey(name)) {
-                                // 记录Start
-                                setLiveIntervalStart(name, index);
-                            } else {
-                                // 记录End
-                                setLiveIntervalEnd(name, index + 1);
-                            }
-                        }
-                    }
-                }
-                index += 1;
-                instSeq += 1;
-            }
+            dfs(riscBB, riscFunc);
         }
 
         sortedLiveIntervalList = sortByStart();
@@ -190,6 +196,7 @@ public class NewRegAllocator implements BaseBackendPass {
             System.out.println();
         }
     }
+
 
     private void linearScan() {
         for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
