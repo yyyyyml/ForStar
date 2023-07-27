@@ -3,7 +3,6 @@ package backend.instructions;
 import backend.RISCBasicBlock;
 import backend.RISCInstruction;
 import backend.RISCOperand;
-import backend.operands.MyString;
 
 public class BneInstruction extends RISCInstruction {
     public RISCOperand op1;
@@ -24,7 +23,7 @@ public class BneInstruction extends RISCInstruction {
     }
 
     @Override
-    public boolean idDef(int position) {
+    public boolean isDef(int position) {
         return false;
     }
 

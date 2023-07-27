@@ -140,6 +140,9 @@ public class NewRegAllocator implements BaseBackendPass {
                 if (riscOp.isVirtualRegister()) {
                     var name = ((VirtualRegister) riscOp).getName();
                     intMapVreg.put(name, (VirtualRegister) riscOp);
+                    if (riscInst.isDef(riscOp.getPosition())) {
+                        ;
+                    }
                     if (!liveIntervalMapList.containsKey(name)) {
                         // 记录Start
                         setLiveIntervalStart(name, index);
@@ -243,6 +246,9 @@ public class NewRegAllocator implements BaseBackendPass {
             curVreg.setRealReg(spillVreg.getRealReg());
             //
             curVreg.setvRegReplaced(spillVreg);
+            // 删掉之前的寄存器分配记录
+            regUsageTracker.delete(spillVreg.getRealReg(), spillEntry.getValue());
+            regUsageTracker.add(spillVreg.getRealReg(), spillEntry.getValue());
             // 分配栈地址
             var curFunc = time2Function.get(time);
             spillVreg.setStackLocation(curFunc.stackIndex);
@@ -269,6 +275,7 @@ public class NewRegAllocator implements BaseBackendPass {
             curFunc.stackIndex += 8;
             // 记录spillTime
             curVreg.setSpillTime(time);
+
 
         }
     }
@@ -376,7 +383,9 @@ public class NewRegAllocator implements BaseBackendPass {
                                     // 添加写回内存的指令 sd
                                     var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
                                     RISCInstruction ldInst = new LdInstruction(tempReg, stack); // 存入溢出的值
+                                    ldInst.setId(-2);
                                     RISCInstruction sdInst = new SdInstruction(tempReg, stack); // 写回溢出值
+                                    sdInst.setId(-2);
                                     if (vReg.getSpillTime() < position) {
                                         riscInstList.add(instIndex + 1, sdInst);
                                         riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
@@ -420,6 +429,11 @@ public class NewRegAllocator implements BaseBackendPass {
 
                                     RISCInstruction inst3 = new SdInstruction(tempReg, spillStack_same); // 写回溢出值
                                     RISCInstruction inst4 = new LdInstruction(tempReg, tempStack_same); // 恢复原值
+
+                                    inst1.setId(-2);
+                                    inst2.setId(-2);
+                                    inst3.setId(-2);
+                                    inst4.setId(-2);
 
                                     mem.basicAddress = tempReg; // 当前指令
                                     nameMapReg.put(name, tempReg); // 记录替换成了哪个
@@ -497,6 +511,8 @@ public class NewRegAllocator implements BaseBackendPass {
                                 var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
                                 RISCInstruction ldInst = new LdInstruction(tempReg, stack); // 存入溢出的值
                                 RISCInstruction sdInst = new SdInstruction(tempReg, stack); // 写回溢出值
+                                ldInst.setId(-2);
+                                sdInst.setId(-2);
                                 if (vReg.getSpillTime() < position) {
                                     riscInstList.add(instIndex + 1, sdInst);
                                     riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
@@ -541,6 +557,11 @@ public class NewRegAllocator implements BaseBackendPass {
                                 RISCInstruction inst3 = new SdInstruction(tempReg, spillStack_same); // 写回溢出值
                                 RISCInstruction inst4 = new LdInstruction(tempReg, tempStack_same); // 恢复原值
 
+                                inst1.setId(-2);
+                                inst2.setId(-2);
+                                inst3.setId(-2);
+                                inst4.setId(-2);
+
                                 riscInst.setOpLocal(tempReg, opIndex, opPosition); // 当前指令
                                 nameMapReg.put(name, tempReg); // 记录替换成了哪个
                                 System.out.println("put" + name + "--" + tempReg.emit());
@@ -580,6 +601,9 @@ public class NewRegAllocator implements BaseBackendPass {
 
                                 RISCInstruction inst2 = new LdInstruction(reg, tempStack_same); // 恢复原值
 
+                                inst1.setId(-2);
+                                inst2.setId(-2);
+
                                 riscInstList.add(instIndex, inst1);
                                 instIndex += 1; // 跳过加在前面的指令
                                 riscInstList.add(instIndex + 1, inst2);
@@ -597,6 +621,9 @@ public class NewRegAllocator implements BaseBackendPass {
                             RISCInstruction inst1 = new SdInstruction(reg, tempStack); // 保存原值
 
                             RISCInstruction inst2 = new LdInstruction(reg, tempStack_same); // 恢复原值
+
+                            inst1.setId(-2);
+                            inst2.setId(-2);
 
                             riscInstList.add(instIndex, inst1);
                             instIndex += 1; // 跳过加在前面的指令

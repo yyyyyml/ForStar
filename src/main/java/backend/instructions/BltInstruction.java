@@ -20,7 +20,7 @@ public class BltInstruction extends RISCInstruction {
     }
 
     @Override
-    public boolean idDef(int position) {
+    public boolean isDef(int position) {
         return false;
     }
 

@@ -126,7 +126,7 @@ public class NewFloatRegAllocator implements BaseBackendPass {
         LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
         for (RISCInstruction riscInst : riscInstList) {
             time2Function.add(index, riscFunc);
-            riscInst.setId(index); // 记录每条指令的标号
+            if (riscInst.getId() == -1) riscInst.setId(index); // 记录每条指令的标号
             LinkedList<RISCOperand> operandList = riscInst.getOperandList();
             for (RISCOperand riscOp : operandList) {
                 if (riscOp.isFloatVirtualRegister()) {

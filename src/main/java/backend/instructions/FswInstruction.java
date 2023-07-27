@@ -16,8 +16,8 @@ public class FswInstruction extends RISCInstruction {
         this.type = RISCInstruction.ITYPE.fsw;
     }
 
-    public boolean idDef(int position) {
-        if(position == 1) return true;
+    public boolean isDef(int position) {
+        if (position == 1) return true;
         else return false;
     }
 

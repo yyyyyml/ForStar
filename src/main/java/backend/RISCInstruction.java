@@ -1,5 +1,7 @@
 package backend;
 
+import ir.values.BasicBlock;
+
 import java.util.LinkedList;
 
 public class RISCInstruction {
@@ -7,6 +9,7 @@ public class RISCInstruction {
     public ITYPE type;
     private LinkedList<RISCOperand> operandList;
     private int id = -1;
+    private BasicBlock parentBlock;
 
     public RISCInstruction() {
         this.operandList = new LinkedList<>();
@@ -24,9 +27,8 @@ public class RISCInstruction {
         return operandNum;
     }
 
-    public boolean idDef(int position){
-        if(position == 0 ) return true;
-        else return false;
+    public boolean isDef(int position) {
+        return position == 0;
     }
 
     public LinkedList<RISCOperand> getOperandList() {
@@ -82,6 +84,14 @@ public class RISCInstruction {
 
     public String emit() {
         return type.name();
+    }
+
+    public BasicBlock getParentBlock() {
+        return parentBlock;
+    }
+
+    public void setParentBlock(BasicBlock parentBlock) {
+        this.parentBlock = parentBlock;
     }
 
     public enum ITYPE {

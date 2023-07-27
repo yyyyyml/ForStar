@@ -17,8 +17,8 @@ public class FsdInstruction extends RISCInstruction {
     }
 
     @Override
-    public boolean idDef(int position) {
-        if(position == 1) return true;
+    public boolean isDef(int position) {
+        if (position == 1) return true;
         else return false;
     }
 

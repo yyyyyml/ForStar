@@ -17,9 +17,10 @@ public class JInstruction extends RISCInstruction {
     }
 
     @Override
-    public boolean idDef(int position) {
+    public boolean isDef(int position) {
         return false;
     }
+
     @Override
     public String emit() {
         return this.type.name() + " " + getOperandAt(0).emit();

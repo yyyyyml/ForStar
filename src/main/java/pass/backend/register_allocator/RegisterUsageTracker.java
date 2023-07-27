@@ -41,4 +41,23 @@ public class RegisterUsageTracker {
         // 找到了，返回
         return registerUsage;
     }
+
+
+    public void delete(int realReg, LiveInterval interval) {
+        int start = interval.getStart();
+        int end = interval.getEnd();
+        for (int i = start; i < end; i++) {
+            var usage = getRegisterUsage(i);
+            usage.freeRegister(realReg);
+        }
+    }
+
+    public void add(int realReg, LiveInterval interval) {
+        int start = interval.getStart();
+        int end = interval.getEnd();
+        for (int i = start; i < end; i++) {
+            var usage = getRegisterUsage(i);
+            usage.allocateRegister(realReg);
+        }
+    }
 }
