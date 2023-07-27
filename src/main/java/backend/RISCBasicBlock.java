@@ -29,8 +29,10 @@ public class RISCBasicBlock {
     public int i;
     public boolean visitedLive = false;
     public boolean visitedLiveFloat = false;
-    public LinkedList<RISCBasicBlock> prelist;
-    public LinkedList<RISCBasicBlock> nextlist;
+    public LinkedList<String> preBlocknameList = new LinkedList<>();
+    public LinkedList<String> nextBlocknameList = new LinkedList<>();
+    public LinkedList<RISCBasicBlock> prelist = new LinkedList<>();
+    public LinkedList<RISCBasicBlock> nextlist = new LinkedList<>();
 
     public String getBlockName() {
         return blockName;
@@ -87,7 +89,9 @@ public class RISCBasicBlock {
     public RISCBasicBlock(BasicBlock irBB, Function irFunc, RISCFunction riscFunc) {
         this.riscFunction = riscFunc;
         this.irFunction = irFunc;
-        this.blockName = irFunc.getName() + irBB.getName();
+        this.blockName =".B"+ irFunc.getName() + irBB.getName();
+        riscFunction.blockHashMap.put(blockName,this);
+
         //每个块开始为phi参数中的值赋个值
         if(riscFunction.blockPhiMap.containsKey(irBB)){
             LinkedList<Pair<Value,Value>> list = riscFunction.blockPhiMap.get(irBB);
@@ -123,14 +127,7 @@ public class RISCBasicBlock {
                 case ALLOCA -> translateAlloca(curInst);
                 case STORE -> translateStore(curInst);
                 case LOAD -> translateLoad(curInst);
-                case ADD -> translateCaculate(curInst);
-                case SUB -> translateCaculate(curInst);
-                case MUL -> translateCaculate(curInst);
-                case DIV -> translateCaculate(curInst);
-                case FADD -> translateCaculate(curInst);
-                case FSUB -> translateCaculate(curInst);
-                case FMUL -> translateCaculate(curInst);
-                case FDIV -> translateCaculate(curInst);
+                case ADD, SUB, MUL, DIV, FADD, FSUB, FDIV, FMUL -> translateCaculate(curInst);
                 case CALL -> translateCall(curInst);
                 case BR -> translateBr(curInst);
                 case NE, LT, LE, GT, GE, EQ, FEQ, FGE, FGT, FLE, FLT, FNE -> translateCond(curInst);
@@ -141,6 +138,7 @@ public class RISCBasicBlock {
                 case FNEG -> translateFneg(curInst);
                 case PTRCAST -> translatePtrcast(curInst);
             }
+            //PHI
             if(riscFunction.phiMap.containsKey(curInst)){
                 LinkedList<Value> list = riscFunction.phiMap.get(curInst);
                 for (Value vd : list)
@@ -549,7 +547,7 @@ public class RISCBasicBlock {
             //vName.deleteCharAt(0);
             String vN = new String(vName);
             MyString ms = new MyString(".B" + irFunction.getName() + vN);
-            JInstruction j = new JInstruction(ms);
+            JInstruction j = new JInstruction(ms,this);
             instructionList.add(j);
         } else if (paraCount == 3) {
             Value vcond = curInst.getOperandAt(0);
@@ -561,14 +559,14 @@ public class RISCBasicBlock {
                     StringBuffer vName = new StringBuffer(v.getName());
                     String vN = new String(vName);
                     MyString ms = new MyString(".B" + irFunction.getName() + vN);
-                    JInstruction j = new JInstruction(ms);
+                    JInstruction j = new JInstruction(ms,this);
                     instructionList.add(j);
                 } else {
                     Value v = curInst.getOperandAt(2);
                     StringBuffer vName = new StringBuffer(v.getName());
                     String vN = new String(vName);
                     MyString ms = new MyString(".B" + irFunction.getName() + vN);
-                    JInstruction j = new JInstruction(ms);
+                    JInstruction j = new JInstruction(ms,this);
                     instructionList.add(j);
                 }
             } else {
@@ -587,10 +585,10 @@ public class RISCBasicBlock {
                 String vN2 = new String(vName2);
                 MyString dst2 = new MyString(".B" + irFunction.getName() + vN2);
 
-                BneInstruction bne = new BneInstruction(rop1, new RealRegister(0), dst1);
+                BneInstruction bne = new BneInstruction(rop1, new RealRegister(0), dst1,this);
                 instructionList.add(bne);
 
-                JInstruction j = new JInstruction(dst2);
+                JInstruction j = new JInstruction(dst2,this);
                 instructionList.add(j);
             }
         }
