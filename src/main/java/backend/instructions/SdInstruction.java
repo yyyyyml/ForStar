@@ -16,6 +16,11 @@ public class SdInstruction extends RISCInstruction {
         this.type = ITYPE.sd;
     }
 
+    @Override
+    public boolean idDef(int position) {
+        if(position == 1) return true;
+        else return false;
+    }
 
     public String emit() {
 //        return this.type.name()+" "+op1.emit()+","+op2.emit();

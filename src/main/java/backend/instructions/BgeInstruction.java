@@ -20,6 +20,11 @@ public class BgeInstruction extends RISCInstruction {
     }
 
     @Override
+    public boolean idDef(int position) {
+        return false;
+    }
+
+    @Override
     public String emit() {
         return this.type.name() + " " + getOperandAt(0).emit() + "," + getOperandAt(1).emit() + "," + getOperandAt(2).emit();
     }

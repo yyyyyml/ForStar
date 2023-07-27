@@ -10,6 +10,11 @@ public class CallInstruction extends RISCInstruction {
         this.type = ITYPE.call;
     }
 
+    @Override
+    public boolean idDef(int position) {
+        return false;
+    }
+
     public String emit() {
         return this.type.name() + " " + funcName;
     }

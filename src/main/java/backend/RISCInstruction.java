@@ -24,6 +24,11 @@ public class RISCInstruction {
         return operandNum;
     }
 
+    public boolean idDef(int position){
+        if(position == 0 ) return true;
+        else return false;
+    }
+
     public LinkedList<RISCOperand> getOperandList() {
         return this.operandList;
     }
