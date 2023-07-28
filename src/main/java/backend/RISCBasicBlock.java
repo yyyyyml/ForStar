@@ -33,8 +33,10 @@ public class RISCBasicBlock {
     public LinkedList<String> nextBlocknameList = new LinkedList<>();
     public LinkedList<RISCBasicBlock> prelist = new LinkedList<>();
     public LinkedList<RISCBasicBlock> nextlist = new LinkedList<>();
-    public RealRegister tempRegister = new RealRegister(13,11);
-    public FloatRealRegister floatTempRegister = new FloatRealRegister(23+18);
+    public int firstId = Integer.MAX_VALUE;
+    public int lastId;
+    public RealRegister tempRegister = new RealRegister(13, 11);
+    public FloatRealRegister floatTempRegister = new FloatRealRegister(23 + 18);
 
     public String getBlockName() {
         return blockName;

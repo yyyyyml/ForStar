@@ -31,6 +31,8 @@ public class NewRegAllocator implements BaseBackendPass {
     private ArrayList<RISCFunction> time2Function; // 时间点对应的函数，其实现在这个没什么用了，因为以函数为单位了，但是不改了
 
     private int index;
+    private int minStart;
+    private int maxEnd;
 
 
     public NewRegAllocator() {
@@ -110,12 +112,12 @@ public class NewRegAllocator implements BaseBackendPass {
 //                int timePoint = entry.getKey();
 //                RegisterUsage registerUsage = entry.getValue();
 //
-//                System.out.println("Time Point: " + timePoint);
+//                System.out.print("Time Point: " + timePoint + " | ");
 //                for (int register = 0; register < registerUsage.getRegNum(); register++) {
 //                    boolean isUsed = registerUsage.isRegisterUsed(register);
-//                    System.out.println("Register " + register + ": " + (isUsed ? "Used" : "Free"));
+//                    System.out.print(register + ": " + (isUsed ? "√" : "x") + " | ");
 //                }
-//                System.out.println("-------------------");
+//                System.out.println();
 //            }
 
             // 生成新的MIR
@@ -135,21 +137,35 @@ public class NewRegAllocator implements BaseBackendPass {
         for (RISCInstruction riscInst : riscInstList) {
             time2Function.add(index, riscFunc);
             riscInst.setId(index); // 记录每条指令的标号
+            System.out.println(riscBB.getBlockName() + "的第一个标号" + riscBB.firstId);
             LinkedList<RISCOperand> operandList = riscInst.getOperandList();
+            int opIndex = 0;
             for (RISCOperand riscOp : operandList) {
+
                 if (riscOp.isVirtualRegister()) {
+//                    System.out.println("有虚拟寄存器要处理"+riscOp.emit()+"位置是"+opIndex);
                     var name = ((VirtualRegister) riscOp).getName();
                     intMapVreg.put(name, (VirtualRegister) riscOp);
-                    if (riscInst.isDef(riscOp.getPosition())) {
-                        ;
-                    }
                     if (!liveIntervalMapList.containsKey(name)) {
+//                        System.out.println("操作数"+opIndex+"第一次出现在"+riscInst.emit());
                         // 记录Start
                         setLiveIntervalStart(name, index);
 
                     } else {
-                        // 记录End
-                        setLiveIntervalEnd(name, index + 1);
+                        if (riscInst.isDef(opIndex)) {
+                            // 又出现了定义点，希望进行dfs，看会不会回到前面的块的更小的start点
+                            Visitor visitor = new Visitor();
+                            minStart = liveIntervalMapList.get(name).getStart(); // 初始化为当前start
+                            maxEnd = 0;
+                            System.out.println("操作数" + opIndex + "出现了定义点" + riscInst.emit());
+                            dfsDef(riscBB, visitor, liveIntervalMapList.get(name).getEnd());
+                            setLiveIntervalStart(name, minStart);
+                            setLiveIntervalEnd(name, maxEnd);
+                        } else {
+                            // 记录End
+                            setLiveIntervalEnd(name, index + 1);
+                        }
+
 
                     }
                 } else if (riscOp.isMemory()) {
@@ -166,6 +182,7 @@ public class NewRegAllocator implements BaseBackendPass {
                         }
                     }
                 }
+                opIndex += 1;
             }
             index += 1;
         }
@@ -174,6 +191,45 @@ public class NewRegAllocator implements BaseBackendPass {
         for (RISCBasicBlock succ : riscBB.nextlist) {
             dfs(succ, riscFunc);
         }
+
+    }
+
+    private void dfsFirst(RISCBasicBlock riscBB, Visitor visitor) {
+        if (visitor.isVisited(riscBB)) {
+            return;
+        }
+        visitor.markVisited(riscBB);
+
+        riscBB.firstId = index; // 记录块的起始点
+        LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
+        for (RISCInstruction riscInst : riscInstList) {
+            riscInst.setId(index); // 记录每条指令的标号
+            index += 1;
+        }
+
+        riscBB.lastId = index - 1; // 记录块的结束点
+        for (RISCBasicBlock nextBB : riscBB.nextlist) {
+            dfsFirst(nextBB, visitor);
+        }
+
+    }
+
+    private void dfsDef(RISCBasicBlock riscBB, Visitor visitor, int curMaxEnd) {
+        if (visitor.isVisited(riscBB)) {
+            return;
+        }
+        visitor.markVisited(riscBB);
+//        System.out.println("dfsDef:"+riscBB.getBlockName()+":"+riscBB.firstId+"-curMaxEnd:"+curMaxEnd);
+        if (riscBB.firstId < minStart) {
+            System.out.println("minStart改变：" + minStart + "->" + riscBB.firstId);
+            System.out.println("curMaxEnd改变：" + maxEnd + "->" + Math.max(maxEnd, curMaxEnd));
+            minStart = riscBB.firstId;
+            maxEnd = Math.max(maxEnd, curMaxEnd); // 说明这条支路能回来，路上经过的maxEnd可能要更新
+        }
+        for (RISCBasicBlock nextBB : riscBB.nextlist) {
+            dfsDef(nextBB, visitor, Math.max(nextBB.lastId, curMaxEnd));
+        }
+
 
     }
 
@@ -187,9 +243,17 @@ public class NewRegAllocator implements BaseBackendPass {
 
         System.out.println(riscFunc.stackSize);
         LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
-        for (RISCBasicBlock riscBB : riscBBList) {
+        Visitor visitor = new Visitor();
+
+        index = 0;
+        for (RISCBasicBlock riscBB : riscBBList)
+            dfsFirst(riscBB, visitor);// 先记录一下id
+
+
+        index = 0;
+        for (RISCBasicBlock riscBB : riscBBList)
             dfs(riscBB, riscFunc);
-        }
+
 
         sortedLiveIntervalList = sortByStart();
         for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
@@ -216,6 +280,7 @@ public class NewRegAllocator implements BaseBackendPass {
                 // 分配一个寄存器
                 var curVreg = intMapVreg.get(entry.getKey());
                 int freeRegister = curRegUsage.getNextFreeRegister();
+                regUsageTracker.add(freeRegister, entry.getValue());//直接分所有时间的
                 System.out.println("Time: " + time + " Allocating register: vr_" + entry.getKey() + " -> " + freeRegister);
                 curVreg.setRealReg(freeRegister);
                 // 加入activeList，并按End排序
@@ -248,7 +313,7 @@ public class NewRegAllocator implements BaseBackendPass {
             curVreg.setvRegReplaced(spillVreg);
             // 删掉之前的寄存器分配记录
             regUsageTracker.delete(spillVreg.getRealReg(), spillEntry.getValue());
-            regUsageTracker.add(spillVreg.getRealReg(), spillEntry.getValue());
+            regUsageTracker.add(spillVreg.getRealReg(), curEntry.getValue());
             // 分配栈地址
             var curFunc = time2Function.get(time);
             spillVreg.setStackLocation(curFunc.stackIndex);

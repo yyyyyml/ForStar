@@ -32,6 +32,8 @@ public class NewFloatRegAllocator implements BaseBackendPass {
     private ArrayList<RISCFunction> time2Function; // 时间点对应的函数，其实现在这个没什么用了，因为以函数为单位了，但是不改了
 
     int index;
+    private int minStart;
+    private int maxEnd;
 
 
     public NewFloatRegAllocator() {
@@ -126,8 +128,9 @@ public class NewFloatRegAllocator implements BaseBackendPass {
         LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
         for (RISCInstruction riscInst : riscInstList) {
             time2Function.add(index, riscFunc);
-            if (riscInst.getId() == -1) riscInst.setId(index); // 记录每条指令的标号
+//            if (riscInst.getId() == -1) riscInst.setId(index); // 记录每条指令的标号
             LinkedList<RISCOperand> operandList = riscInst.getOperandList();
+            int opIndex = 0;
             for (RISCOperand riscOp : operandList) {
                 if (riscOp.isFloatVirtualRegister()) {
                     var name = ((FloatVirtualRegister) riscOp).getName();
@@ -137,8 +140,19 @@ public class NewFloatRegAllocator implements BaseBackendPass {
                         setLiveIntervalStart(name, index);
 
                     } else {
-                        // 记录End
-                        setLiveIntervalEnd(name, index + 1);
+                        if (riscInst.isDef(opIndex)) {
+                            // 又出现了定义点，希望进行dfs，看会不会回到前面的块的更小的start点
+                            Visitor visitor = new Visitor();
+                            minStart = liveIntervalMapList.get(name).getStart(); // 初始化为当前start
+                            maxEnd = 0;
+                            System.out.println("操作数" + opIndex + "出现了定义点" + riscInst.emit());
+                            dfsDef(riscBB, visitor, liveIntervalMapList.get(name).getEnd());
+                            setLiveIntervalStart(name, minStart);
+                            setLiveIntervalEnd(name, maxEnd);
+                        } else {
+                            // 记录End
+                            setLiveIntervalEnd(name, index + 1);
+                        }
 
                     }
                 } else if (riscOp.isMemory()) {
@@ -155,6 +169,7 @@ public class NewFloatRegAllocator implements BaseBackendPass {
                         }
                     }
                 }
+                opIndex += 1;
             }
             index += 1;
         }
@@ -166,9 +181,26 @@ public class NewFloatRegAllocator implements BaseBackendPass {
 
     }
 
+    private void dfsDef(RISCBasicBlock riscBB, Visitor visitor, int curMaxEnd) {
+        if (visitor.isVisited(riscBB)) {
+            return;
+        }
+        visitor.markVisited(riscBB);
+//        System.out.println("dfsDef:"+riscBB.getBlockName()+":"+riscBB.firstId+"-curMaxEnd:"+curMaxEnd);
+        if (riscBB.firstId < minStart) {
+            System.out.println("minStart改变：" + minStart + "->" + riscBB.firstId);
+            System.out.println("curMaxEnd改变：" + maxEnd + "->" + Math.max(maxEnd, curMaxEnd));
+            minStart = riscBB.firstId;
+            maxEnd = Math.max(maxEnd, curMaxEnd); // 说明这条支路能回来，路上经过的maxEnd可能要更新
+        }
+        for (RISCBasicBlock nextBB : riscBB.nextlist) {
+            dfsDef(nextBB, visitor, Math.max(nextBB.lastId, curMaxEnd));
+        }
+
+
+    }
+
     private void initializeLiveInterval(RISCFunction riscFunc) {
-
-
         // 先遍历一遍 记录变量的live interval
         riscFunc.stackSize = riscFunc.stackSize + 16;
         riscFunc.stackIndex = riscFunc.stackSize;
@@ -176,13 +208,14 @@ public class NewFloatRegAllocator implements BaseBackendPass {
 
         System.out.println(riscFunc.stackSize);
         LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
+        index = 0;
         for (RISCBasicBlock riscBB : riscBBList) {
             dfs(riscBB, riscFunc);
         }
 
         sortedLiveIntervalList = sortByStart();
         for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
-            System.out.println("Register: vr_" + entry.getKey().toString());
+            System.out.println("Register: fvr_" + entry.getKey().toString());
             System.out.println("Start: " + entry.getValue().getStart());
             System.out.println("End: " + entry.getValue().getEnd());
             System.out.println();
@@ -204,6 +237,7 @@ public class NewFloatRegAllocator implements BaseBackendPass {
                 // 分配一个寄存器
                 var curVreg = intMapVreg.get(entry.getKey());
                 int freeRegister = curRegUsage.getNextFreeRegister();
+                regUsageTracker.add(freeRegister, entry.getValue());//直接分所有时间的
 //                System.out.println("Time: " + time + " Allocating register: vr_f" + entry.getKey() + " -> " + freeRegister);
                 curVreg.setRealReg(freeRegister);
                 // 加入activeList，并按End排序
@@ -234,6 +268,9 @@ public class NewFloatRegAllocator implements BaseBackendPass {
             curVreg.setRealReg(spillVreg.getRealReg());
             //
             curVreg.setvRegReplaced(spillVreg);
+            // 删掉之前的寄存器分配记录
+            regUsageTracker.delete(spillVreg.getRealReg(), spillEntry.getValue());
+            regUsageTracker.add(spillVreg.getRealReg(), curEntry.getValue());
             // 分配栈地址
             var curFunc = time2Function.get(time);
             spillVreg.setStackLocation(curFunc.stackIndex);
@@ -242,7 +279,7 @@ public class NewFloatRegAllocator implements BaseBackendPass {
             curFunc.stackSize += 8;
             curFunc.stackIndex += 8;
             // 记录spillTime
-            spillVreg.setSpillTime(time);
+            spillVreg.setSpillTime(0);
             // 从activeList移除spill
             activeList.remove(spillEntry);
             // 将curEntry加入activeList，并按End排序
@@ -303,7 +340,7 @@ public class NewFloatRegAllocator implements BaseBackendPass {
                 boolean is23TempEmpty = true;
                 int tempIdFromZero = 0;
                 int tempStackIndex = riscFunc.stackIndex; // 保存这条指令分配临时栈空间之前的栈位置，用于恢复
-                boolean[] visitVReg = new boolean[100010]; // 这条指令中visit过哪些虚拟寄存器
+                boolean[] visitVReg = new boolean[1000010]; // 这条指令中visit过哪些虚拟寄存器
                 HashMap<Integer, FloatRealRegister> nameMapReg = new HashMap<>();
 
                 for (int opIndex = 0; opIndex < operandList.size(); opIndex++) {
