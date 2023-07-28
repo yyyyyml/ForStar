@@ -37,7 +37,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>(); // 编号对应的虚拟寄存器对象
         time2Function = new ArrayList<>();
-        regNum = 8;
+        regNum = 22;
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
@@ -299,6 +299,8 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                     continue;
                 }
                 LinkedList<RISCOperand> operandList = riscInst.getOperandList();
+                boolean is22TempEmpty = true;
+                boolean is23TempEmpty = true;
                 int tempIdFromZero = 0;
                 int tempStackIndex = riscFunc.stackIndex; // 保存这条指令分配临时栈空间之前的栈位置，用于恢复
                 boolean[] visitVReg = new boolean[100010]; // 这条指令中visit过哪些虚拟寄存器
@@ -330,7 +332,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                             if (vRegReplaced != null && vRegReplaced.getSpillTime() == position && vRegReplaced.getRealReg() != -1) {
                                 // 说明这时需要把那个被替换的寄存器溢出到相应栈中
                                 // 需要被换的寄存器
-                                FloatRealRegister realReg = new FloatRealRegister(vRegReplaced.getRealReg());
+                                FloatRealRegister realReg = new FloatRealRegister(vRegReplaced.getRealReg() + 18);
                                 // 添加写回内存的指令 sd
                                 var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
                                 RISCInstruction sdInst = new FsdInstruction(realReg, stack); // 存入栈
@@ -342,7 +344,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                             if (vReg.getSpillTime() > position) {
                                 // spillTime > 当前位置，说明分配过寄存器
                                 var id = vReg.getRealReg();
-                                var newReg = new FloatRealRegister(id);
+                                var newReg = new FloatRealRegister(id + 18);
                                 if (!listHasReg(nowRealRegList, newReg))
                                     nowRealRegList.add(newReg); // 加入当前在用的寄存器
                                 // 替换内存的basicAddress
@@ -356,11 +358,20 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                 // 或是第一次出现就需要溢出到栈里，即没有分配过寄存器（spillTime == 当前位置）
                                 // 需要暂时替换一个寄存器，用完后再换回
                                 var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
-                                var tempRegID = curRegUsage.getNextFreeRegister();
+                                int tempRegID;
+                                if (is22TempEmpty) {
+                                    tempRegID = 22;
+                                    is22TempEmpty = false;
+                                } else if (is23TempEmpty) {
+                                    tempRegID = 23;
+                                    is23TempEmpty = false;
+                                } else {
+                                    tempRegID = curRegUsage.getNextFreeRegister();
+                                }
 
                                 if (tempRegID != -1) {
                                     // 有空闲，分配成功
-                                    FloatRealRegister tempReg = new FloatRealRegister(tempRegID);
+                                    FloatRealRegister tempReg = new FloatRealRegister(tempRegID + 18);
                                     if (!listHasReg(nowRealRegList, tempReg))
                                         nowRealRegList.add(tempReg); // 加入当前在用的寄存器
                                     // 替换内存的basicAddress
@@ -397,7 +408,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                         }
                                     }
 
-                                    var tempReg = new FloatRealRegister(tempIdFromZero++);
+                                    var tempReg = new FloatRealRegister(18 + tempIdFromZero++);
                                     if (!listHasReg(nowRealRegList, tempReg))
                                         nowRealRegList.add(tempReg); // 加入当前在用的寄存器
 //                                    System.out.println(tempIdFromZero);
@@ -456,7 +467,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                         if (vRegReplaced != null && vRegReplaced.getSpillTime() == position && vRegReplaced.getRealReg() != -1) {
                             // 说明这时需要把那个被替换的寄存器溢出到相应栈中
                             // 需要被换的寄存器
-                            FloatRealRegister realReg = new FloatRealRegister(vRegReplaced.getRealReg());
+                            FloatRealRegister realReg = new FloatRealRegister(vRegReplaced.getRealReg() + 18);
                             // 添加写回内存的指令 sd
                             var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
                             RISCInstruction sdInst = new FsdInstruction(realReg, stack); // 存入栈
@@ -468,7 +479,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                         if (vReg.getSpillTime() > position) {
                             // spillTime > 当前位置，说明分配过寄存器
                             var id = vReg.getRealReg();
-                            var newReg = new FloatRealRegister(id);
+                            var newReg = new FloatRealRegister(id + 18);
                             if (!listHasReg(nowRealRegList, newReg))
                                 nowRealRegList.add(newReg); // 加入当前在用的寄存器
                             // 替换操作数
@@ -482,11 +493,20 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                             // 或是第一次出现就需要溢出到栈里，即没有分配过寄存器（spillTime == 当前位置）
                             // 需要暂时替换一个寄存器，用完后再换回
                             var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
-                            var tempRegID = curRegUsage.getNextFreeRegister();
+                            int tempRegID;
+                            if (is22TempEmpty) {
+                                tempRegID = 22;
+                                is22TempEmpty = false;
+                            } else if (is23TempEmpty) {
+                                tempRegID = 23;
+                                is23TempEmpty = false;
+                            } else {
+                                tempRegID = curRegUsage.getNextFreeRegister();
+                            }
 
                             if (tempRegID != -1) {
                                 // 有空闲，分配成功
-                                FloatRealRegister tempReg = new FloatRealRegister(tempRegID);
+                                FloatRealRegister tempReg = new FloatRealRegister(tempRegID + 18);
                                 if (!listHasReg(nowRealRegList, tempReg))
                                     nowRealRegList.add(tempReg); // 加入当前在用的寄存器
                                 // 替换操作数
@@ -523,7 +543,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                                     }
                                 }
 
-                                var tempReg = new FloatRealRegister(tempIdFromZero++);
+                                var tempReg = new FloatRealRegister(18 + tempIdFromZero++);
                                 if (!listHasReg(nowRealRegList, tempReg))
                                     nowRealRegList.add(tempReg); // 加入当前在用的寄存器
 //                                System.out.println(tempIdFromZero);
@@ -578,7 +598,7 @@ public class FloatRegisterAllocator implements BaseBackendPass {
                         var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                         for (int i = 0; i < curRegUsage.getRegNum(); i++) {
                             if (curRegUsage.isRegisterUsed(i)) {
-                                FloatRealRegister reg = new FloatRealRegister(i);
+                                FloatRealRegister reg = new FloatRealRegister(i + 18);
                                 riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
 //                                System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
                                 if (riscFunc.stackSize < riscFunc.stackIndex)
