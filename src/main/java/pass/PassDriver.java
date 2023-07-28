@@ -26,7 +26,7 @@ public class PassDriver {
 
         irPassList.add(new MultiRetEliminate());
         irPassList.add(new BlockMerge());
-        irPassList.add(new Mem2Reg());
+        //irPassList.add(new Mem2Reg());
 //        irPassList.add(new DeadCodeEliminate()); // TODO:好像mem2reg之前还不能做这个优化，有问题
 
 //       backendPassList.add(new NewRegAllocator());
