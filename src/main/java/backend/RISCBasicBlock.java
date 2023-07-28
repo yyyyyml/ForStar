@@ -33,6 +33,8 @@ public class RISCBasicBlock {
     public LinkedList<String> nextBlocknameList = new LinkedList<>();
     public LinkedList<RISCBasicBlock> prelist = new LinkedList<>();
     public LinkedList<RISCBasicBlock> nextlist = new LinkedList<>();
+    public RealRegister tempRegister = new RealRegister(13,11);
+    public FloatRealRegister floatTempRegister = new FloatRealRegister(23+18);
 
     public String getBlockName() {
         return blockName;
@@ -100,21 +102,41 @@ public class RISCBasicBlock {
                 Value vs = pair.b;
                 RISCOperand dst = getOperand(vd);
                 RISCOperand src = getOperand(vs);
-                if(src instanceof Immediate){
-                    LiInstruction liInstruction = new LiInstruction(dst,src);
-                    instructionList.add(liInstruction);
+                if (dst instanceof Register)
+                {
+                    if (src instanceof Immediate) {
+                        LiInstruction liInstruction = new LiInstruction(dst, src);
+                        instructionList.add(liInstruction);
+                    } else if (src instanceof FloatVirtualRegister || src instanceof FloatRealRegister) {
+                        FmvInstruction fmvInstruction = new FmvInstruction(dst, src);
+                        instructionList.add(fmvInstruction);
+                    } else if (src instanceof Memory) {
+                        LdInstruction ldInstruction = new LdInstruction(dst, src);
+                        instructionList.add(ldInstruction);
+                    } else {
+                        MvInstruction mvInstruction = new MvInstruction(dst, src);
+                        instructionList.add(mvInstruction);
+                    }
                 }
-                else if(src instanceof FloatVirtualRegister || src instanceof FloatRealRegister){
-                    FmvInstruction fmvInstruction = new FmvInstruction(dst,src);
-                    instructionList.add(fmvInstruction);
-                }
-                else if(src instanceof Memory){
-                    LdInstruction ldInstruction = new LdInstruction(dst,src);
-                    instructionList.add(ldInstruction);
-                }
-                else {
-                    MvInstruction mvInstruction = new MvInstruction(dst,src);
-                    instructionList.add(mvInstruction);
+                else if (dst instanceof Memory){
+                    if (src instanceof Immediate) {
+                        LiInstruction liInstruction = new LiInstruction(tempRegister, src);
+                        instructionList.add(liInstruction);
+                        SdInstruction sd = new SdInstruction(tempRegister,dst);
+                        instructionList.add(sd);
+                    } else if (src instanceof FloatVirtualRegister || src instanceof FloatRealRegister) {
+
+                        FsdInstruction fsdInstruction = new FsdInstruction(src,dst);
+                        instructionList.add(fsdInstruction);
+                    } else if (src instanceof Memory) {
+                        LdInstruction ldInstruction = new LdInstruction(tempRegister, src);
+                        instructionList.add(ldInstruction);
+                        SdInstruction sd = new SdInstruction(tempRegister,dst);
+                        instructionList.add(sd);
+                    } else {
+                        SdInstruction sd = new SdInstruction(src,dst);
+                        instructionList.add(sd);
+                    }
                 }
             }
         }
@@ -145,12 +167,26 @@ public class RISCBasicBlock {
                 {
                     RISCOperand dst = getOperand(vd);
                     RISCOperand src = getOperand(curInst);
-                    if (curInst.getType().isFloatType()) {
-                        FmvInstruction fmv = new FmvInstruction(dst, src);
-                        instructionList.add(fmv);
-                    } else {
-                        MvInstruction mvInstruction = new MvInstruction(dst, src);
-                        instructionList.add(mvInstruction);
+                    //虚拟寄存器
+                    if (dst instanceof Register)
+                    {
+                        if (curInst.getType().isFloatType()) {
+                            FmvInstruction fmv = new FmvInstruction(dst, src);
+                            instructionList.add(fmv);
+                        } else {
+                            MvInstruction mvInstruction = new MvInstruction(dst, src);
+                            instructionList.add(mvInstruction);
+                        }
+                    }
+                    //Meomery
+                    else if(dst instanceof Memory){
+                        if (curInst.getType().isFloatType()) {
+                            FsdInstruction fsd = new FsdInstruction(src, dst);
+                            instructionList.add(fsd);
+                        } else {
+                            SdInstruction sd = new SdInstruction(src, dst);
+                            instructionList.add(sd);
+                        }
                     }
                 }
 
@@ -1156,4 +1192,6 @@ public class RISCBasicBlock {
         FloatVirtualRegister fvr = new FloatVirtualRegister(riscFunction.floatVirtualRegisterIndex++);
         return fvr;
     }
+
+    public RealRegister getTempRegister(){return tempRegister;}
 }

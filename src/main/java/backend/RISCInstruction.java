@@ -9,7 +9,7 @@ public class RISCInstruction {
     public ITYPE type;
     private LinkedList<RISCOperand> operandList;
     private int id = -1;
-    private BasicBlock parentBlock;
+    private RISCBasicBlock parentBlock;
 
     public RISCInstruction() {
         this.operandList = new LinkedList<>();
@@ -86,11 +86,11 @@ public class RISCInstruction {
         return type.name();
     }
 
-    public BasicBlock getParentBlock() {
+    public RISCBasicBlock getParentBlock() {
         return parentBlock;
     }
 
-    public void setParentBlock(BasicBlock parentBlock) {
+    public void setParentBlock(RISCBasicBlock parentBlock) {
         this.parentBlock = parentBlock;
     }
 

@@ -2,6 +2,7 @@ package backend;
 
 import backend.operands.FloatVirtualRegister;
 import backend.operands.Immediate;
+import backend.operands.Memory;
 import backend.operands.VirtualRegister;
 import ir.Instruction;
 import ir.Value;
@@ -138,11 +139,19 @@ public class RISCFunction {
                     RISCOperand dst;
                     if(curInst.getType().isIntegerType()||curInst.getType().isPointerType()){
                         phiCount++;
-                        dst = new VirtualRegister(virtualRegisterIndex++);
+                        //虚拟寄存器
+                        //dst = new VirtualRegister(virtualRegisterIndex++);
+                        //栈
+                        localStackIndex += 8;
+                        dst = new Memory(localStackIndex, 1);
                     }
                     else {
                         floatPhiCount++;
-                        dst = new FloatVirtualRegister(floatVirtualRegisterIndex++);
+                        //虚拟寄存器
+                        //dst = new FloatVirtualRegister(floatVirtualRegisterIndex++);
+                        //栈
+                        localStackIndex += 8;
+                        dst = new Memory(localStackIndex, 1);
                     }
                     valueRISCOperandHashMap.put(curInst,dst);
                     int paraCount = curInst.getNumOP();
