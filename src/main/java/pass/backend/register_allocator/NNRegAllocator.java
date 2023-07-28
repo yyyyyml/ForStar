@@ -149,6 +149,19 @@ public class NNRegAllocator implements BaseBackendPass {
 
             // 生成新的MIR
             renameRegister(riscFunc);
+
+            // 打印寄存器分配情况
+            for (Map.Entry<Integer, RegisterUsage> entry : regUsageTracker.getRegisterUsageMap().entrySet()) {
+                int timePoint = entry.getKey();
+                RegisterUsage registerUsage = entry.getValue();
+
+                System.out.print("Time Point: " + timePoint + " | ");
+                for (int register = 0; register < registerUsage.getRegNum(); register++) {
+                    boolean isUsed = registerUsage.isRegisterUsed(register);
+                    System.out.print(register + ": " + (isUsed ? "√" : "x") + " | ");
+                }
+                System.out.println();
+            }
         }
 
 
@@ -394,8 +407,10 @@ public class NNRegAllocator implements BaseBackendPass {
                 // 分配一个寄存器
                 var curVreg = intMapVreg.get(entry.getKey());
                 int freeRegister = curRegUsage.getNextFreeRegister();
-//                System.out.println("Time: " + time + " Allocating register: vr_" + entry.getKey() + " -> " + freeRegister);
+                regUsageTracker.add(freeRegister, entry.getValue());//直接分所有时间的
                 curVreg.setRealReg(freeRegister);
+//                System.out.println("Time: " + time + " Allocating register: vr_" + entry.getKey() + " -> " + freeRegister);
+//                curVreg.setRealReg(freeRegister);
                 // 加入activeList，并按End排序
                 activeList.add(entry);
                 activeList.sort(Comparator.comparingInt(e -> e.getValue().getEnd()));
@@ -424,6 +439,9 @@ public class NNRegAllocator implements BaseBackendPass {
             curVreg.setRealReg(spillVreg.getRealReg());
             //
             curVreg.setvRegReplaced(spillVreg);
+            // 删掉之前的寄存器分配记录
+            regUsageTracker.delete(spillVreg.getRealReg(), spillEntry.getValue());
+            regUsageTracker.add(spillVreg.getRealReg(), curEntry.getValue());
             // 分配栈地址
             var curFunc = curFunction;
             spillVreg.setStackLocation(curFunc.stackIndex);
@@ -560,12 +578,13 @@ public class NNRegAllocator implements BaseBackendPass {
                                     var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
                                     RISCInstruction ldInst = new LdInstruction(tempReg, stack); // 存入溢出的值
                                     RISCInstruction sdInst = new SdInstruction(tempReg, stack); // 写回溢出值
-                                    if (vReg.getSpillTime() < position) {
+                                    if (riscInst.isDef(opIndex)) {
+                                        // 如果是定义点，只需要用后store
                                         riscInstList.add(instIndex + 1, sdInst);
+                                    } else {
+                                        // 如果是使用点，只需要用前load
                                         riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
                                         instIndex += 1; // 跳过加的指令
-                                    } else {
-                                        riscInstList.add(instIndex + 1, sdInst);
                                     }
 //                                    System.out.println(sdInst.emit());
 
@@ -680,12 +699,13 @@ public class NNRegAllocator implements BaseBackendPass {
                                 var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
                                 RISCInstruction ldInst = new LdInstruction(tempReg, stack); // 存入溢出的值
                                 RISCInstruction sdInst = new SdInstruction(tempReg, stack); // 写回溢出值
-                                if (vReg.getSpillTime() < position) {
+                                if (riscInst.isDef(opIndex)) {
+                                    // 如果是定义点，只需要用后store
                                     riscInstList.add(instIndex + 1, sdInst);
+                                } else {
+                                    // 如果是使用点，只需要用前load
                                     riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
                                     instIndex += 1; // 跳过加的指令
-                                } else {
-                                    riscInstList.add(instIndex + 1, sdInst);
                                 }
 //                                System.out.println(sdInst.emit());
 

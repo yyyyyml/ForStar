@@ -20,7 +20,7 @@ public class PassDriver {
     ArrayList<BaseIRPass> irPassList;
     ArrayList<BaseBackendPass> backendPassList;
 
-    public PassDriver() {
+    public PassDriver(boolean isPass) {
         irPassList = new ArrayList<>();
         backendPassList = new ArrayList<>();
 
