@@ -37,6 +37,8 @@ public class RISCBasicBlock {
     public int lastId;
     public RealRegister tempRegister = new RealRegister(13, 11);
     public FloatRealRegister floatTempRegister = new FloatRealRegister(23 + 18);
+    public HashMap<Value,Memory> phiMemMap = new HashMap<>();
+    public LinkedList<Value> phiList = new LinkedList<>();
 
     public String getBlockName() {
         return blockName;
@@ -161,6 +163,7 @@ public class RISCBasicBlock {
                 case ZEXT -> translateZext(curInst);
                 case FNEG -> translateFneg(curInst);
                 case PTRCAST -> translatePtrcast(curInst);
+                case PHI -> translatePhi(curInst);
             }
             //PHI
             if(riscFunction.phiMap.containsKey(curInst)){
@@ -193,6 +196,22 @@ public class RISCBasicBlock {
                 }
 
             }
+        }
+        for (Value phi : phiList){
+            riscFunction.valueRISCOperandHashMap.put(phi,phiMemMap.get(phi));
+        }
+    }
+
+    private void translatePhi(Instruction curInst) {
+        RISCOperand mem = getOperand(curInst);
+        if(mem instanceof Memory)
+        {
+            phiMemMap.put(curInst, (Memory) mem);
+            phiList.add(curInst);
+            VirtualRegister vr = getNewVr();
+            LdInstruction ld = new LdInstruction(vr, mem);
+            instructionList.add(ld);
+            riscFunction.valueRISCOperandHashMap.put(curInst, vr);
         }
     }
 
