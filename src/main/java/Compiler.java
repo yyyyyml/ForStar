@@ -88,7 +88,7 @@ public class Compiler {
         visitor.visit(ast);
 
         // 运行IR优化
-        PassDriver passDriver = new PassDriver();
+        PassDriver passDriver = new PassDriver(isPass);
         passDriver.runIR(module);
 
         // 生成LLVM IR

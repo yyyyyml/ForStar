@@ -39,7 +39,7 @@ public class demoMain {
         Emitter emitter = new Emitter("testcase.ll");
         emitter.emit(module);
 
-        PassDriver passDriver = new PassDriver();
+        PassDriver passDriver = new PassDriver(false);
         passDriver.runIR(module);
 
         RISCBuilder mcBuilder = RISCBuilder.get();
