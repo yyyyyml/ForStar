@@ -269,9 +269,10 @@ public class RISCBasicBlock {
         }
 
         if (dst instanceof Memory) {
-            FcvtInstruction fcvt = new FcvtInstruction(tempRegister, src, false);
+            VirtualRegister vr = getNewVr();
+            FcvtInstruction fcvt = new FcvtInstruction(vr, src, false);
             instructionList.add(fcvt);
-            SwInstruction sw = new SwInstruction(tempRegister, dst);
+            SwInstruction sw = new SwInstruction(vr, dst);
             instructionList.add(sw);
         } else {
             FcvtInstruction fcvt = new FcvtInstruction(dst, src, false);
