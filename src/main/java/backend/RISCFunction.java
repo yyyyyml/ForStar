@@ -1,12 +1,9 @@
 package backend;
 
 import backend.operands.FloatVirtualRegister;
-import backend.operands.Immediate;
-import backend.operands.Memory;
 import backend.operands.VirtualRegister;
 import ir.Instruction;
 import ir.Value;
-import ir.types.PointerType;
 import ir.values.BasicBlock;
 import ir.values.Constant;
 import ir.values.Function;
@@ -140,18 +137,18 @@ public class RISCFunction {
                     if(curInst.getType().isIntegerType()||curInst.getType().isPointerType()){
                         phiCount++;
                         //虚拟寄存器
-                        //dst = new VirtualRegister(virtualRegisterIndex++);
+                        dst = new VirtualRegister(virtualRegisterIndex++);
                         //栈
-                        localStackIndex += 8;
-                        dst = new Memory(localStackIndex, 1);
+//                        localStackIndex += 8;
+//                        dst = new Memory(localStackIndex, 1);
                     }
                     else {
                         floatPhiCount++;
                         //虚拟寄存器
-                        //dst = new FloatVirtualRegister(floatVirtualRegisterIndex++);
+                        dst = new FloatVirtualRegister(floatVirtualRegisterIndex++);
                         //栈
-                        localStackIndex += 8;
-                        dst = new Memory(localStackIndex, 1);
+//                        localStackIndex += 8;
+//                        dst = new Memory(localStackIndex, 1);
                     }
                     valueRISCOperandHashMap.put(curInst,dst);
                     int paraCount = curInst.getNumOP();

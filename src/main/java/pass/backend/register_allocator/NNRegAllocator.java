@@ -14,8 +14,10 @@ import java.util.*;
 /**
  * 简单的线性扫描寄存器分配
  * 目前改成了以函数为单位的
+ * 溢出的一直在栈里，使用两个临时寄存器，使用活跃变量分析
  */
-public class RegisterAllocator implements BaseBackendPass {
+
+public class NNRegAllocator implements BaseBackendPass {
 
     public boolean lessRegSave = true;
 
@@ -28,15 +30,26 @@ public class RegisterAllocator implements BaseBackendPass {
     private RegisterUsageTracker regUsageTracker;
     private int time = 0;
     private RegisterUsage curRegUsage;
-    private ArrayList<RISCFunction> time2Function; // 时间点对应的函数，其实现在这个没什么用了，因为以函数为单位了，但是不改了
+    private RISCFunction curFunction;
+
+    // 活跃变量分析用的
+    private Map<RISCBasicBlock, Set<Integer>> def;
+    private Map<RISCBasicBlock, Set<Integer>> use;
+    private Map<RISCBasicBlock, Set<Integer>> in;
+    private Map<RISCBasicBlock, Set<Integer>> out;
+    private Map<Integer, Set<RISCBasicBlock>> activeBlocksMap;
 
 
-    public RegisterAllocator() {
+    public NNRegAllocator() {
         liveIntervalMapList = new HashMap<>();
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>(); // 编号对应的虚拟寄存器对象
-        time2Function = new ArrayList<>();
         regNum = 13;
+        def = new HashMap<>();
+        use = new HashMap<>();
+        in = new HashMap<>();
+        out = new HashMap<>();
+        activeBlocksMap = new HashMap<>();
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
@@ -49,6 +62,21 @@ public class RegisterAllocator implements BaseBackendPass {
     public void setLiveIntervalEnd(int virtualRegister, int end) {
         LiveInterval interval = liveIntervalMapList.get(virtualRegister);
         interval.setEnd(end);
+    }
+
+    public void updateLiveInterval(int virtualRegister, int start, int end) {
+        // 检查map中是否已经存在该虚拟寄存器的LiveInterval
+        if (liveIntervalMapList.containsKey(virtualRegister)) {
+            LiveInterval interval = liveIntervalMapList.get(virtualRegister);
+
+            // 取并集，更新LiveInterval的起始和结束位置
+            interval.setStart(Math.min(interval.getStart(), start));
+            interval.setEnd(Math.max(interval.getEnd(), end));
+        } else {
+            // 如果map中还没有该虚拟寄存器的LiveInterval，则直接创建一个新的并添加到map中
+            LiveInterval interval = new LiveInterval(start, end);
+            liveIntervalMapList.put(virtualRegister, interval);
+        }
     }
 
     /**
@@ -88,12 +116,28 @@ public class RegisterAllocator implements BaseBackendPass {
         LinkedList<RISCFunction> funcList = riscModule.getFunctionList();
 
         for (RISCFunction riscFunc : funcList) {
+            if (riscFunc.isBuildIn) continue;
             // 先清空这些结构
             liveIntervalMapList.clear();
             activeList.clear();
             intMapVreg.clear();
-            time2Function.clear();
             regUsageTracker = new RegisterUsageTracker(regNum);
+
+            def.clear();
+            use.clear();
+            in.clear();
+            out.clear();
+            activeBlocksMap.clear();
+            curFunction = riscFunc;
+
+            // 初始化def use
+            fisrtProcess(riscFunc);
+            // 活跃变量分析
+            livenessAnalysis(riscFunc);
+            // 得到每个寄存器的活跃基本块
+            activeBlocksForVariable(riscFunc);
+            // 输出活跃基本块信息
+            printActiveBlocksForVariable(activeBlocksMap);
 
 
             // 初始化LiveInterval
@@ -102,24 +146,174 @@ public class RegisterAllocator implements BaseBackendPass {
             // 线性扫描
             linearScan();
 
-//            // 打印寄存器分配情况
-//            for (Map.Entry<Integer, RegisterUsage> entry : regUsageTracker.getRegisterUsageMap().entrySet()) {
-//                int timePoint = entry.getKey();
-//                RegisterUsage registerUsage = entry.getValue();
-//
-//                System.out.println("Time Point: " + timePoint);
-//                for (int register = 0; register < registerUsage.getRegNum(); register++) {
-//                    boolean isUsed = registerUsage.isRegisterUsed(register);
-//                    System.out.println("Register " + register + ": " + (isUsed ? "Used" : "Free"));
-//                }
-//                System.out.println("-------------------");
-//            }
 
             // 生成新的MIR
             renameRegister(riscFunc);
         }
 
 
+    }
+
+    private void fisrtProcess(RISCFunction riscFunc) {
+        int index = 0; // 用于记录位置
+
+        LinkedList<RISCBasicBlock> riscBBList = riscFunc.getBasicBlockList();
+        for (RISCBasicBlock riscBB : riscBBList) {
+            riscBB.firstId = index;
+            var curDefSet = new HashSet<Integer>();
+            var curUseSet = new HashSet<Integer>();
+            LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
+            int instSeq = 0; // 块内顺序
+            for (RISCInstruction riscInst : riscInstList) {
+                riscInst.setId(index); // 记录每条指令的标号
+                LinkedList<RISCOperand> operandList = riscInst.getOperandList();
+                int opIndex = 0;
+                for (RISCOperand riscOp : operandList) {
+                    if (riscOp.isVirtualRegister()) {
+                        var name = ((VirtualRegister) riscOp).getName();
+                        intMapVreg.put(name, (VirtualRegister) riscOp);
+                        if (riscInst.isDef(opIndex)) {
+                            // 定义点，前面如果没有使用点则加入def
+                            if (!curUseSet.contains(name)) {
+                                curDefSet.add(name);
+                            }
+                        } else {
+                            // 使用点，前面如果没有定义点则加入use i=i+1?
+                            if (!curDefSet.contains(name)) {
+                                curUseSet.add(name);
+                            }
+                        }
+
+                    } else if (riscOp.isMemory()) {
+                        var mem = (Memory) riscOp;
+                        if (mem.basicAddress.isVirtualRegister()) {
+                            var name = ((VirtualRegister) mem.basicAddress).getName();
+                            intMapVreg.put(name, (VirtualRegister) mem.basicAddress);
+                            // 使用点，前面如果没有定义点则加入use i=i+1?
+                            if (!curDefSet.contains(name)) {
+                                curUseSet.add(name);
+                            }
+
+                        }
+                    }
+                    opIndex += 1;
+                }
+                instSeq += 1;
+                index += 1;
+            }
+            riscBB.lastId = index - 1;
+            def.put(riscBB, curDefSet);
+            use.put(riscBB, curUseSet);
+        }
+        for (RISCBasicBlock riscBB : riscBBList) {
+            System.out.println("Basic Block: " + riscBB.getBlockName());
+
+            System.out.println("Def:");
+            for (Integer defVar : def.get(riscBB)) {
+                System.out.println("  vr_" + defVar);
+            }
+
+            System.out.println("Use:");
+            for (Integer useVar : use.get(riscBB)) {
+                System.out.println("  vr_" + useVar);
+            }
+
+            System.out.println("--------------------");
+        }
+    }
+
+    private void activeBlocksForVariable(RISCFunction riscFunc) {
+        // 遍历每个基本块B
+        for (RISCBasicBlock riscBB : riscFunc.getBasicBlockList()) {
+            // 在IN[B]集合中的所有活跃变量
+            Set<Integer> activeInBB = in.get(riscBB);
+            for (int variable : activeInBB) {
+                // 将变量添加到Map中
+                activeBlocksMap.putIfAbsent(variable, new HashSet<>());
+                activeBlocksMap.get(variable).add(riscBB);
+                updateLiveInterval(variable, riscBB.firstId, riscBB.lastId + 1); // 在这直接更新生存周期
+
+            }
+
+            // 在OUT[B]集合中的所有活跃变量
+            Set<Integer> activeOutBB = out.get(riscBB);
+            for (int variable : activeOutBB) {
+                // 将变量添加到Map中
+                activeBlocksMap.putIfAbsent(variable, new HashSet<>());
+                activeBlocksMap.get(variable).add(riscBB);
+                updateLiveInterval(variable, riscBB.firstId, riscBB.lastId + 1); // 在这直接更新生存周期
+            }
+        }
+    }
+
+    private void printActiveBlocksForVariable(Map<Integer, Set<RISCBasicBlock>> activeBlocksMap) {
+
+        // 遍历活跃块Map，打印每个变量及其对应的活跃基本块集合
+        for (Map.Entry<Integer, Set<RISCBasicBlock>> entry : activeBlocksMap.entrySet()) {
+            int variable = entry.getKey();
+            Set<RISCBasicBlock> activeBlocks = entry.getValue();
+
+            System.out.println("Variable vr_" + variable + " is active in the following basic blocks:");
+            for (RISCBasicBlock riscBB : activeBlocks) {
+                System.out.println("  " + riscBB.getBlockName());
+            }
+            System.out.println();
+        }
+    }
+
+    private void livenessAnalysis(RISCFunction riscFunc) {
+        // 初始化IN和OUT集合
+        for (RISCBasicBlock riscBB : riscFunc.getBasicBlockList()) {
+            in.put(riscBB, new HashSet<>());
+            out.put(riscBB, new HashSet<>());
+        }
+        // 初始化EXIT节点的IN集合为Φ
+
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            // 对于除EXIT之外的每个基本块B
+            for (RISCBasicBlock riscBB : riscFunc.getBasicBlockList()) {
+
+                // 计算OUT[B] = ∪S是B的一个后继IN[S]
+                Set<Integer> newOut = new HashSet<>();
+                for (RISCBasicBlock succBB : riscBB.nextlist) {
+                    newOut.addAll(in.get(succBB));
+                }
+
+                // 更新OUT集合
+                if (!newOut.equals(out.get(riscBB))) {
+                    out.put(riscBB, newOut);
+                    changed = true;
+                }
+
+                // 计算IN[B] = useB ∪ (OUT[B] - defB)
+                Set<Integer> newIn = new HashSet<>(use.get(riscBB));
+                newIn.addAll(out.get(riscBB));
+                newIn.removeAll(def.get(riscBB));
+
+                // 更新IN集合
+                if (!newIn.equals(in.get(riscBB))) {
+                    in.put(riscBB, newIn);
+                    changed = true;
+                }
+            }
+        }
+        for (RISCBasicBlock riscBB : riscFunc.getBasicBlockList()) {
+            System.out.println("Basic Block: " + riscBB.getBlockName());
+
+            System.out.println("IN:");
+            for (Integer defVar : in.get(riscBB)) {
+                System.out.println("  vr_" + defVar);
+            }
+
+            System.out.println("OUT:");
+            for (Integer useVar : out.get(riscBB)) {
+                System.out.println("  vr_" + useVar);
+            }
+
+            System.out.println("--------------------");
+        }
     }
 
 
@@ -137,42 +331,37 @@ public class RegisterAllocator implements BaseBackendPass {
             LinkedList<RISCInstruction> riscInstList = riscBB.getInstructionList();
             int instSeq = 0; // 块内顺序
             for (RISCInstruction riscInst : riscInstList) {
-                time2Function.add(index, riscFunc);
-                riscInst.setId(index); // 记录每条指令的标号
+//                riscInst.setId(index); // 记录每条指令的标号
                 LinkedList<RISCOperand> operandList = riscInst.getOperandList();
                 for (RISCOperand riscOp : operandList) {
                     if (riscOp.isVirtualRegister()) {
                         var name = ((VirtualRegister) riscOp).getName();
                         intMapVreg.put(name, (VirtualRegister) riscOp);
-                        if (!liveIntervalMapList.containsKey(name)) {
-                            // 记录Start
-//                            if (((VirtualRegister) riscOp).getName() < riscFunc.phiCount) {
-//                                setLiveIntervalStart(name, index - instSeq);
-//                            } else {
-                            setLiveIntervalStart(name, index);
-//                            }
-                        } else {
-                            // 记录End
-//                            if (((VirtualRegister) riscOp).getName() < riscFunc.phiCount) {
-//                                // 如果最后一次出现是phi的虚拟寄存器，说明跳转到前面的块使用，生存周期结束要延长到这个块结束
-//                                int newIndex = index + riscInstList.size() - instSeq;
-//                                setLiveIntervalEnd(name, newIndex);
-//                            } else {
-                            setLiveIntervalEnd(name, index + 1);
-//                            }
-
-                        }
-                    } else if (riscOp.isMemory()) {
-                        var mem = (Memory) riscOp;
-                        if (mem.basicAddress.isVirtualRegister()) {
-                            var name = ((VirtualRegister) mem.basicAddress).getName();
-                            intMapVreg.put(name, (VirtualRegister) mem.basicAddress);
+                        if (!activeBlocksMap.containsKey(name)) {
+                            // 生存周期在同一个块内
                             if (!liveIntervalMapList.containsKey(name)) {
                                 // 记录Start
                                 setLiveIntervalStart(name, index);
                             } else {
                                 // 记录End
                                 setLiveIntervalEnd(name, index + 1);
+                            }
+                        }
+
+                    } else if (riscOp.isMemory()) {
+                        var mem = (Memory) riscOp;
+                        if (mem.basicAddress.isVirtualRegister()) {
+                            var name = ((VirtualRegister) mem.basicAddress).getName();
+                            intMapVreg.put(name, (VirtualRegister) mem.basicAddress);
+                            if (!activeBlocksMap.containsKey(name)) {
+                                // 生存周期在同一个块内
+                                if (!liveIntervalMapList.containsKey(name)) {
+                                    // 记录Start
+                                    setLiveIntervalStart(name, index);
+                                } else {
+                                    // 记录End
+                                    setLiveIntervalEnd(name, index + 1);
+                                }
                             }
                         }
                     }
@@ -182,12 +371,12 @@ public class RegisterAllocator implements BaseBackendPass {
         }
 
         sortedLiveIntervalList = sortByStart();
-//        for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
-//            System.out.println("Register: vr_" + entry.getKey().toString());
-//            System.out.println("Start: " + entry.getValue().getStart());
-//            System.out.println("End: " + entry.getValue().getEnd());
-//            System.out.println();
-//        }
+        for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
+            System.out.println("Register: vr_" + entry.getKey().toString());
+            System.out.println("Start: " + entry.getValue().getStart());
+            System.out.println("End: " + entry.getValue().getEnd());
+            System.out.println();
+        }
     }
 
     private void linearScan() {
@@ -236,14 +425,14 @@ public class RegisterAllocator implements BaseBackendPass {
             //
             curVreg.setvRegReplaced(spillVreg);
             // 分配栈地址
-            var curFunc = time2Function.get(time);
+            var curFunc = curFunction;
             spillVreg.setStackLocation(curFunc.stackIndex);
 //            System.out.println("Time: " + time + " Spilling: vr_" + spillEntry.getKey() + " -> stack " + curFunc.stackIndex);
 //            System.out.println("Time: " + time + " Allocating register: vr_" + curEntry.getKey() + " -> " + spillVreg.getRealReg());
             curFunc.stackSize += 8;
             curFunc.stackIndex += 8;
             // 记录spillTime
-            spillVreg.setSpillTime(time);
+            spillVreg.setSpillTime(0);
             // 从activeList移除spill
             activeList.remove(spillEntry);
             // 将curEntry加入activeList，并按End排序
@@ -253,14 +442,14 @@ public class RegisterAllocator implements BaseBackendPass {
         } else {
             // 如果需要把当前的spill
             // 分配栈地址
-            var curFunc = time2Function.get(time);
+            var curFunc = curFunction;
 
             curVreg.setStackLocation(curFunc.stackIndex);
 //            System.out.println("Time: " + time + " Spilling: vr_" + curEntry.getKey() + " -> stack " + curFunc.stackIndex);
             curFunc.stackSize += 8;
             curFunc.stackIndex += 8;
             // 记录spillTime
-            curVreg.setSpillTime(time);
+            curVreg.setSpillTime(0);
 
         }
     }
@@ -328,19 +517,6 @@ public class RegisterAllocator implements BaseBackendPass {
 //                            System.out.println("visit" + name + "--" + register);
                             }
 
-                            // 判断这个时刻当前vReg要使用的寄存器是不是之前有别的vReg在用，如果是需要把之前的值溢出到栈中
-                            var vRegReplaced = vReg.getvRegReplaced();
-                            if (vRegReplaced != null && vRegReplaced.getSpillTime() == position && vRegReplaced.getRealReg() != -1) {
-                                // 说明这时需要把那个被替换的寄存器溢出到相应栈中
-                                // 需要被换的寄存器
-                                RealRegister realReg = new RealRegister(vRegReplaced.getRealReg(), 11);
-                                // 添加写回内存的指令 sd
-                                var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
-                                RISCInstruction sdInst = new SdInstruction(realReg, stack); // 存入栈
-                                riscInstList.add(instIndex, sdInst); // 在当前这条指令之前，入栈
-                                instIndex++; // 跳过加的指令
-
-                            }
 
                             if (vReg.getSpillTime() > position) {
                                 // spillTime > 当前位置，说明分配过寄存器
@@ -462,21 +638,6 @@ public class RegisterAllocator implements BaseBackendPass {
 //                            System.out.println("visit" + name + "--" + register);
                         }
 
-
-                        // 判断这个时刻当前vReg要使用的寄存器是不是之前有别的vReg在用，如果是需要把之前的值溢出到栈中
-                        var vRegReplaced = vReg.getvRegReplaced();
-                        if (vRegReplaced != null && vRegReplaced.getSpillTime() == position && vRegReplaced.getRealReg() != -1) {
-                            // 说明这时需要把那个被替换的寄存器溢出到相应栈中
-                            // 需要被换的寄存器
-                            RealRegister realReg = new RealRegister(vRegReplaced.getRealReg(), 11);
-                            // 添加写回内存的指令 sd
-                            var stack = new Memory(-vRegReplaced.getStackLocation(), 1); // 临时栈
-                            RISCInstruction sdInst = new SdInstruction(realReg, stack); // 存入栈
-                            riscInstList.add(instIndex, sdInst); // 在当前这条指令之前，入栈
-                            instIndex++; // 跳过加的指令
-
-                        }
-
                         if (vReg.getSpillTime() > position) {
                             // spillTime > 当前位置，说明分配过寄存器
                             var id = vReg.getRealReg();
@@ -589,61 +750,6 @@ public class RegisterAllocator implements BaseBackendPass {
 //                        System.out.println("---------------------" + riscInst.emit());
                 }
 
-//                // 找return位置，修改return的上面3条有关栈空间的指令
-//                if (instIndex == riscInstList.size() - 1 && riscInst.type == RISCInstruction.ITYPE.jr) {
-//                    riscFunc.stackSize += 8 * riscFunc.operandStackCounts; // 给参数留位置
-//                    if (riscFunc.stackSize % 16 == 12) {
-//                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
-//                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//                        raMemory.setOffset(riscFunc.stackSize - 8 + 4);
-//
-//                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
-//                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//                        s0Memory.setOffset(riscFunc.stackSize - 16 + 4);
-//
-//                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
-//                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
-//                        addiMemory.setVal(riscFunc.stackSize + 4);
-//                    } else if (riscFunc.stackSize % 16 == 8) {
-//                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
-//                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//                        raMemory.setOffset(riscFunc.stackSize - 8 + 8);
-//
-//                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
-//                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//                        s0Memory.setOffset(riscFunc.stackSize - 16 + 8);
-//
-//                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
-//                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
-//                        addiMemory.setVal(riscFunc.stackSize + 8);
-//                    } else if (riscFunc.stackSize % 16 == 4) {
-//                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
-//                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//                        raMemory.setOffset(riscFunc.stackSize - 8 + 12);
-//
-//                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
-//                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//                        s0Memory.setOffset(riscFunc.stackSize - 16 + 12);
-//
-//                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
-//                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
-//                        addiMemory.setVal(riscFunc.stackSize + 12);
-//                    } else {
-//                        RISCInstruction ldraInst = riscInstList.get(instIndex - 3);
-//                        Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//                        raMemory.setOffset(riscFunc.stackSize - 8);
-//
-//                        RISCInstruction lds0Inst = riscInstList.get(instIndex - 2);
-//                        Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//                        s0Memory.setOffset(riscFunc.stackSize - 16);
-//
-//                        RISCInstruction addiInst = riscInstList.get(instIndex - 1);
-//                        Immediate addiMemory = (Immediate) addiInst.getOperandAt(2);
-//                        addiMemory.setVal(riscFunc.stackSize);
-//                    }
-//                    riscFunc.stackSize -= 8 * riscFunc.operandStackCounts; // 恢复
-//
-//                }
 
                 // 找call指令，处理寄存器的保存
                 if (riscInst.type == RISCInstruction.ITYPE.call) {
@@ -694,77 +800,6 @@ public class RegisterAllocator implements BaseBackendPass {
                 riscFunc.stackIndex = tempStackIndex; // 恢复栈的位置
             }
         }
-
-//        // 修改函数的前4条指令
-//        var firstInstList = riscBBList.get(0).getInstructionList();
-//
-//        riscFunc.stackSize += 8 * riscFunc.operandStackCounts; // 给参数留位置
-//        if (riscFunc.stackSize % 16 == 12) {
-//            RISCInstruction addispInst = firstInstList.get(0);
-//            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
-//            addisp.setVal(-riscFunc.stackSize - 4);
-//
-//            RISCInstruction ldraInst = firstInstList.get(1);
-//            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//            raMemory.setOffset(riscFunc.stackSize - 8 + 4);
-//
-//            RISCInstruction lds0Inst = firstInstList.get(2);
-//            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//            s0Memory.setOffset(riscFunc.stackSize - 16 + 4);
-//
-//            RISCInstruction addis0Inst = firstInstList.get(3);
-//            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-//            addis0.setVal(riscFunc.stackSize + 4);
-//        } else if (riscFunc.stackSize % 16 == 8) {
-//            RISCInstruction addispInst = firstInstList.get(0);
-//            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
-//            addisp.setVal(-riscFunc.stackSize - 8);
-//
-//            RISCInstruction ldraInst = firstInstList.get(1);
-//            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//            raMemory.setOffset(riscFunc.stackSize - 8 + 8);
-//
-//            RISCInstruction lds0Inst = firstInstList.get(2);
-//            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//            s0Memory.setOffset(riscFunc.stackSize - 16 + 8);
-//
-//            RISCInstruction addis0Inst = firstInstList.get(3);
-//            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-//            addis0.setVal(riscFunc.stackSize + 8);
-//        } else if (riscFunc.stackSize % 16 == 4) {
-//            RISCInstruction addispInst = firstInstList.get(0);
-//            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
-//            addisp.setVal(-riscFunc.stackSize - 12);
-//
-//            RISCInstruction ldraInst = firstInstList.get(1);
-//            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//            raMemory.setOffset(riscFunc.stackSize - 8 + 12);
-//
-//            RISCInstruction lds0Inst = firstInstList.get(2);
-//            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//            s0Memory.setOffset(riscFunc.stackSize - 16 + 12);
-//
-//            RISCInstruction addis0Inst = firstInstList.get(3);
-//            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-//            addis0.setVal(riscFunc.stackSize + 12);
-//        } else {
-//            RISCInstruction addispInst = firstInstList.get(0);
-//            Immediate addisp = (Immediate) addispInst.getOperandAt(2);
-//            addisp.setVal(-riscFunc.stackSize);
-//
-//            RISCInstruction ldraInst = firstInstList.get(1);
-//            Memory raMemory = (Memory) ldraInst.getOperandAt(1);
-//            raMemory.setOffset(riscFunc.stackSize - 8);
-//
-//            RISCInstruction lds0Inst = firstInstList.get(2);
-//            Memory s0Memory = (Memory) lds0Inst.getOperandAt(1);
-//            s0Memory.setOffset(riscFunc.stackSize - 16);
-//
-//            RISCInstruction addis0Inst = firstInstList.get(3);
-//            Immediate addis0 = (Immediate) addis0Inst.getOperandAt(2);
-//            addis0.setVal(riscFunc.stackSize);
-//        }
-//        riscFunc.stackSize -= 8 * riscFunc.operandStackCounts; // 恢复
 
     }
 
