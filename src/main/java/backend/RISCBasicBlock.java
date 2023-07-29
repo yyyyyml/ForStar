@@ -377,8 +377,10 @@ public class RISCBasicBlock {
                     }
                     //计算偏移量，放入vr1
                     int basicOffset = ((Memory) basicAddress).getOffset();
-                    AddiInstruction addi = new AddiInstruction(vr1, vr1, new Immediate(basicOffset));
-                    instructionList.add(addi);
+                    if(basicOffset != 0) {
+                        AddiInstruction addi = new AddiInstruction(vr1, vr1, new Immediate(basicOffset));
+                        instructionList.add(addi);
+                    }
                     //计算结果
                     AddInstruction add = new AddInstruction(dst, basicAdd, vr1);
                     instructionList.add(add);
@@ -455,8 +457,11 @@ public class RISCBasicBlock {
                     }
                     //计算偏移量，放入vr1
                     int basicOffset = ((Memory) basicAddress).getOffset();
-                    AddiInstruction addi = new AddiInstruction(vr1, vr1, new Immediate(basicOffset));
-                    instructionList.add(addi);
+                    if(basicOffset != 0 )
+                    {
+                        AddiInstruction addi = new AddiInstruction(vr1, vr1, new Immediate(basicOffset));
+                        instructionList.add(addi);
+                    }
                     //计算结果
                     AddInstruction add = new AddInstruction(dst, basicAdd, vr1);
                     instructionList.add(add);
@@ -534,8 +539,17 @@ public class RISCBasicBlock {
                 instructionList.add(xor);
             }
             case LT -> {
-                SltInstruction b = new SltInstruction(dst, temp1, temp2);
-                instructionList.add(b);
+                if(op2 instanceof Immediate)
+                {
+                    instructionList.removeLast();
+                    SltiInstruction b = new SltiInstruction(dst, temp1, op2);
+                    instructionList.add(b);
+                }
+                else {
+                        SltInstruction b = new SltInstruction(dst, temp1, temp2);
+                        instructionList.add(b);
+                }
+
             }
             case LE -> {
                 // 小于等于 相当于大于反过来
@@ -707,16 +721,29 @@ public class RISCBasicBlock {
 
                 if (v.getType().isIntegerType()) {
                     int val = ((Constant.ConstantInt) v).getVal();
-                    RISCOperand temp = new Immediate(val);
-                    if (dst instanceof Register) {
-                        LiInstruction li = new LiInstruction(dst, temp);
-                        instructionList.add(li);
-                    } else if (dst instanceof Memory) {
-                        VirtualRegister vr = getNewVr();
-                        LiInstruction li = new LiInstruction(vr, temp);
-                        instructionList.add(li);
-                        SdInstruction sd = new SdInstruction(vr, dst);
-                        instructionList.add(sd);
+                    if(val != 0)
+                    {
+                        RISCOperand temp = new Immediate(val);
+                        if (dst instanceof Register) {
+                            LiInstruction li = new LiInstruction(dst, temp);
+                            instructionList.add(li);
+                        } else if (dst instanceof Memory) {
+                            VirtualRegister vr = getNewVr();
+                            LiInstruction li = new LiInstruction(vr, temp);
+                            instructionList.add(li);
+                            SdInstruction sd = new SdInstruction(vr, dst);
+                            instructionList.add(sd);
+                        }
+                    }
+                    else {
+                        RISCOperand temp = new RealRegister(0);
+                        if (dst instanceof Register) {
+                            MvInstruction mv = new MvInstruction(dst, temp);
+                            instructionList.add(mv);
+                        } else if (dst instanceof Memory) {
+                            SdInstruction sd = new SdInstruction(temp, dst);
+                            instructionList.add(sd);
+                        }
                     }
 
                 } else if (v.getType().isFloatType()) {
@@ -984,7 +1011,7 @@ public class RISCBasicBlock {
 //        if(rop2 instanceof Register){
 //            rop2 = new Memory(0, (Register) rop2);
 //        }
-        if (op1 instanceof Constant.ConstantInt) {
+        if (rop1 instanceof Immediate) {
             VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++);
             LiInstruction li1 = new LiInstruction(vr, rop1);
             instructionList.add(li1);
@@ -1161,8 +1188,15 @@ public class RISCBasicBlock {
         } else {
             if (value instanceof Constant) {
                 int val = ((Constant.ConstantInt) value).getVal();
-                RISCOperand temp = new Immediate(val);
-                return temp;
+                if (val != 0)
+                {
+                    RISCOperand temp = new Immediate(val);
+                    return temp;
+                }
+                else {
+                    RISCOperand zero = new RealRegister(0);
+                    return zero;
+                }
             } else {
                 VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++, value);
                 return vr;
