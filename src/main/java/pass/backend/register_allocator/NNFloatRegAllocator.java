@@ -136,7 +136,7 @@ public class NNFloatRegAllocator implements BaseBackendPass {
             // 得到每个寄存器的活跃基本块
             activeBlocksForVariable(riscFunc);
             // 输出活跃基本块信息
-            printActiveBlocksForVariable(activeBlocksMap);
+//            printActiveBlocksForVariable(activeBlocksMap);
 
 
             // 初始化LiveInterval
@@ -151,17 +151,17 @@ public class NNFloatRegAllocator implements BaseBackendPass {
             updateStackSize(riscFunc);
 
             // 打印寄存器分配情况
-            for (Map.Entry<Integer, RegisterUsage> entry : regUsageTracker.getRegisterUsageMap().entrySet()) {
-                int timePoint = entry.getKey();
-                RegisterUsage registerUsage = entry.getValue();
-
-                System.out.print("Time Point: " + timePoint + " | ");
-                for (int register = 0; register < registerUsage.getRegNum(); register++) {
-                    boolean isUsed = registerUsage.isRegisterUsed(register);
-                    System.out.print(register + ": " + (isUsed ? "√" : "x") + " | ");
-                }
-                System.out.println();
-            }
+//            for (Map.Entry<Integer, RegisterUsage> entry : regUsageTracker.getRegisterUsageMap().entrySet()) {
+//                int timePoint = entry.getKey();
+//                RegisterUsage registerUsage = entry.getValue();
+//
+//                System.out.print("Time Point: " + timePoint + " | ");
+//                for (int register = 0; register < registerUsage.getRegNum(); register++) {
+//                    boolean isUsed = registerUsage.isRegisterUsed(register);
+//                    System.out.print(register + ": " + (isUsed ? "√" : "x") + " | ");
+//                }
+//                System.out.println();
+//            }
         }
 
 
@@ -212,21 +212,21 @@ public class NNFloatRegAllocator implements BaseBackendPass {
             def.put(riscBB, curDefSet);
             use.put(riscBB, curUseSet);
         }
-        for (RISCBasicBlock riscBB : riscBBList) {
-            System.out.println("Basic Block: " + riscBB.getBlockName());
-
-            System.out.println("Def:");
-            for (Integer defVar : def.get(riscBB)) {
-                System.out.println("  vr_f" + defVar);
-            }
-
-            System.out.println("Use:");
-            for (Integer useVar : use.get(riscBB)) {
-                System.out.println("  vr_f" + useVar);
-            }
-
-            System.out.println("--------------------");
-        }
+//        for (RISCBasicBlock riscBB : riscBBList) {
+//            System.out.println("Basic Block: " + riscBB.getBlockName());
+//
+//            System.out.println("Def:");
+//            for (Integer defVar : def.get(riscBB)) {
+//                System.out.println("  vr_f" + defVar);
+//            }
+//
+//            System.out.println("Use:");
+//            for (Integer useVar : use.get(riscBB)) {
+//                System.out.println("  vr_f" + useVar);
+//            }
+//
+//            System.out.println("--------------------");
+//        }
     }
 
     private void activeBlocksForVariable(RISCFunction riscFunc) {
@@ -256,16 +256,16 @@ public class NNFloatRegAllocator implements BaseBackendPass {
     private void printActiveBlocksForVariable(Map<Integer, Set<RISCBasicBlock>> activeBlocksMap) {
 
         // 遍历活跃块Map，打印每个变量及其对应的活跃基本块集合
-        for (Map.Entry<Integer, Set<RISCBasicBlock>> entry : activeBlocksMap.entrySet()) {
-            int variable = entry.getKey();
-            Set<RISCBasicBlock> activeBlocks = entry.getValue();
-
-            System.out.println("Variable vr_f" + variable + " is active in the following basic blocks:");
-            for (RISCBasicBlock riscBB : activeBlocks) {
-                System.out.println("  " + riscBB.getBlockName());
-            }
-            System.out.println();
-        }
+//        for (Map.Entry<Integer, Set<RISCBasicBlock>> entry : activeBlocksMap.entrySet()) {
+//            int variable = entry.getKey();
+//            Set<RISCBasicBlock> activeBlocks = entry.getValue();
+//
+//            System.out.println("Variable vr_f" + variable + " is active in the following basic blocks:");
+//            for (RISCBasicBlock riscBB : activeBlocks) {
+//                System.out.println("  " + riscBB.getBlockName());
+//            }
+//            System.out.println();
+//        }
     }
 
     private void livenessAnalysis(RISCFunction riscFunc) {
@@ -306,21 +306,21 @@ public class NNFloatRegAllocator implements BaseBackendPass {
                 }
             }
         }
-        for (RISCBasicBlock riscBB : riscFunc.getBasicBlockList()) {
-            System.out.println("Basic Block: " + riscBB.getBlockName());
-
-            System.out.println("IN:");
-            for (Integer defVar : in.get(riscBB)) {
-                System.out.println("  vr_f" + defVar);
-            }
-
-            System.out.println("OUT:");
-            for (Integer useVar : out.get(riscBB)) {
-                System.out.println("  vr_f" + useVar);
-            }
-
-            System.out.println("--------------------");
-        }
+//        for (RISCBasicBlock riscBB : riscFunc.getBasicBlockList()) {
+//            System.out.println("Basic Block: " + riscBB.getBlockName());
+//
+//            System.out.println("IN:");
+//            for (Integer defVar : in.get(riscBB)) {
+//                System.out.println("  vr_f" + defVar);
+//            }
+//
+//            System.out.println("OUT:");
+//            for (Integer useVar : out.get(riscBB)) {
+//                System.out.println("  vr_f" + useVar);
+//            }
+//
+//            System.out.println("--------------------");
+//        }
     }
 
     private void initializeLiveInterval(RISCFunction riscFunc) {
@@ -375,12 +375,12 @@ public class NNFloatRegAllocator implements BaseBackendPass {
         }
 
         sortedLiveIntervalList = sortByStart();
-        for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
-            System.out.println("Register: vr_f" + entry.getKey().toString());
-            System.out.println("Start: " + entry.getValue().getStart());
-            System.out.println("End: " + entry.getValue().getEnd());
-            System.out.println();
-        }
+//        for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
+//            System.out.println("Register: vr_f" + entry.getKey().toString());
+//            System.out.println("Start: " + entry.getValue().getStart());
+//            System.out.println("End: " + entry.getValue().getEnd());
+//            System.out.println();
+//        }
     }
 
     private void linearScan() {
