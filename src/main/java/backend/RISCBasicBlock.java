@@ -541,9 +541,23 @@ public class RISCBasicBlock {
             case LT -> {
                 if(op2 instanceof Immediate)
                 {
-                    instructionList.removeLast();
-                    SltiInstruction b = new SltiInstruction(dst, temp1, op2);
-                    instructionList.add(b);
+                    int val = ((Immediate) op2).getVal();
+                    if(val >= -2048 && val <=2047 )
+                    {
+                        instructionList.removeLast();
+                        SltiInstruction b = new SltiInstruction(dst, temp1, op2);
+                        instructionList.add(b);
+                    }
+                    else if(val >= 2048 && val <= 4095 )
+                    {
+                        instructionList.removeLast();
+                        SltiuInstruction b = new SltiuInstruction(dst, temp1, op2);
+                        instructionList.add(b);
+                    }
+                    else {
+                        SltInstruction b = new SltInstruction(dst, temp1, temp2);
+                        instructionList.add(b);
+                    }
                 }
                 else {
                         SltInstruction b = new SltInstruction(dst, temp1, temp2);
@@ -570,8 +584,30 @@ public class RISCBasicBlock {
             }
             case GE -> {
                 //大于等于相当于小于反过来
-                SltInstruction b = new SltInstruction(dst, temp1, temp2);
-                instructionList.add(b);
+                if(op2 instanceof Immediate)
+                {
+                    int val = ((Immediate) op2).getVal();
+                    if(val >= -2048 && val <=2047 )
+                    {
+                        instructionList.removeLast();
+                        SltiInstruction b = new SltiInstruction(dst, temp1, op2);
+                        instructionList.add(b);
+                    }
+                    else if(val >= 2048 && val <= 4095 )
+                    {
+                        instructionList.removeLast();
+                        SltiuInstruction b = new SltiuInstruction(dst, temp1, op2);
+                        instructionList.add(b);
+                    }
+                    else {
+                        SltInstruction b = new SltInstruction(dst, temp1, temp2);
+                        instructionList.add(b);
+                    }
+                }
+                else {
+                    SltInstruction b = new SltInstruction(dst, temp1, temp2);
+                    instructionList.add(b);
+                }
                 XoriInstruction xor = new XoriInstruction(dst, dst, new Immediate(1));
                 instructionList.add(xor);
             }

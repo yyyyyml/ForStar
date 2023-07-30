@@ -6,7 +6,6 @@
 	.align	1
 	.global	float_abs
 	.type	float_abs	@function
-	slti
 float_abs:
 0	addi sp,sp,-48
 1	sd ra,40(sp)
@@ -528,120 +527,123 @@ main:
 198	j .Bmain30
 .Bmain40:
 199	lw t2,-104(s0)
-200	slti t3,t2,1000000000
-201	bne t3,zero,.Bmain43
-202	j .Bmain70
+200	li t3,1000000000
+201	slt t4,t2,t3
+202	bne t4,zero,.Bmain43
+203	j .Bmain70
 .Bmain43:
-203	sd t2,-120(s0)
-204	sd t3,-128(s0)
+204	sd t2,-120(s0)
+205	sd t3,-128(s0)
+206	sd t4,-136(s0)
 	fsd f0,-152(s0)
 	fsd f1,-160(s0)
-205	call getfloat
+207	call getfloat
 	fld f1,-160(s0)
 	fld f0,-152(s0)
-206	ld t3,-128(s0)
-207	ld t2,-120(s0)
-208	fmv.s f0,f10
-209	fsw f0,-40(s0)
-210	flw f0,-40(s0)
-211	lla t2,.F0
-212	flw f1,0(t2)
-213	fmul.s f2,f1,f0
-214	flw f0,-40(s0)
-215	fmul.s f1,f2,f0
-216	fsw f1,-32(s0)
+208	ld t4,-136(s0)
+209	ld t3,-128(s0)
+210	ld t2,-120(s0)
+211	fmv.s f0,f10
+212	fsw f0,-40(s0)
+213	flw f0,-40(s0)
+214	lla t2,.F0
+215	flw f1,0(t2)
+216	fmul.s f2,f1,f0
 217	flw f0,-40(s0)
-218	fcvt.w.s t2,f0,rtz
-219	mv a0,t2
-220	sd t2,-120(s0)
+218	fmul.s f1,f2,f0
+219	fsw f1,-32(s0)
+220	flw f0,-40(s0)
+221	fcvt.w.s t2,f0,rtz
+222	mv a0,t2
+223	sd t2,-120(s0)
 	fsd f0,-152(s0)
-221	call circle_area
+224	call circle_area
 	fld f0,-152(s0)
-222	ld t2,-120(s0)
-223	fmv.s f0,f10
-224	fsw f0,-24(s0)
-225	lw t2,-96(s0)
-226	li t3,4
-227	mulw t3,t3,t2
-228	addi t3,t3,-88
-229	add t2,s0,t3
-230	lw t3,-96(s0)
-231	li t4,4
-232	mulw t4,t4,t3
-233	addi t4,t4,-88
-234	add t3,s0,t4
-235	flw f0,0(t3)
-236	flw f1,-40(s0)
-237	fadd.s f2,f0,f1
-238	fsw f2,0(t2)
-239	flw f0,-32(s0)
-240	fmv.s f10,f0
-241	sd t2,-120(s0)
-242	sd t3,-128(s0)
-243	sd t4,-136(s0)
+225	ld t2,-120(s0)
+226	fmv.s f0,f10
+227	fsw f0,-24(s0)
+228	lw t2,-96(s0)
+229	li t3,4
+230	mulw t3,t3,t2
+231	addi t3,t3,-88
+232	add t2,s0,t3
+233	lw t3,-96(s0)
+234	li t4,4
+235	mulw t4,t4,t3
+236	addi t4,t4,-88
+237	add t3,s0,t4
+238	flw f0,0(t3)
+239	flw f1,-40(s0)
+240	fadd.s f2,f0,f1
+241	fsw f2,0(t2)
+242	flw f0,-32(s0)
+243	fmv.s f10,f0
+244	sd t2,-120(s0)
+245	sd t3,-128(s0)
+246	sd t4,-136(s0)
 	fsd f0,-152(s0)
-244	call putfloat
+247	call putfloat
 	fld f0,-152(s0)
-245	ld t4,-136(s0)
-246	ld t3,-128(s0)
-247	ld t2,-120(s0)
-248	mv t2,a0
-249	li a0,32
-250	sd t2,-120(s0)
+248	ld t4,-136(s0)
+249	ld t3,-128(s0)
+250	ld t2,-120(s0)
+251	mv t2,a0
+252	li a0,32
+253	sd t2,-120(s0)
 	fsd f0,-152(s0)
-251	call putch
+254	call putch
 	fld f0,-152(s0)
-252	ld t2,-120(s0)
-253	mv t2,a0
-254	flw f0,-24(s0)
-255	fcvt.w.s t2,f0,rtz
-256	mv a0,t2
-257	sd t2,-120(s0)
+255	ld t2,-120(s0)
+256	mv t2,a0
+257	flw f0,-24(s0)
+258	fcvt.w.s t2,f0,rtz
+259	mv a0,t2
+260	sd t2,-120(s0)
 	fsd f0,-152(s0)
-258	call putint
+261	call putint
 	fld f0,-152(s0)
-259	ld t2,-120(s0)
-260	mv t2,a0
-261	li a0,10
-262	sd t2,-120(s0)
+262	ld t2,-120(s0)
+263	mv t2,a0
+264	li a0,10
+265	sd t2,-120(s0)
 	fsd f0,-152(s0)
-263	call putch
+266	call putch
 	fld f0,-152(s0)
-264	ld t2,-120(s0)
-265	mv t2,a0
-266	lw t2,-104(s0)
-267	lla t3,.F15
-268	flw f0,0(t3)
-269	fneg.s f1,f0
-270	fneg.s f0,f1
-271	fcvt.s.w f1,t2
-272	fmul.s f2,f1,f0
-273	fcvt.w.s t2,f2,rtz
-274	sw t2,-104(s0)
-275	lw t2,-96(s0)
-276	addi t3,t2,1
-277	sw t3,-96(s0)
-278	j .Bmain40
+267	ld t2,-120(s0)
+268	mv t2,a0
+269	lw t2,-104(s0)
+270	lla t3,.F15
+271	flw f0,0(t3)
+272	fneg.s f1,f0
+273	fneg.s f0,f1
+274	fcvt.s.w f1,t2
+275	fmul.s f2,f1,f0
+276	fcvt.w.s t2,f2,rtz
+277	sw t2,-104(s0)
+278	lw t2,-96(s0)
+279	addi t3,t2,1
+280	sw t3,-96(s0)
+281	j .Bmain40
 .Bmain70:
-279	lw t2,-48(s0)
-280	mv a0,t2
-281	addi t2,s0,-88
-282	mv a1,t2
-283	sd t2,-120(s0)
+282	lw t2,-48(s0)
+283	mv a0,t2
+284	addi t2,s0,-88
+285	mv a1,t2
+286	sd t2,-120(s0)
 	fsd f0,-152(s0)
 	fsd f1,-160(s0)
 	fsd f2,-168(s0)
-284	call putfarray
+287	call putfarray
 	fld f2,-168(s0)
 	fld f1,-160(s0)
 	fld f0,-152(s0)
-285	ld t2,-120(s0)
-286	mv t2,a0
-287	mv a0,zero
-288	ld ra,168(sp)
-289	ld s0,160(sp)
-290	addi sp,sp,176
-291	jr ra
+288	ld t2,-120(s0)
+289	mv t2,a0
+290	mv a0,zero
+291	ld ra,168(sp)
+292	ld s0,160(sp)
+293	addi sp,sp,176
+294	jr ra
 	.size	main, .-main
 	.align	2
 .F0:
