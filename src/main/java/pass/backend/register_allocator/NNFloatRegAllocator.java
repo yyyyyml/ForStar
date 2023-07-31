@@ -178,6 +178,7 @@ public class NNFloatRegAllocator implements BaseBackendPass {
 
                 LinkedList<RISCOperand> operandList = riscInst.getOperandList();
                 int opIndex = 0;
+                int defOpName = -1;
                 for (RISCOperand riscOp : operandList) {
                     if (riscOp.isFloatVirtualRegister()) {
                         var name = ((FloatVirtualRegister) riscOp).getName();
@@ -188,9 +189,10 @@ public class NNFloatRegAllocator implements BaseBackendPass {
                                 curDefSet.add(name);
                             }
                         } else {
-                            // 使用点，前面如果没有定义点则加入use i=i+1?
-                            if (!curDefSet.contains(name)) {
+                            // 使用点，前面如果没有定义点则加入use i=i+1?同时加入使用点和定义点
+                            if (!curDefSet.contains(name) || name == defOpName) {
                                 curUseSet.add(name);
+                                curDefSet.remove(name);
                             }
                         }
 

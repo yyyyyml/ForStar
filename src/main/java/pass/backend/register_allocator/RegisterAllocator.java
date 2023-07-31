@@ -652,6 +652,7 @@ public class RegisterAllocator implements BaseBackendPass {
                         var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                         for (int i = 0; i < curRegUsage.getRegNum(); i++) {
                             if (curRegUsage.isRegisterUsed(i)) {
+                                if (i > 4) continue;
                                 RealRegister reg = new RealRegister(i, 11);
                                 riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
 //                                System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
