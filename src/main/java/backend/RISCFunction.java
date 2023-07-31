@@ -150,6 +150,7 @@ public class RISCFunction {
 //                        localStackIndex += 8;
 //                        dst = new Memory(localStackIndex, 1);
                     }
+                    System.out.println(curInst.getName()+"->"+dst.emit());
                     valueRISCOperandHashMap.put(curInst,dst);
                     int paraCount = curInst.getNumOP();
                     if(paraCount % 2 != 0 ){
@@ -158,7 +159,7 @@ public class RISCFunction {
                     for(int i = 0 ; i < paraCount ; i = i + 2){
                         Value v1 = curInst.getOperandAt(i);
                         Value v2 = curInst.getOperandAt(i+1);
-                        if((!(v1 instanceof Constant))&&(!myfuncParameters.containsKey(v1))){
+                        if(false&&(!(v1 instanceof Constant))&&(!myfuncParameters.containsKey(v1))){
                             if ((phiMap.containsKey(v1))){
                                 phiMap.get(v1).add(curInst);
                             }
@@ -171,14 +172,16 @@ public class RISCFunction {
                         }
                         //判断v1为本函数参数或是常数，把curinst和v1以pair的形式存入list中
                         else {
+                            //System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!");
                             if(blockPhiMap.containsKey(v2)){
                                 blockPhiMap.get(v2).add(new Pair<>(curInst,v1));
-
+                                //System.out.println(v2.getName()+": "+v1+"->"+curInst.getName());
                             }
                             else {
                                 LinkedList<Pair<Value,Value>> list = new LinkedList<>();
                                 list.add(new Pair<>(curInst,v1));
                                 blockPhiMap.put(v2,list);
+                                //System.out.println(v2.getName()+": "+v1+"->"+curInst.getName());
                             }
                         }
                     }

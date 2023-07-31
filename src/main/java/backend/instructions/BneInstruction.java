@@ -18,7 +18,7 @@ public class BneInstruction extends RISCInstruction {
         this.op3 = op3;
         this.setOperand(op3, 2);
         this.type = ITYPE.bne;
-        System.out.println("ADD TO LIST " + op3.emit() );
+      //  System.out.println("ADD TO LIST " + op3.emit() );
         BB.nextBlocknameList.add(op3.emit());
     }
 

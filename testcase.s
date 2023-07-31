@@ -4,694 +4,216 @@
 	.attribute stack_align, 16
 	.text
 	.align	1
-	.global	float_abs
-	.type	float_abs	@function
-float_abs:
-0	addi sp,sp,-48
-1	sd ra,40(sp)
-2	sd s0,32(sp)
-3	addi s0,sp,48
-.Bfloat_abs1:
-4	fsw f10,-24(s0)
-5	flw f0,-24(s0)
-6	fcvt.s.w f1,zero
-7	flt.s t2,f0,f1
-8	bne t2,zero,.Bfloat_abs8
-9	j .Bfloat_abs6
-.Bfloat_abs6:
-10	flw f0,-24(s0)
-11	fmv.s f10,f0
-12	ld ra,40(sp)
-13	ld s0,32(sp)
-14	addi sp,sp,48
-15	jr ra
-.Bfloat_abs8:
-16	flw f0,-24(s0)
-17	fneg.s f1,f0
-18	fmv.s f10,f1
-19	ld ra,40(sp)
-20	ld s0,32(sp)
-21	addi sp,sp,48
-22	jr ra
-	.size	float_abs, .-float_abs
-	.align	1
-	.global	circle_area
-	.type	circle_area	@function
-circle_area:
-0	addi sp,sp,-48
-1	sd ra,40(sp)
-2	sd s0,32(sp)
-3	addi s0,sp,48
-.Bcircle_area1:
-4	sw a0,-24(s0)
-5	lw t2,-24(s0)
-6	fcvt.s.w f0,t2
-7	lla t2,.F0
-8	flw f1,0(t2)
-9	fmul.s f2,f1,f0
-10	lw t2,-24(s0)
-11	fcvt.s.w f0,t2
-12	fmul.s f1,f2,f0
-13	lw t2,-24(s0)
-14	lw t3,-24(s0)
-15	mulw t4,t2,t3
-16	fcvt.s.w f0,t4
-17	lla t2,.F0
-18	flw f2,0(t2)
-19	fmul.s f3,f0,f2
-20	fadd.s f0,f1,f3
-21	li t2,2
-22	fcvt.s.w f1,t2
-23	fdiv.s f2,f0,f1
-24	fmv.s f10,f2
-25	ld ra,40(sp)
-26	ld s0,32(sp)
-27	addi sp,sp,48
-28	jr ra
-	.size	circle_area, .-circle_area
-	.align	1
-	.global	float_eq
-	.type	float_eq	@function
-float_eq:
-0	addi sp,sp,-80
-1	sd ra,72(sp)
-2	sd s0,64(sp)
-3	addi s0,sp,80
-.Bfloat_eq2:
-4	fsw f10,-32(s0)
-5	fsw f11,-24(s0)
-6	flw f0,-32(s0)
-7	flw f1,-24(s0)
-8	fsub.s f2,f0,f1
-9	fmv.s f10,f2
-	fsd f0,-56(s0)
-	fsd f1,-64(s0)
-	fsd f2,-72(s0)
-10	call float_abs
-	fld f2,-72(s0)
-	fld f1,-64(s0)
-	fld f0,-56(s0)
-11	fmv.s f0,f10
-12	lla t2,.F1
-13	flw f1,0(t2)
-14	flt.s t2,f0,f1
-15	bne t2,zero,.Bfloat_eq10
-16	j .Bfloat_eq16
-.Bfloat_eq10:
-17	li t2,1
-18	fcvt.s.w f0,t2
-19	lla t2,.F2
-20	flw f1,0(t2)
-21	fmul.s f2,f0,f1
-22	li t2,2
-23	fcvt.s.w f0,t2
-24	fdiv.s f1,f2,f0
-25	fcvt.w.s t2,f1,rtz
-26	mv a0,t2
-27	ld ra,72(sp)
-28	ld s0,64(sp)
-29	addi sp,sp,80
-30	jr ra
-.Bfloat_eq16:
-31	mv a0,zero
-32	ld ra,72(sp)
-33	ld s0,64(sp)
-34	addi sp,sp,80
-35	jr ra
-	.size	float_eq, .-float_eq
-	.align	1
-	.global	error
-	.type	error	@function
-error:
-0	addi sp,sp,-48
-1	sd ra,40(sp)
-2	sd s0,32(sp)
-3	addi s0,sp,48
-.Berror0:
-4	li a0,101
-5	call putch
-6	mv t2,a0
-7	li a0,114
-8	sd t2,-32(s0)
-9	call putch
-10	ld t2,-32(s0)
-11	mv t2,a0
-12	li a0,114
-13	sd t2,-32(s0)
-14	call putch
-15	ld t2,-32(s0)
-16	mv t2,a0
-17	li a0,111
-18	sd t2,-32(s0)
-19	call putch
-20	ld t2,-32(s0)
-21	mv t2,a0
-22	li a0,114
-23	sd t2,-32(s0)
-24	call putch
-25	ld t2,-32(s0)
-26	mv t2,a0
-27	li a0,10
-28	sd t2,-32(s0)
-29	call putch
-30	ld t2,-32(s0)
-31	mv t2,a0
-32	nop
-33	ld ra,40(sp)
-34	ld s0,32(sp)
-35	addi sp,sp,48
-36	jr ra
-	.size	error, .-error
-	.align	1
-	.global	ok
-	.type	ok	@function
-ok:
-0	addi sp,sp,-48
-1	sd ra,40(sp)
-2	sd s0,32(sp)
-3	addi s0,sp,48
-.Bok0:
-4	li a0,111
-5	call putch
-6	mv t2,a0
-7	li a0,107
-8	sd t2,-32(s0)
-9	call putch
-10	ld t2,-32(s0)
-11	mv t2,a0
-12	li a0,10
-13	sd t2,-32(s0)
-14	call putch
-15	ld t2,-32(s0)
-16	mv t2,a0
-17	nop
-18	ld ra,40(sp)
-19	ld s0,32(sp)
-20	addi sp,sp,48
-21	jr ra
-	.size	ok, .-ok
-	.align	1
-	.global	assert
-	.type	assert	@function
-assert:
-0	addi sp,sp,-64
-1	sd ra,56(sp)
-2	sd s0,48(sp)
-3	addi s0,sp,64
-.Bassert1:
-4	sw a0,-24(s0)
-5	lw t2,-24(s0)
-6	subw t3,zero,t2
-7	seqz t2,t3
-8	bne t2,zero,.Bassert6
-9	j .Bassert7
-.Bassert5:
-10	nop
-11	ld ra,56(sp)
-12	ld s0,48(sp)
-13	addi sp,sp,64
-14	jr ra
-.Bassert6:
-15	sd t2,-40(s0)
-16	sd t3,-48(s0)
-17	call error
-18	ld t3,-48(s0)
-19	ld t2,-40(s0)
-20	mv t2,a0
-21	j .Bassert5
-.Bassert7:
-22	sd t2,-40(s0)
-23	call ok
-24	ld t2,-40(s0)
-25	mv t2,a0
-26	j .Bassert5
-	.size	assert, .-assert
-	.align	1
-	.global	assert_not
-	.type	assert_not	@function
-assert_not:
-0	addi sp,sp,-64
-1	sd ra,56(sp)
-2	sd s0,48(sp)
-3	addi s0,sp,64
-.Bassert_not1:
-4	sw a0,-24(s0)
-5	lw t2,-24(s0)
-6	subw t3,t2,zero
-7	seqz t2,t3
-8	xori t2,t2,1
-9	bne t2,zero,.Bassert_not6
-10	j .Bassert_not7
-.Bassert_not5:
-11	nop
-12	ld ra,56(sp)
-13	ld s0,48(sp)
-14	addi sp,sp,64
-15	jr ra
-.Bassert_not6:
-16	sd t2,-40(s0)
-17	sd t3,-48(s0)
-18	call error
-19	ld t3,-48(s0)
-20	ld t2,-40(s0)
-21	mv t2,a0
-22	j .Bassert_not5
-.Bassert_not7:
-23	sd t2,-40(s0)
-24	call ok
-25	ld t2,-40(s0)
-26	mv t2,a0
-27	j .Bassert_not5
-	.size	assert_not, .-assert_not
+	.global	select_sort
+	.type	select_sort	@function
+select_sort:
+	addi sp,sp,-80
+	sd ra,72(sp)
+	sd s0,64(sp)
+	addi s0,sp,80
+.Bselect_sort2:
+	mv t2,a0
+	mv t3,zero
+	mv t4,a1
+	j .Bselect_sort3
+.Bselect_sort3:
+	li s6,1
+	subw s7,t4,s6
+	slt s6,t3,s7
+	bne s6,zero,.Bselect_sort9
+	j .Bselect_sort11
+.Bselect_sort9:
+	addi s7,t3,1
+	mv s10,t2
+	sd s10,-48(s0)
+	mv s10,t3
+	sd s10,-40(s0)
+	mv s10,t3
+	sd s10,-32(s0)
+	mv s10,t4
+	sd s10,-24(s0)
+	mv s8,s7
+	j .Bselect_sort12
+.Bselect_sort11:
+	mv a0,zero
+	ld ra,72(sp)
+	ld s0,64(sp)
+	addi sp,sp,80
+	jr ra
+.Bselect_sort12:
+	ld s10,-24(s0)
+	slt s7,s8,s10
+	bne s7,zero,.Bselect_sort19
+	j .Bselect_sort29
+.Bselect_sort19:
+	li t5,4
+	ld s10,-32(s0)
+	mulw t5,t5,s10
+	ld s10,-48(s0)
+	add s6,s10,t5
+	lw s5,0(s6)
+	li t6,4
+	mulw t6,t6,s8
+	ld s10,-48(s0)
+	add s6,s10,t6
+	lw s4,0(s6)
+	subw s6,s5,s4
+	sgtz s4,s6
+	ld s10,-32(s0)
+	mv s7,s10
+	bne s4,zero,.Bselect_sort28
+	j .Bselect_sort25
+.Bselect_sort25:
+	addi s4,s8,1
+	mv s10,s10
+	sd s10,-48(s0)
+	mv s10,s10
+	sd s10,-40(s0)
+	mv s10,s7
+	sd s10,-32(s0)
+	mv s10,s10
+	sd s10,-24(s0)
+	mv s8,s4
+	j .Bselect_sort12
+.Bselect_sort28:
+	mv s7,s8
+	j .Bselect_sort25
+.Bselect_sort29:
+	ld s10,-32(s0)
+	ld s9,-40(s0)
+	subw s4,s10,s9
+	seqz s1,s4
+	xori s1,s1,1
+	bne s1,zero,.Bselect_sort33
+	j .Bselect_sort31
+.Bselect_sort31:
+	ld s10,-40(s0)
+	addi s4,s10,1
+	ld s10,-48(s0)
+	mv t2,s10
+	mv t3,s4
+	ld s10,-24(s0)
+	mv t4,s10
+	j .Bselect_sort3
+.Bselect_sort33:
+	li s2,4
+	ld s10,-32(s0)
+	mulw s2,s2,s10
+	ld s10,-48(s0)
+	add t2,s10,s2
+	lw s4,0(t2)
+	li s3,4
+	ld s10,-32(s0)
+	mulw s3,s3,s10
+	ld s10,-48(s0)
+	add t2,s10,s3
+	li s10,4
+	sd s10,-64(s0)
+	ld s9,-40(s0)
+	mulw s10,s10,s9
+	sd s10,-64(s0)
+	ld s10,-48(s0)
+	ld s9,-64(s0)
+	add s5,s10,s9
+	lw s6,0(s5)
+	sw s6,0(t2)
+	li s10,4
+	sd s10,-56(s0)
+	ld s9,-40(s0)
+	mulw s10,s10,s9
+	sd s10,-56(s0)
+	ld s10,-48(s0)
+	ld s9,-56(s0)
+	add t2,s10,s9
+	sw s4,0(t2)
+	j .Bselect_sort31
+	.size	select_sort, .-select_sort
 	.align	1
 	.global	main
 	.type	main	@function
 main:
-0	addi sp,sp,-176
-1	sd ra,168(sp)
-2	sd s0,160(sp)
-3	addi s0,sp,176
+	addi sp,sp,-96
+	sd ra,88(sp)
+	sd s0,80(sp)
+	addi s0,sp,96
 .Bmain0:
-4	lla t2,.F3
-5	flw f0,0(t2)
-6	lla t2,.F3
-7	flw f0,0(t2)
-8	fmv.s f10,f0
-9	lla t2,.F4
-10	flw f0,0(t2)
-11	lla t2,.F4
-12	flw f0,0(t2)
-13	fmv.s f11,f0
-14	sd t2,-120(s0)
-	fsd f0,-152(s0)
-15	call float_eq
-	fld f0,-152(s0)
-16	ld t2,-120(s0)
-17	mv t2,a0
-18	mv a0,t2
-19	sd t2,-120(s0)
-	fsd f0,-152(s0)
-20	call assert_not
-	fld f0,-152(s0)
-21	ld t2,-120(s0)
-22	mv t2,a0
-23	lla t2,.F5
-24	flw f0,0(t2)
-25	lla t2,.F5
-26	flw f0,0(t2)
-27	fmv.s f10,f0
-28	lla t2,.F6
-29	flw f0,0(t2)
-30	lla t2,.F6
-31	flw f0,0(t2)
-32	fmv.s f10,f0
-33	sd t2,-120(s0)
-	fsd f0,-152(s0)
-34	call float_eq
-	fld f0,-152(s0)
-35	ld t2,-120(s0)
-36	mv t2,a0
-37	mv a0,t2
-38	sd t2,-120(s0)
-	fsd f0,-152(s0)
-39	call assert_not
-	fld f0,-152(s0)
-40	ld t2,-120(s0)
-41	mv t2,a0
-42	lla t2,.F6
-43	flw f0,0(t2)
-44	lla t2,.F6
-45	flw f0,0(t2)
-46	fmv.s f10,f0
-47	lla t2,.F6
-48	flw f0,0(t2)
-49	lla t2,.F6
-50	flw f0,0(t2)
-51	fmv.s f11,f0
-52	sd t2,-120(s0)
-	fsd f0,-152(s0)
-53	call float_eq
-	fld f0,-152(s0)
-54	ld t2,-120(s0)
-55	mv t2,a0
-56	mv a0,t2
-57	sd t2,-120(s0)
-	fsd f0,-152(s0)
-58	call assert
-	fld f0,-152(s0)
-59	ld t2,-120(s0)
-60	mv t2,a0
-61	lla t2,.F7
-62	flw f0,0(t2)
-63	fcvt.w.s t2,f0,rtz
-64	mv a0,t2
-65	sd t2,-120(s0)
-	fsd f0,-152(s0)
-66	call circle_area
-	fld f0,-152(s0)
-67	ld t2,-120(s0)
-68	fmv.s f0,f10
-69	li a0,5
-70	sd t2,-120(s0)
-	fsd f0,-152(s0)
-71	call circle_area
-	fld f0,-152(s0)
-72	ld t2,-120(s0)
-73	fmv.s f1,f10
-74	fmv.s f10,f0
-75	fmv.s f11,f1
-76	sd t2,-120(s0)
-	fsd f0,-152(s0)
-	fsd f1,-160(s0)
-77	call float_eq
-	fld f1,-160(s0)
-	fld f0,-152(s0)
-78	ld t2,-120(s0)
-79	mv t2,a0
-80	mv a0,t2
-81	sd t2,-120(s0)
-	fsd f0,-152(s0)
-	fsd f1,-160(s0)
-82	call assert
-	fld f1,-160(s0)
-	fld f0,-152(s0)
-83	ld t2,-120(s0)
-84	mv t2,a0
-85	lla t2,.F8
-86	flw f0,0(t2)
-87	lla t2,.F8
-88	flw f0,0(t2)
-89	fmv.s f10,f0
-90	lla t2,.F9
-91	flw f0,0(t2)
-92	lla t2,.F9
-93	flw f0,0(t2)
-94	fmv.s f11,f0
-95	sd t2,-120(s0)
-	fsd f0,-152(s0)
-96	call float_eq
-	fld f0,-152(s0)
-97	ld t2,-120(s0)
-98	mv t2,a0
-99	mv a0,t2
-100	sd t2,-120(s0)
-	fsd f0,-152(s0)
-101	call assert_not
-	fld f0,-152(s0)
-102	ld t2,-120(s0)
-103	mv t2,a0
-104	lla t2,.F10
-105	flw f0,0(t2)
-106	lla t2,.F11
-107	flw f1,0(t2)
-108	feq.s t2,f0,f1
-109	xori t3,t2,1
-110	bne t3,zero,.Bmain17
-111	j .Bmain18
-.Bmain17:
-112	sd t2,-120(s0)
-113	sd t3,-128(s0)
-	fsd f0,-152(s0)
-	fsd f1,-160(s0)
-114	call ok
-	fld f1,-160(s0)
-	fld f0,-152(s0)
-115	ld t3,-128(s0)
-116	ld t2,-120(s0)
-117	mv t2,a0
-118	j .Bmain18
-.Bmain18:
-119	lla t2,.F11
-120	flw f0,0(t2)
-121	lla t2,.F12
-122	flw f1,0(t2)
-123	feq.s t2,f0,f1
-124	subw t3,zero,t2
-125	seqz t2,t3
-126	bne t2,zero,.Bmain22
-127	j .Bmain23
-.Bmain22:
-128	sd t2,-120(s0)
-129	sd t3,-128(s0)
-	fsd f0,-152(s0)
-	fsd f1,-160(s0)
-130	call ok
-	fld f1,-160(s0)
-	fld f0,-152(s0)
-131	ld t3,-128(s0)
-132	ld t2,-120(s0)
-133	mv t2,a0
-134	j .Bmain23
+	lla t3,n
+	li t5,10
+	sw t5,0(t3)
+	li t3,4
+	sw t3,-56(s0)
+	li t3,3
+	sw t3,-52(s0)
+	li t3,9
+	sw t3,-48(s0)
+	li t3,2
+	sw t3,-44(s0)
+	sw zero,-40(s0)
+	li t3,1
+	sw t3,-36(s0)
+	li t3,6
+	sw t3,-32(s0)
+	li t3,5
+	sw t3,-28(s0)
+	li t3,7
+	sw t3,-24(s0)
+	li t3,8
+	sw t3,-20(s0)
+	lla t3,n
+	lw t5,0(t3)
+	addi t3,s0,-56
+	mv a0,t3
+	mv a1,t5
+	sd t2,-72(s0)
+	sd t4,-80(s0)
+	call select_sort
+	ld t4,-80(s0)
+	ld t2,-72(s0)
+	mv t3,a0
+	mv t2,t3
+	j .Bmain15
+.Bmain15:
+	lla t3,n
+	lw t5,0(t3)
+	slt t3,t2,t5
+	bne t3,zero,.Bmain19
+	j .Bmain23
+.Bmain19:
+	li t4,4
+	mulw t4,t4,t2
+	addi t4,t4,-56
+	add t3,s0,t4
+	lw t5,0(t3)
+	mv a0,t5
+	sd t2,-72(s0)
+	sd t4,-80(s0)
+	call putint
+	ld t4,-80(s0)
+	ld t2,-72(s0)
+	mv t3,a0
+	li a0,10
+	sd t2,-72(s0)
+	sd t4,-80(s0)
+	call putch
+	ld t4,-80(s0)
+	ld t2,-72(s0)
+	mv t3,a0
+	addi t3,t2,1
+	mv t2,t3
+	j .Bmain15
 .Bmain23:
-135	lla t2,.F11
-136	flw f0,0(t2)
-137	lla t2,.F11
-138	flw f1,0(t2)
-139	feq.s t2,f0,f1
-140	xori t3,t2,1
-141	bne t3,zero,.Bmain26
-142	j .Bmain28
-.Bmain25:
-143	sd t2,-120(s0)
-144	sd t3,-128(s0)
-	fsd f0,-152(s0)
-	fsd f1,-160(s0)
-145	call error
-	fld f1,-160(s0)
-	fld f0,-152(s0)
-146	ld t3,-128(s0)
-147	ld t2,-120(s0)
-148	mv t2,a0
-149	j .Bmain28
-.Bmain26:
-150	li t2,3
-151	subw t3,t2,zero
-152	seqz t2,t3
-153	xori t2,t2,1
-154	bne t2,zero,.Bmain25
-155	j .Bmain28
-.Bmain28:
-156	subw t2,zero,zero
-157	seqz t3,t2
-158	xori t3,t3,1
-159	bne t3,zero,.Bmain37
-160	j .Bmain38
-.Bmain30:
-161	li t2,1
-162	sw t2,-104(s0)
-163	sw zero,-96(s0)
-164	addi t2,s0,-88
-165	mv a0,t2
-166	mv a1,zero
-167	li a2,40
-168	sd t2,-120(s0)
-	fsd f0,-152(s0)
-	fsd f1,-160(s0)
-169	call memset
-	fld f1,-160(s0)
-	fld f0,-152(s0)
-170	ld t2,-120(s0)
-171	mv t2,a0
-172	lla t2,.F13
-173	flw f0,0(t2)
-174	fsw f0,-88(s0)
-175	li t2,2
-176	fcvt.s.w f0,t2
-177	fsw f0,-84(s0)
-178	addi t2,s0,-88
-179	mv a0,t2
-180	sd t2,-120(s0)
-	fsd f0,-152(s0)
-181	call getfarray
-	fld f0,-152(s0)
-182	ld t2,-120(s0)
-183	mv t2,a0
-184	sw t2,-48(s0)
-185	j .Bmain40
-.Bmain37:
-186	sd t2,-120(s0)
-	fsd f0,-152(s0)
-187	call ok
-	fld f0,-152(s0)
-188	ld t2,-120(s0)
-189	mv t2,a0
-190	j .Bmain30
-.Bmain38:
-191	lla t2,.F14
-192	flw f0,0(t2)
-193	lla t2,.F11
-194	flw f1,0(t2)
-195	feq.s t2,f0,f1
-196	xori t3,t2,1
-197	bne t3,zero,.Bmain37
-198	j .Bmain30
-.Bmain40:
-199	lw t2,-104(s0)
-200	li t3,1000000000
-201	slt t4,t2,t3
-202	bne t4,zero,.Bmain43
-203	j .Bmain70
-.Bmain43:
-204	sd t2,-120(s0)
-205	sd t3,-128(s0)
-206	sd t4,-136(s0)
-	fsd f0,-152(s0)
-	fsd f1,-160(s0)
-207	call getfloat
-	fld f1,-160(s0)
-	fld f0,-152(s0)
-208	ld t4,-136(s0)
-209	ld t3,-128(s0)
-210	ld t2,-120(s0)
-211	fmv.s f0,f10
-212	fsw f0,-40(s0)
-213	flw f0,-40(s0)
-214	lla t2,.F0
-215	flw f1,0(t2)
-216	fmul.s f2,f1,f0
-217	flw f0,-40(s0)
-218	fmul.s f1,f2,f0
-219	fsw f1,-32(s0)
-220	flw f0,-40(s0)
-221	fcvt.w.s t2,f0,rtz
-222	mv a0,t2
-223	sd t2,-120(s0)
-	fsd f0,-152(s0)
-224	call circle_area
-	fld f0,-152(s0)
-225	ld t2,-120(s0)
-226	fmv.s f0,f10
-227	fsw f0,-24(s0)
-228	lw t2,-96(s0)
-229	li t3,4
-230	mulw t3,t3,t2
-231	addi t3,t3,-88
-232	add t2,s0,t3
-233	lw t3,-96(s0)
-234	li t4,4
-235	mulw t4,t4,t3
-236	addi t4,t4,-88
-237	add t3,s0,t4
-238	flw f0,0(t3)
-239	flw f1,-40(s0)
-240	fadd.s f2,f0,f1
-241	fsw f2,0(t2)
-242	flw f0,-32(s0)
-243	fmv.s f10,f0
-244	sd t2,-120(s0)
-245	sd t3,-128(s0)
-246	sd t4,-136(s0)
-	fsd f0,-152(s0)
-247	call putfloat
-	fld f0,-152(s0)
-248	ld t4,-136(s0)
-249	ld t3,-128(s0)
-250	ld t2,-120(s0)
-251	mv t2,a0
-252	li a0,32
-253	sd t2,-120(s0)
-	fsd f0,-152(s0)
-254	call putch
-	fld f0,-152(s0)
-255	ld t2,-120(s0)
-256	mv t2,a0
-257	flw f0,-24(s0)
-258	fcvt.w.s t2,f0,rtz
-259	mv a0,t2
-260	sd t2,-120(s0)
-	fsd f0,-152(s0)
-261	call putint
-	fld f0,-152(s0)
-262	ld t2,-120(s0)
-263	mv t2,a0
-264	li a0,10
-265	sd t2,-120(s0)
-	fsd f0,-152(s0)
-266	call putch
-	fld f0,-152(s0)
-267	ld t2,-120(s0)
-268	mv t2,a0
-269	lw t2,-104(s0)
-270	lla t3,.F15
-271	flw f0,0(t3)
-272	fneg.s f1,f0
-273	fneg.s f0,f1
-274	fcvt.s.w f1,t2
-275	fmul.s f2,f1,f0
-276	fcvt.w.s t2,f2,rtz
-277	sw t2,-104(s0)
-278	lw t2,-96(s0)
-279	addi t3,t2,1
-280	sw t3,-96(s0)
-281	j .Bmain40
-.Bmain70:
-282	lw t2,-48(s0)
-283	mv a0,t2
-284	addi t2,s0,-88
-285	mv a1,t2
-286	sd t2,-120(s0)
-	fsd f0,-152(s0)
-	fsd f1,-160(s0)
-	fsd f2,-168(s0)
-287	call putfarray
-	fld f2,-168(s0)
-	fld f1,-160(s0)
-	fld f0,-152(s0)
-288	ld t2,-120(s0)
-289	mv t2,a0
-290	mv a0,zero
-291	ld ra,168(sp)
-292	ld s0,160(sp)
-293	addi sp,sp,176
-294	jr ra
+	mv a0,zero
+	ld ra,88(sp)
+	ld s0,80(sp)
+	addi sp,sp,96
+	jr ra
 	.size	main, .-main
+	.global	n
+	.bss
 	.align	2
-.F0:
-	.word	1078530011
-	.align	2
-.F1:
-	.word	897988541
-	.align	2
-.F2:
-	.word	1073741824
-	.align	2
-.F3:
-	.word	1033895936
-	.align	2
-.F4:
-	.word	-956241920
-	.align	2
-.F5:
-	.word	1119752446
-	.align	2
-.F6:
-	.word	1107966695
-	.align	2
-.F7:
-	.word	1085276160
-	.align	2
-.F8:
-	.word	1130954752
-	.align	2
-.F9:
-	.word	1166012416
-	.align	2
-.F10:
-	.word	1069547520
-	.align	2
-.F11:
-	.word	0
-	.align	2
-.F12:
-	.word	1079194419
-	.align	2
-.F13:
-	.word	1065353216
-	.align	2
-.F14:
-	.word	1050253722
-	.align	2
-.F15:
-	.word	1092616192
+	.type	n,@object
+	.size	n,4
+n:
+	.zero	4
 	.ident	"ForStar"
 	.section	.note.GNU-stack,"",@progbits

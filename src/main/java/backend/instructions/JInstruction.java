@@ -12,7 +12,7 @@ public class JInstruction extends RISCInstruction {
         this.op1 = op1;
         this.setOperand(op1, 0);
         this.type = ITYPE.j;
-        System.out.println("ADD TO LIST " + op1.emit() );
+      //  System.out.println("ADD TO LIST " + op1.emit() );
         BB.nextBlocknameList.add(op1.emit());
     }
 
