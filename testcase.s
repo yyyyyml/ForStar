@@ -4,130 +4,277 @@
 	.attribute stack_align, 16
 	.text
 	.align	1
-	.global	select_sort
-	.type	select_sort	@function
-select_sort:
-	addi sp,sp,-80
-	sd ra,72(sp)
-	sd s0,64(sp)
-	addi s0,sp,80
-.Bselect_sort2:
-	mv t2,a0
-	mv t3,zero
-	mv t4,a1
-	j .Bselect_sort3
-.Bselect_sort3:
-	li s6,1
-	subw s7,t4,s6
-	slt s6,t3,s7
-	bne s6,zero,.Bselect_sort9
-	j .Bselect_sort11
-.Bselect_sort9:
-	addi s7,t3,1
-	mv s10,t2
-	sd s10,-48(s0)
-	mv s10,t3
-	sd s10,-40(s0)
-	mv s10,t3
-	sd s10,-32(s0)
-	mv s10,t4
-	sd s10,-24(s0)
-	mv s8,s7
-	j .Bselect_sort12
-.Bselect_sort11:
+	.global	QuickSort
+	.type	QuickSort	@function
+QuickSort:
+	addi sp,sp,-240
+	sd ra,232(sp)
+	sd s0,224(sp)
+	addi s0,sp,240
+.BQuickSort3:
+	slt t2,a1,a2
+	bne t2,zero,.BQuickSort6
+	j .BQuickSort5
+.BQuickSort5:
 	mv a0,zero
-	ld ra,72(sp)
-	ld s0,64(sp)
-	addi sp,sp,80
+	ld ra,232(sp)
+	ld s0,224(sp)
+	addi sp,sp,240
 	jr ra
-.Bselect_sort12:
-	ld s10,-24(s0)
-	slt s7,s8,s10
-	bne s7,zero,.Bselect_sort19
-	j .Bselect_sort29
-.Bselect_sort19:
-	li t5,4
-	ld s10,-32(s0)
-	mulw t5,t5,s10
+.BQuickSort6:
+	li t3,4
+	mulw t3,t3,a1
+	add s8,a0,t3
+	lw s7,0(s8)
+	mv s10,s7
+	sd s10,-64(s0)
+	mv s10,a2
+	sd s10,-56(s0)
+	mv s10,a1
+	sd s10,-48(s0)
+	mv s10,a0
+	sd s10,-40(s0)
+	mv s10,a2
+	sd s10,-32(s0)
+	mv s10,a1
+	sd s10,-24(s0)
+	j .BQuickSort9
+.BQuickSort9:
 	ld s10,-48(s0)
-	add s6,s10,t5
-	lw s5,0(s6)
+	ld s9,-32(s0)
+	slt s4,s10,s9
+	ld s10,-64(s0)
+	mv t3,s10
+	ld s10,-56(s0)
+	mv s7,s10
+	ld s10,-48(s0)
+	mv s8,s10
+	ld s10,-40(s0)
+	mv s6,s10
+	ld s10,-32(s0)
+	mv s5,s10
+	ld s10,-24(s0)
+	mv t2,s10
+	bne s4,zero,.BQuickSort23
+	j .BQuickSort17
+.BQuickSort17:
+	li t4,4
+	ld s10,-48(s0)
+	mulw t4,t4,s10
+	ld s10,-40(s0)
+	add s4,s10,t4
+	ld s10,-64(s0)
+	sw s10,0(s4)
+	li s4,1
+	ld s10,-48(s0)
+	subw s3,s10,s4
+	ld s10,-40(s0)
+	mv a0,s10
+	ld s10,-24(s0)
+	mv a1,s10
+	mv a2,s3
+	sd t2,-152(s0)
+	sd t3,-160(s0)
+	sd t4,-168(s0)
+	sd t5,-176(s0)
+	sd t6,-184(s0)
+	sd s1,-192(s0)
+	sd s5,-200(s0)
+	sd s6,-208(s0)
+	sd s7,-216(s0)
+	sd s8,-224(s0)
+	call QuickSort
+	ld s8,-224(s0)
+	ld s7,-216(s0)
+	ld s6,-208(s0)
+	ld s5,-200(s0)
+	ld s1,-192(s0)
+	ld t6,-184(s0)
+	ld t5,-176(s0)
+	ld t4,-168(s0)
+	ld t3,-160(s0)
+	ld t2,-152(s0)
+	mv s3,a0
+	ld s10,-48(s0)
+	addi s3,s10,1
+	ld s10,-40(s0)
+	mv a0,s10
+	mv a1,s3
+	ld s10,-56(s0)
+	mv a2,s10
+	sd t2,-152(s0)
+	sd t3,-160(s0)
+	sd t4,-168(s0)
+	sd t5,-176(s0)
+	sd t6,-184(s0)
+	sd s1,-192(s0)
+	sd s5,-200(s0)
+	sd s6,-208(s0)
+	sd s7,-216(s0)
+	sd s8,-224(s0)
+	call QuickSort
+	ld s8,-224(s0)
+	ld s7,-216(s0)
+	ld s6,-208(s0)
+	ld s5,-200(s0)
+	ld s1,-192(s0)
+	ld t6,-184(s0)
+	ld t5,-176(s0)
+	ld t4,-168(s0)
+	ld t3,-160(s0)
+	ld t2,-152(s0)
+	mv s3,a0
+	j .BQuickSort5
+.BQuickSort23:
+	slt s3,s8,s5
+	bne s3,zero,.BQuickSort33
+	j .BQuickSort38
+.BQuickSort31:
+	li s3,1
+	subw s4,s5,s3
+	mv s5,s4
+	j .BQuickSort23
+.BQuickSort33:
+	li t5,4
+	mulw t5,t5,s5
+	add s3,s6,t5
+	lw s4,0(s3)
+	li s3,1
+	subw s2,t3,s3
+	subw s3,s4,s2
+	sgtz s2,s3
+	bne s2,zero,.BQuickSort31
+	j .BQuickSort38
+.BQuickSort38:
+	slt s4,s8,s5
+	mv s10,t3
+	sd s10,-136(s0)
+	mv s10,s7
+	sd s10,-128(s0)
+	mv s10,s8
+	sd s10,-120(s0)
+	mv s10,s6
+	sd s10,-96(s0)
+	mv s10,s5
+	sd s10,-104(s0)
+	mv s10,t2
+	sd s10,-112(s0)
+	bne s4,zero,.BQuickSort40
+	j .BQuickSort45
+.BQuickSort40:
 	li t6,4
 	mulw t6,t6,s8
-	ld s10,-48(s0)
-	add s6,s10,t6
-	lw s4,0(s6)
-	subw s6,s5,s4
-	sgtz s4,s6
-	ld s10,-32(s0)
-	mv s7,s10
-	bne s4,zero,.Bselect_sort28
-	j .Bselect_sort25
-.Bselect_sort25:
-	addi s4,s8,1
-	mv s10,s10
-	sd s10,-48(s0)
-	mv s10,s10
-	sd s10,-40(s0)
+	add s4,s6,t6
+	li s1,4
+	mulw s1,s1,s5
+	add s3,s6,s1
+	lw s2,0(s3)
+	sw s2,0(s4)
+	addi s2,s8,1
+	mv s10,t3
+	sd s10,-136(s0)
 	mv s10,s7
-	sd s10,-32(s0)
-	mv s10,s10
-	sd s10,-24(s0)
-	mv s8,s4
-	j .Bselect_sort12
-.Bselect_sort28:
-	mv s7,s8
-	j .Bselect_sort25
-.Bselect_sort29:
-	ld s10,-32(s0)
-	ld s9,-40(s0)
-	subw s4,s10,s9
-	seqz s1,s4
-	xori s1,s1,1
-	bne s1,zero,.Bselect_sort33
-	j .Bselect_sort31
-.Bselect_sort31:
-	ld s10,-40(s0)
-	addi s4,s10,1
-	ld s10,-48(s0)
-	mv t2,s10
-	mv t3,s4
-	ld s10,-24(s0)
-	mv t4,s10
-	j .Bselect_sort3
-.Bselect_sort33:
-	li s2,4
-	ld s10,-32(s0)
-	mulw s2,s2,s10
-	ld s10,-48(s0)
-	add t2,s10,s2
-	lw s4,0(t2)
-	li s3,4
-	ld s10,-32(s0)
-	mulw s3,s3,s10
-	ld s10,-48(s0)
-	add t2,s10,s3
+	sd s10,-128(s0)
+	mv s10,s2
+	sd s10,-120(s0)
+	mv s10,s6
+	sd s10,-96(s0)
+	mv s10,s5
+	sd s10,-104(s0)
+	mv s10,t2
+	sd s10,-112(s0)
+	j .BQuickSort45
+.BQuickSort45:
+	ld s10,-120(s0)
+	ld s9,-104(s0)
+	slt t2,s10,s9
+	bne t2,zero,.BQuickSort55
+	j .BQuickSort59
+.BQuickSort53:
+	ld s10,-120(s0)
+	addi t2,s10,1
+	mv s10,t2
+	sd s10,-120(s0)
+	j .BQuickSort45
+.BQuickSort55:
 	li s10,4
-	sd s10,-64(s0)
-	ld s9,-40(s0)
+	sd s10,-88(s0)
+	ld s9,-120(s0)
 	mulw s10,s10,s9
-	sd s10,-64(s0)
-	ld s10,-48(s0)
-	ld s9,-64(s0)
-	add s5,s10,s9
-	lw s6,0(s5)
-	sw s6,0(t2)
-	li s10,4
-	sd s10,-56(s0)
-	ld s9,-40(s0)
-	mulw s10,s10,s9
-	sd s10,-56(s0)
-	ld s10,-48(s0)
-	ld s9,-56(s0)
+	sd s10,-88(s0)
+	ld s10,-96(s0)
+	ld s9,-88(s0)
 	add t2,s10,s9
-	sw s4,0(t2)
-	j .Bselect_sort31
-	.size	select_sort, .-select_sort
+	lw s2,0(t2)
+	ld s10,-136(s0)
+	slt t2,s2,s10
+	bne t2,zero,.BQuickSort53
+	j .BQuickSort59
+.BQuickSort59:
+	ld s10,-120(s0)
+	ld s9,-104(s0)
+	slt t2,s10,s9
+	ld s9,-136(s0)
+	mv s10,s9
+	sd s10,-64(s0)
+	ld s9,-128(s0)
+	mv s10,s9
+	sd s10,-56(s0)
+	ld s9,-120(s0)
+	mv s10,s9
+	sd s10,-48(s0)
+	ld s9,-96(s0)
+	mv s10,s9
+	sd s10,-40(s0)
+	ld s9,-104(s0)
+	mv s10,s9
+	sd s10,-32(s0)
+	ld s9,-112(s0)
+	mv s10,s9
+	sd s10,-24(s0)
+	bne t2,zero,.BQuickSort61
+	j .BQuickSort9
+.BQuickSort61:
+	li s10,4
+	sd s10,-80(s0)
+	ld s9,-104(s0)
+	mulw s10,s10,s9
+	sd s10,-80(s0)
+	ld s10,-96(s0)
+	ld s9,-80(s0)
+	add t2,s10,s9
+	li s10,4
+	sd s10,-72(s0)
+	ld s9,-120(s0)
+	mulw s10,s10,s9
+	sd s10,-72(s0)
+	ld s10,-96(s0)
+	ld s9,-72(s0)
+	add s2,s10,s9
+	lw s3,0(s2)
+	sw s3,0(t2)
+	li t2,1
+	ld s10,-104(s0)
+	subw s2,s10,t2
+	ld s9,-136(s0)
+	mv s10,s9
+	sd s10,-64(s0)
+	ld s9,-128(s0)
+	mv s10,s9
+	sd s10,-56(s0)
+	ld s9,-120(s0)
+	mv s10,s9
+	sd s10,-48(s0)
+	ld s9,-96(s0)
+	mv s10,s9
+	sd s10,-40(s0)
+	mv s10,s2
+	sd s10,-32(s0)
+	ld s9,-112(s0)
+	mv s10,s9
+	sd s10,-24(s0)
+	j .BQuickSort9
+	.size	QuickSort, .-QuickSort
 	.align	1
 	.global	main
 	.type	main	@function
@@ -140,6 +287,9 @@ main:
 	lla t3,n
 	li t5,10
 	sw t5,0(t3)
+	lla t3,n
+	lw t5,0(t3)
+	mv t3,t5
 	li t3,4
 	sw t3,-56(s0)
 	li t3,3
@@ -159,26 +309,25 @@ main:
 	sw t3,-24(s0)
 	li t3,8
 	sw t3,-20(s0)
-	lla t3,n
-	lw t5,0(t3)
 	addi t3,s0,-56
 	mv a0,t3
-	mv a1,t5
+	mv a1,zero
+	li a2,9
 	sd t2,-72(s0)
 	sd t4,-80(s0)
-	call select_sort
+	call QuickSort
 	ld t4,-80(s0)
 	ld t2,-72(s0)
 	mv t3,a0
 	mv t2,t3
-	j .Bmain15
-.Bmain15:
+	j .Bmain16
+.Bmain16:
 	lla t3,n
 	lw t5,0(t3)
 	slt t3,t2,t5
-	bne t3,zero,.Bmain19
-	j .Bmain23
-.Bmain19:
+	bne t3,zero,.Bmain20
+	j .Bmain24
+.Bmain20:
 	li t4,4
 	mulw t4,t4,t2
 	addi t4,t4,-56
@@ -200,8 +349,8 @@ main:
 	mv t3,a0
 	addi t3,t2,1
 	mv t2,t3
-	j .Bmain15
-.Bmain23:
+	j .Bmain16
+.Bmain24:
 	mv a0,zero
 	ld ra,88(sp)
 	ld s0,80(sp)

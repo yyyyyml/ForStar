@@ -211,40 +211,41 @@ public class RISCBasicBlock {
                 Value vs = pair.b;
                 RISCOperand dst = getOperand(vd);
                 RISCOperand src = getOperand(vs);
-                if (dst instanceof Register)
+                if(dst != src)
                 {
-                    if (src instanceof Immediate) {
-                        LiInstruction liInstruction = new LiInstruction(dst, src);
-                        instructionList.add(firstBrposition+index++,liInstruction);
-                    } else if (src instanceof FloatVirtualRegister || src instanceof FloatRealRegister) {
-                        FmvInstruction fmvInstruction = new FmvInstruction(dst, src);
-                        instructionList.add(firstBrposition+index++,fmvInstruction);
-                    } else if (src instanceof Memory) {
-                        LdInstruction ldInstruction = new LdInstruction(dst, src);
-                        instructionList.add(firstBrposition+index++,ldInstruction);
-                    } else {
-                        MvInstruction mvInstruction = new MvInstruction(dst, src);
-                        instructionList.add(firstBrposition+index++,mvInstruction);
-                    }
-                }
-                else if (dst instanceof Memory){
-                    if (src instanceof Immediate) {
-                        LiInstruction liInstruction = new LiInstruction(tempRegister, src);
-                        instructionList.add(firstBrposition+index++,liInstruction);
-                        SdInstruction sd = new SdInstruction(tempRegister,dst);
-                        instructionList.add(firstBrposition+index++,sd);
-                    } else if (src instanceof FloatVirtualRegister || src instanceof FloatRealRegister) {
+                    if (dst instanceof Register) {
+                        if (src instanceof Immediate) {
+                            LiInstruction liInstruction = new LiInstruction(dst, src);
+                            instructionList.add(firstBrposition + index++, liInstruction);
+                        } else if (src instanceof FloatVirtualRegister || src instanceof FloatRealRegister) {
+                            FmvInstruction fmvInstruction = new FmvInstruction(dst, src);
+                            instructionList.add(firstBrposition + index++, fmvInstruction);
+                        } else if (src instanceof Memory) {
+                            LdInstruction ldInstruction = new LdInstruction(dst, src);
+                            instructionList.add(firstBrposition + index++, ldInstruction);
+                        } else {
+                            MvInstruction mvInstruction = new MvInstruction(dst, src);
+                            instructionList.add(firstBrposition + index++, mvInstruction);
+                        }
+                    } else if (dst instanceof Memory) {
+                        if (src instanceof Immediate) {
+                            LiInstruction liInstruction = new LiInstruction(tempRegister, src);
+                            instructionList.add(firstBrposition + index++, liInstruction);
+                            SdInstruction sd = new SdInstruction(tempRegister, dst);
+                            instructionList.add(firstBrposition + index++, sd);
+                        } else if (src instanceof FloatVirtualRegister || src instanceof FloatRealRegister) {
 
-                        FsdInstruction fsdInstruction = new FsdInstruction(src,dst);
-                        instructionList.add(firstBrposition+index++,fsdInstruction);
-                    } else if (src instanceof Memory) {
-                        LdInstruction ldInstruction = new LdInstruction(tempRegister, src);
-                        instructionList.add(firstBrposition+index++,ldInstruction);
-                        SdInstruction sd = new SdInstruction(tempRegister,dst);
-                        instructionList.add(firstBrposition+index++,sd);
-                    } else {
-                        SdInstruction sd = new SdInstruction(src,dst);
-                        instructionList.add(firstBrposition+index++,sd);
+                            FsdInstruction fsdInstruction = new FsdInstruction(src, dst);
+                            instructionList.add(firstBrposition + index++, fsdInstruction);
+                        } else if (src instanceof Memory) {
+                            LdInstruction ldInstruction = new LdInstruction(tempRegister, src);
+                            instructionList.add(firstBrposition + index++, ldInstruction);
+                            SdInstruction sd = new SdInstruction(tempRegister, dst);
+                            instructionList.add(firstBrposition + index++, sd);
+                        } else {
+                            SdInstruction sd = new SdInstruction(src, dst);
+                            instructionList.add(firstBrposition + index++, sd);
+                        }
                     }
                 }
             }
@@ -918,7 +919,8 @@ public class RISCBasicBlock {
     private void translateCaculate(Instruction curInst) {
 
 
-
+        Boolean isZero = false;
+        Boolean isOne = false;
         Value vop1 = curInst.getOperandAt(0);
         RISCOperand op1 = getOperand(vop1);
       //  System.out.println(vop1.getName() + " -> " + op1.emit());
@@ -948,8 +950,14 @@ public class RISCBasicBlock {
             LwInstruction lw2 = new LwInstruction(temp2, op2);
             instructionList.add(lw2);
         } else if (op2 instanceof Register) {
+            if(op2 instanceof RealRegister && ((RealRegister) op2).regType.name() == "zero"){
+                isZero = true;
+            }
             temp2 = op2;
         } else if (op2 instanceof Immediate) {
+            if (((Immediate) op2).getVal() == 1){
+                isOne = true;
+            }
             VirtualRegister vr = getNewVr();
             LiInstruction li = new LiInstruction(vr, op2);
             instructionList.add(li);
@@ -967,21 +975,45 @@ public class RISCBasicBlock {
                 }
                 else
                 {
-                    AddwInstruction cal = new AddwInstruction(dst, temp1, temp2);
-                    instructionList.add(cal);
+                    if(isZero){
+                        MvInstruction mvInstruction = new MvInstruction(dst,temp1);
+                        instructionList.add(mvInstruction);
+                    }
+                    else {
+                        AddwInstruction cal = new AddwInstruction(dst, temp1, temp2);
+                        instructionList.add(cal);
+                    }
                 }
             }
             case SUB -> {
-                SubwInstruction cal = new SubwInstruction(dst, temp1, temp2);
-                instructionList.add(cal);
+                if(isZero){
+                    MvInstruction mvInstruction = new MvInstruction(dst,temp1);
+                    instructionList.add(mvInstruction);
+                }
+                else {
+                    SubwInstruction cal = new SubwInstruction(dst, temp1, temp2);
+                    instructionList.add(cal);
+                }
             }
             case MUL -> {
-                MulwInstruction cal = new MulwInstruction(dst, temp1, temp2);
-                instructionList.add(cal);
+                if(isOne){
+                    MvInstruction mvInstruction = new MvInstruction(dst,temp1);
+                    instructionList.add(mvInstruction);
+                }
+                else {
+                    MulwInstruction cal = new MulwInstruction(dst, temp1, temp2);
+                    instructionList.add(cal);
+                }
             }
             case DIV -> {
-                DivwInstruction cal = new DivwInstruction(dst, temp1, temp2);
-                instructionList.add(cal);
+                if(isOne){
+                    MvInstruction mvInstruction = new MvInstruction(dst,temp1);
+                    instructionList.add(mvInstruction);
+                }
+                {
+                    DivwInstruction cal = new DivwInstruction(dst, temp1, temp2);
+                    instructionList.add(cal);
+                }
             }
             case FADD -> {
                 FaddInstruction cal = new FaddInstruction(dst, temp1, temp2);
