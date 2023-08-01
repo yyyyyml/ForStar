@@ -926,9 +926,21 @@ public class RISCBasicBlock {
       //  System.out.println(vop1.getName() + " -> " + op1.emit());
         RISCOperand temp1 = null;
         if (op1 instanceof Memory) {
-            temp1 = new VirtualRegister(riscFunction.virtualRegisterIndex++);
-            LwInstruction lw1 = new LwInstruction(temp1, op1);
-            instructionList.add(lw1);
+            if(vop1.getType().isIntegerType()) {
+                temp1 = new VirtualRegister(riscFunction.virtualRegisterIndex++, vop1);
+                LwInstruction lw2 = new LwInstruction(temp1, op1);
+                instructionList.add(lw2);
+            }
+            else if(vop1.getType().isFloatType()){
+                temp1 = new FloatVirtualRegister(riscFunction.floatVirtualRegisterIndex++,vop1);
+                FlwInstruction lw2 = new FlwInstruction(temp1, op1);
+                instructionList.add(lw2);
+            }
+            else if(vop1.getType().isPointerType()){
+                temp1 = new VirtualRegister(riscFunction.virtualRegisterIndex++, vop1);
+                LdInstruction l2 = new LdInstruction(temp1, op1);
+                instructionList.add(l2);
+            }
         } else if (op1 instanceof Register) {
             temp1 = op1;
             //if(riscFunction.valueVRMap.get(vop1) == (VirtualRegister) op1) {riscFunction.valueVRMap.remove(vop1);}
@@ -945,10 +957,23 @@ public class RISCBasicBlock {
   //      System.out.println(vop2.getName() + " -> " + op2.emit());
         RISCOperand temp2 = null;
         if (op2 instanceof Memory) {
-            temp2 = new VirtualRegister(riscFunction.virtualRegisterIndex++, vop2);
+            if(vop2.getType().isIntegerType()) {
+                temp2 = new VirtualRegister(riscFunction.virtualRegisterIndex++, vop2);
+                LwInstruction lw2 = new LwInstruction(temp2, op2);
+                instructionList.add(lw2);
+            }
+            else if(vop2.getType().isFloatType()){
+                temp2 = new FloatVirtualRegister(riscFunction.floatVirtualRegisterIndex++,vop2);
+                FlwInstruction lw2 = new FlwInstruction(temp2, op2);
+                instructionList.add(lw2);
+            }
+            else if(vop2.getType().isPointerType()){
+                temp2 = new VirtualRegister(riscFunction.virtualRegisterIndex++, vop2);
+                LdInstruction l2 = new LdInstruction(temp2, op2);
+                instructionList.add(l2);
+            }
             //riscFunction.valueVRMap.put(vop2,(VirtualRegister) temp2);
-            LwInstruction lw2 = new LwInstruction(temp2, op2);
-            instructionList.add(lw2);
+
         } else if (op2 instanceof Register) {
             if(op2 instanceof RealRegister && ((RealRegister) op2).regType.name() == "zero"){
                 isZero = true;
