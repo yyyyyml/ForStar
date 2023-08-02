@@ -407,12 +407,13 @@ public class NNRegAllocator implements BaseBackendPass {
                 // 溢出，找End最大的
                 spill(entry);
             } else {
+                System.out.println("现在活跃的个数：" + activeList.size());
                 // 分配一个寄存器
                 var curVreg = intMapVreg.get(entry.getKey());
                 int freeRegister = curRegUsage.getNextFreeRegister();
-                regUsageTracker.add(freeRegister, entry.getValue());//直接分所有时间的
+//                regUsageTracker.add(freeRegister, entry.getValue());//直接分所有时间的
                 curVreg.setRealReg(freeRegister);
-//                System.out.println("Time: " + time + " Allocating register: vr_" + entry.getKey() + " -> " + freeRegister);
+                System.out.println("Time: " + time + " Allocating register: vr_" + entry.getKey() + " -> " + freeRegister);
 //                curVreg.setRealReg(freeRegister);
                 // 加入activeList，并按End排序
                 activeList.add(entry);
@@ -443,13 +444,14 @@ public class NNRegAllocator implements BaseBackendPass {
             //
             curVreg.setvRegReplaced(spillVreg);
             // 删掉之前的寄存器分配记录
-            regUsageTracker.delete(spillVreg.getRealReg(), spillEntry.getValue());
-            regUsageTracker.add(spillVreg.getRealReg(), curEntry.getValue());
+            regUsageTracker.delete(spillVreg.getRealReg(), spillEntry.getValue().getStart(), time);
+            curRegUsage.allocateRegister(spillVreg.getRealReg());
+//            regUsageTracker.add(spillVreg.getRealReg(), curEntry.getValue());
             // 分配栈地址
             var curFunc = curFunction;
             spillVreg.setStackLocation(curFunc.stackIndex);
-//            System.out.println("Time: " + time + " Spilling: vr_" + spillEntry.getKey() + " -> stack " + curFunc.stackIndex);
-//            System.out.println("Time: " + time + " Allocating register: vr_" + curEntry.getKey() + " -> " + spillVreg.getRealReg());
+            System.out.println("Time: " + time + " Spilling: vr_" + spillEntry.getKey() + " -> stack " + curFunc.stackIndex);
+            System.out.println("Time: " + time + " Allocating register: vr_" + curEntry.getKey() + " -> " + spillVreg.getRealReg());
             curFunc.stackSize += 8;
             curFunc.stackIndex += 8;
             // 记录spillTime
@@ -466,7 +468,7 @@ public class NNRegAllocator implements BaseBackendPass {
             var curFunc = curFunction;
 
             curVreg.setStackLocation(curFunc.stackIndex);
-//            System.out.println("Time: " + time + " Spilling: vr_" + curEntry.getKey() + " -> stack " + curFunc.stackIndex);
+            System.out.println("Time: " + time + " Spilling: vr_" + curEntry.getKey() + " -> stack " + curFunc.stackIndex);
             curFunc.stackSize += 8;
             curFunc.stackIndex += 8;
             // 记录spillTime
@@ -486,7 +488,7 @@ public class NNRegAllocator implements BaseBackendPass {
             // 释放他的已分配的寄存器
             var reg = intMapVreg.get(entry.getKey());
             curRegUsage.freeRegister(reg.getRealReg());
-//            System.out.println("Time: " + time + " Freeing register: " + reg.getRealReg());
+            System.out.println("Time: " + time + " Freeing register: " + reg.getRealReg());
             return true;
         });
     }

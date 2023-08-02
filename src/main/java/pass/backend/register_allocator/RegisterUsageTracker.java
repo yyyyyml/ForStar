@@ -43,9 +43,7 @@ public class RegisterUsageTracker {
     }
 
 
-    public void delete(int realReg, LiveInterval interval) {
-        int start = interval.getStart();
-        int end = interval.getEnd();
+    public void delete(int realReg, int start, int end) {
         for (int i = start; i < end; i++) {
             var usage = getRegisterUsage(i);
             usage.freeRegister(realReg);

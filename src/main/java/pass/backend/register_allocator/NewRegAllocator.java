@@ -312,7 +312,7 @@ public class NewRegAllocator implements BaseBackendPass {
             //
             curVreg.setvRegReplaced(spillVreg);
             // 删掉之前的寄存器分配记录
-            regUsageTracker.delete(spillVreg.getRealReg(), spillEntry.getValue());
+//            regUsageTracker.delete(spillVreg.getRealReg(), spillEntry.getValue());
             regUsageTracker.add(spillVreg.getRealReg(), curEntry.getValue());
             // 分配栈地址
             var curFunc = time2Function.get(time);

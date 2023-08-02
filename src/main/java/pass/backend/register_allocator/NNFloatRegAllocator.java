@@ -400,7 +400,7 @@ public class NNFloatRegAllocator implements BaseBackendPass {
                 // 分配一个寄存器
                 var curVreg = intMapVreg.get(entry.getKey());
                 int freeRegister = curRegUsage.getNextFreeRegister();
-                regUsageTracker.add(freeRegister, entry.getValue());//直接分所有时间的
+//                regUsageTracker.add(freeRegister, entry.getValue());//直接分所有时间的
 //                System.out.println("Time: " + time + " Allocating register: vr_f" + entry.getKey() + " -> " + freeRegister);
                 curVreg.setRealReg(freeRegister);
                 // 加入activeList，并按End排序
@@ -432,8 +432,8 @@ public class NNFloatRegAllocator implements BaseBackendPass {
             //
             curVreg.setvRegReplaced(spillVreg);
             // 删掉之前的寄存器分配记录
-            regUsageTracker.delete(spillVreg.getRealReg(), spillEntry.getValue());
-            regUsageTracker.add(spillVreg.getRealReg(), curEntry.getValue());
+            regUsageTracker.delete(spillVreg.getRealReg(), spillEntry.getValue().getStart(), time);
+            curRegUsage.allocateRegister(spillVreg.getRealReg());
             // 分配栈地址
             var curFunc = curFunction;
             spillVreg.setStackLocation(curFunc.stackIndex);
