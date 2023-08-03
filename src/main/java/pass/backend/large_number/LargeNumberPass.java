@@ -39,7 +39,7 @@ public class LargeNumberPass implements BaseBackendPass {
 
                         // 如果是地址
                         if (riscOp.isMemory()) {
-
+//                            System.out.println("Mem:"+riscInst.getId()+" "+riscInst.emit());
                             Memory memOp = (Memory) riscOp; // 转换类型
                             int imm = memOp.getOffset(); // s0的原始偏移量
 

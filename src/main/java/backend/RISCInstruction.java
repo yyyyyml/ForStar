@@ -1,7 +1,5 @@
 package backend;
 
-import ir.values.BasicBlock;
-
 import java.util.LinkedList;
 
 public class RISCInstruction {
@@ -78,7 +76,7 @@ public class RISCInstruction {
     public boolean isNumber12bit() {
         return this.type == ITYPE.addi || this.type == ITYPE.xori ||
                 this.type == ITYPE.lw || this.type == ITYPE.flw || this.type == ITYPE.ld || this.type == ITYPE.fld ||
-                this.type == ITYPE.sw || this.type == ITYPE.fsw || this.type == ITYPE.sd;
+                this.type == ITYPE.sw || this.type == ITYPE.fsw || this.type == ITYPE.sd || this.type == ITYPE.fsd;
     }
 
 
