@@ -10,6 +10,7 @@ import ir.values.Function;
 import org.antlr.v4.runtime.misc.Pair;
 import util.IList;
 
+import java.sql.Array;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
@@ -40,6 +41,8 @@ public class RISCFunction {
     public int phiCount = 0;
     public int floatPhiCount = 0;
     public HashMap<String,RISCBasicBlock> blockHashMap;
+    public boolean[] intMyparaIsDef;
+    public boolean[] floatMyparaIsDef;
     //第二版phi
     public HashMap<Value,LinkedList<Value>> preBlockMap;
 
@@ -58,6 +61,8 @@ public class RISCFunction {
         phiMap = new HashMap<>();
         blockPhiMap = new HashMap<>();
         blockHashMap = new HashMap<>();
+        intMyparaIsDef = new boolean[8];
+        floatMyparaIsDef = new boolean[8];
 //        valueFloatVrMap = new HashMap<>();
 //        valueVRMap = new HashMap<>();
 //        valueMemoryHashMap = new HashMap<>();
@@ -102,6 +107,13 @@ public class RISCFunction {
             for (IList.INode<Instruction, BasicBlock> Inode : irBB.list) {
                 Instruction curInst = Inode.getElement();
                 if (curInst.getTag() == Instruction.TAG.CALL) {
+                    if (curInst.getType().isIntegerType()||curInst.getType().isPointerType())
+                    {
+                        intMyparaIsDef[0] = true;
+                    }
+                    else if(curInst.getType().isFloatType()){
+                        floatMyparaIsDef[0] = true;
+                    }
                     int paraCount = curInst.getNumOP() - 1;
                     int intCount = 0;
                     int floatCount = 0;
@@ -110,6 +122,7 @@ public class RISCFunction {
                         Value v = curInst.getOperandAt(i);
                         if (v.getType().isIntegerType() || v.getType().isPointerType()) {
                             if (intCount < 8) {
+                                intMyparaIsDef[intCount] = true;
                                 funcParameters.put(v, intCount++);
                             } else {
                                 funcParameters.put(v, stackIndex++);
@@ -117,6 +130,7 @@ public class RISCFunction {
                             }
                         } else if (v.getType().isFloatType()) {
                             if (floatCount < 8) {
+                                floatMyparaIsDef[floatCount] = true;
                                 funcParameters.put(v, floatCount++);
                             } else {
                                 funcParameters.put(v, stackIndex++);
@@ -188,9 +202,13 @@ public class RISCFunction {
                 }
             }
         }
+        RISCBasicBlock myParaBB = new RISCBasicBlock(2,irFunc,this);
+        BasicBlockList.add(myParaBB);
+
+
         //记录结束块位置
         Stack<Integer> stack = new Stack<>();
-        Integer blockIndex = 0;
+        Integer blockIndex = 1;
         for (IList.INode<BasicBlock, Function> bbInode : irFunc.list) {
             blockIndex++;
 //            System.out.println(funcName + "\t" + "localindex=" + localStackIndex);
