@@ -4,356 +4,201 @@
 	.attribute stack_align, 16
 	.text
 	.align	1
-	.global	merge_sort
-	.type	merge_sort	@function
-merge_sort:
-	addi sp,sp,-272
-	sd ra,264(sp)
-	sd s0,256(sp)
-	addi s0,sp,272
-	mv t2,a0
-	mv t3,a1
-.Bmerge_sort2:
-	addi t4,t2,1
-	slt t5,t4,t3
-	xori t5,t5,1
-	bne t5,zero,.Bmerge_sort8
-	j .Bmerge_sort5
-.Bmerge_sort5:
-	addw s6,t2,t3
-	li s7,2
-	divw s8,s6,s7
-	mv a0,t2
-	mv a1,s8
-	sd t2,-160(s0)
-	sd t3,-168(s0)
-	sd t4,-176(s0)
-	sd t5,-184(s0)
-	sd t6,-192(s0)
-	sd s1,-200(s0)
-	sd s2,-208(s0)
-	sd s3,-216(s0)
-	sd s4,-224(s0)
-	sd s5,-232(s0)
-	sd s6,-240(s0)
-	sd s7,-248(s0)
-	sd s8,-256(s0)
-	call merge_sort
-	ld s8,-256(s0)
-	ld s7,-248(s0)
-	ld s6,-240(s0)
-	ld s5,-232(s0)
-	ld s4,-224(s0)
-	ld s3,-216(s0)
-	ld s2,-208(s0)
-	ld s1,-200(s0)
-	ld t6,-192(s0)
-	ld t5,-184(s0)
-	ld t4,-176(s0)
-	ld t3,-168(s0)
-	ld t2,-160(s0)
-	mv s6,a0
-	mv a0,s8
-	mv a1,t3
-	sd t2,-160(s0)
-	sd t3,-168(s0)
-	sd t4,-176(s0)
-	sd t5,-184(s0)
-	sd t6,-192(s0)
-	sd s1,-200(s0)
-	sd s2,-208(s0)
-	sd s3,-216(s0)
-	sd s4,-224(s0)
-	sd s5,-232(s0)
-	sd s6,-240(s0)
-	sd s8,-248(s0)
-	call merge_sort
-	ld s8,-248(s0)
-	ld s6,-240(s0)
-	ld s5,-232(s0)
-	ld s4,-224(s0)
-	ld s3,-216(s0)
-	ld s2,-208(s0)
-	ld s1,-200(s0)
-	ld t6,-192(s0)
-	ld t5,-184(s0)
-	ld t4,-176(s0)
-	ld t3,-168(s0)
-	ld t2,-160(s0)
-	mv s6,a0
-	mv t4,t2
-	mv t5,s8
-	mv s10,s8
-	sd s10,-96(s0)
-	mv s10,t2
-	sd s10,-88(s0)
-	mv s10,t2
-	sd s10,-80(s0)
-	mv s10,t3
-	sd s10,-72(s0)
-	j .Bmerge_sort9
-.Bmerge_sort8:
-	nop
-	ld ra,264(sp)
-	ld s0,256(sp)
-	addi sp,sp,272
-	jr ra
-.Bmerge_sort9:
-	slt s8,t4,t5
-	mv s10,t4
-	sd s10,-144(s0)
-	mv s10,t5
-	sd s10,-136(s0)
-	ld s9,-96(s0)
-	mv s10,s9
-	sd s10,-128(s0)
-	ld s9,-88(s0)
-	mv s10,s9
-	sd s10,-120(s0)
-	ld s9,-80(s0)
-	mv s10,s9
-	sd s10,-112(s0)
-	ld s9,-72(s0)
-	mv s10,s9
-	sd s10,-104(s0)
-	bne s8,zero,.Bmerge_sort17
-	j .Bmerge_sort45
-.Bmerge_sort17:
-	ld s10,-96(s0)
-	ld s9,-72(s0)
-	slt s8,s10,s9
-	mv s10,t4
-	sd s10,-144(s0)
-	mv s10,t5
-	sd s10,-136(s0)
-	ld s9,-96(s0)
-	mv s10,s9
-	sd s10,-128(s0)
-	ld s9,-88(s0)
-	mv s10,s9
-	sd s10,-120(s0)
-	ld s9,-80(s0)
-	mv s10,s9
-	sd s10,-112(s0)
-	ld s9,-72(s0)
-	mv s10,s9
-	sd s10,-104(s0)
-	bne s8,zero,.Bmerge_sort19
-	j .Bmerge_sort45
-.Bmerge_sort19:
-	lla s8,buf
-	li t6,4
-	mulw t6,t6,t4
-	add s7,s8,t6
-	lw s8,0(s7)
-	lla s7,buf
-	li s1,4
-	ld s10,-96(s0)
-	mulw s1,s1,s10
-	add s6,s7,s1
-	lw s7,0(s6)
-	slt s6,s8,s7
-	bne s6,zero,.Bmerge_sort31
-	j .Bmerge_sort38
-.Bmerge_sort27:
-	ld s10,-88(s0)
-	addi s8,s10,1
-	mv t4,s6
-	mv s10,s7
-	sd s10,-96(s0)
-	mv s10,s8
-	sd s10,-88(s0)
-	j .Bmerge_sort9
-.Bmerge_sort31:
-	lla s8,buf
-	li s2,4
-	ld s10,-88(s0)
-	mulw s2,s2,s10
-	addi s2,s2,400
-	add t3,s8,s2
-	lla s8,buf
-	li s3,4
-	mulw s3,s3,t4
-	add t2,s8,s3
-	lw s8,0(t2)
-	sw s8,0(t3)
-	addi t2,t4,1
-	mv s6,t2
-	ld s10,-96(s0)
-	mv s7,s10
-	j .Bmerge_sort27
-.Bmerge_sort38:
-	lla t2,buf
-	li s4,4
-	ld s10,-88(s0)
-	mulw s4,s4,s10
-	addi s4,s4,400
-	add t3,t2,s4
-	lla t2,buf
-	li s5,4
-	ld s10,-96(s0)
-	mulw s5,s5,s10
-	add s8,t2,s5
-	lw t2,0(s8)
-	sw t2,0(t3)
-	ld s10,-96(s0)
-	addi t2,s10,1
-	mv s6,t4
-	mv s7,t2
-	j .Bmerge_sort27
-.Bmerge_sort45:
-	ld s10,-144(s0)
-	ld s9,-136(s0)
-	slt t6,s10,s9
-	ld s10,-120(s0)
-	mv t2,s10
-	ld s10,-128(s0)
-	mv t3,s10
-	ld s10,-112(s0)
-	mv t4,s10
-	ld s10,-104(s0)
-	mv t5,s10
-	bne t6,zero,.Bmerge_sort53
-	j .Bmerge_sort61
-.Bmerge_sort53:
-	lla t6,buf
-	li s10,4
-	sd s10,-64(s0)
-	ld s9,-120(s0)
-	mulw s10,s10,s9
-	sd s10,-64(s0)
-	addi s10,s10,400
-	sd s10,-64(s0)
-	ld s10,-64(s0)
-	add s1,t6,s10
-	lla t6,buf
-	li s10,4
-	sd s10,-56(s0)
-	ld s9,-144(s0)
-	mulw s10,s10,s9
-	sd s10,-56(s0)
-	ld s10,-56(s0)
-	add s2,t6,s10
-	lw t6,0(s2)
-	sw t6,0(s1)
-	ld s10,-144(s0)
-	addi t6,s10,1
-	ld s10,-120(s0)
-	addi s1,s10,1
-	mv s10,t6
-	sd s10,-144(s0)
-	mv s10,s1
-	sd s10,-120(s0)
-	j .Bmerge_sort45
-.Bmerge_sort61:
-	slt s2,t3,t5
-	mv t6,t4
-	mv s1,t5
-	bne s2,zero,.Bmerge_sort67
-	j .Bmerge_sort75
-.Bmerge_sort67:
-	lla s2,buf
-	li s10,4
-	sd s10,-48(s0)
-	mulw s10,s10,t2
-	sd s10,-48(s0)
-	addi s10,s10,400
-	sd s10,-48(s0)
-	ld s10,-48(s0)
-	add s3,s2,s10
-	lla s2,buf
-	li s10,4
-	sd s10,-24(s0)
-	mulw s10,s10,t3
-	sd s10,-24(s0)
-	ld s10,-24(s0)
-	add s4,s2,s10
-	lw s2,0(s4)
-	sw s2,0(s3)
-	addi s2,t3,1
-	addi s3,t2,1
-	mv t2,s3
-	mv t3,s2
-	j .Bmerge_sort61
-.Bmerge_sort75:
-	slt t2,t6,s1
-	bne t2,zero,.Bmerge_sort79
-	j .Bmerge_sort86
-.Bmerge_sort79:
-	lla t2,buf
-	li s10,4
-	sd s10,-32(s0)
-	mulw s10,s10,t6
-	sd s10,-32(s0)
-	ld s10,-32(s0)
-	add t3,t2,s10
-	lla t2,buf
-	li s10,4
-	sd s10,-40(s0)
-	mulw s10,s10,t6
-	sd s10,-40(s0)
-	addi s10,s10,400
-	sd s10,-40(s0)
-	ld s10,-40(s0)
-	add t4,t2,s10
-	lw t2,0(t4)
-	sw t2,0(t3)
-	addi t2,t6,1
-	mv t6,t2
-	j .Bmerge_sort75
-.Bmerge_sort86:
-	nop
-	ld ra,264(sp)
-	ld s0,256(sp)
-	addi sp,sp,272
-	jr ra
-	.size	merge_sort, .-merge_sort
-	.align	1
-	.global	main
-	.type	main	@function
-main:
+	.global	move
+	.type	move	@function
+move:
 	addi sp,sp,-48
 	sd ra,40(sp)
 	sd s0,32(sp)
 	addi s0,sp,48
-.Bmain0:
-	lla t2,buf
-	addi t3,t2,0
+	mv t2,a0
+	mv t3,a1
+.Bmove2:
+	mv a0,t2
+	sd t2,-32(s0)
+	sd t3,-40(s0)
+	call putint
+	ld t3,-40(s0)
+	ld t2,-32(s0)
+	li a0,32
+	sd t2,-32(s0)
+	sd t3,-40(s0)
+	call putch
+	ld t3,-40(s0)
+	ld t2,-32(s0)
 	mv a0,t3
 	sd t2,-32(s0)
 	sd t3,-40(s0)
-	call getarray
+	call putint
 	ld t3,-40(s0)
 	ld t2,-32(s0)
-	mv t2,a0
-	mv a0,zero
-	mv a1,t2
-	sd t2,-32(s0)
-	call merge_sort
-	ld t2,-32(s0)
-	mv t3,a0
-	lla t3,buf
-	mv a0,t2
-	addi t2,t3,0
-	mv a1,t2
+	li a0,44
 	sd t2,-32(s0)
 	sd t3,-40(s0)
-	call putarray
+	call putch
 	ld t3,-40(s0)
 	ld t2,-32(s0)
-	mv t2,a0
-	mv a0,zero
+	li a0,32
+	sd t2,-32(s0)
+	sd t3,-40(s0)
+	call putch
+	ld t3,-40(s0)
+	ld t2,-32(s0)
 	ld ra,40(sp)
 	ld s0,32(sp)
 	addi sp,sp,48
 	jr ra
+	.size	move, .-move
+	.align	1
+	.global	hanoi
+	.type	hanoi	@function
+hanoi:
+	addi sp,sp,-80
+	sd ra,72(sp)
+	sd s0,64(sp)
+	addi s0,sp,80
+	mv t2,a0
+	mv t3,a1
+	mv t4,a2
+	mv t5,a3
+.Bhanoi4:
+	li t6,1
+	subw s1,t2,t6
+	seqz t6,s1
+	bne t6,zero,.Bhanoi7
+	j .Bhanoi8
+.Bhanoi6:
+	ld ra,72(sp)
+	ld s0,64(sp)
+	addi sp,sp,80
+	jr ra
+.Bhanoi7:
+	mv a0,t3
+	mv a1,t5
+	sd t2,-32(s0)
+	sd t3,-40(s0)
+	sd t4,-48(s0)
+	sd t5,-56(s0)
+	sd t6,-64(s0)
+	sd s1,-72(s0)
+	call move
+	ld s1,-72(s0)
+	ld t6,-64(s0)
+	ld t5,-56(s0)
+	ld t4,-48(s0)
+	ld t3,-40(s0)
+	ld t2,-32(s0)
+	j .Bhanoi6
+.Bhanoi8:
+	li t6,1
+	subw s1,t2,t6
+	mv a0,s1
+	mv a1,t3
+	mv a2,t5
+	mv a3,t4
+	sd t2,-32(s0)
+	sd t3,-40(s0)
+	sd t4,-48(s0)
+	sd t5,-56(s0)
+	sd t6,-64(s0)
+	sd s1,-72(s0)
+	call hanoi
+	ld s1,-72(s0)
+	ld t6,-64(s0)
+	ld t5,-56(s0)
+	ld t4,-48(s0)
+	ld t3,-40(s0)
+	ld t2,-32(s0)
+	mv a0,t3
+	mv a1,t5
+	sd t2,-32(s0)
+	sd t3,-40(s0)
+	sd t4,-48(s0)
+	sd t5,-56(s0)
+	sd t6,-64(s0)
+	sd s1,-72(s0)
+	call move
+	ld s1,-72(s0)
+	ld t6,-64(s0)
+	ld t5,-56(s0)
+	ld t4,-48(s0)
+	ld t3,-40(s0)
+	ld t2,-32(s0)
+	li t6,1
+	subw s1,t2,t6
+	mv a0,s1
+	mv a1,t4
+	mv a2,t3
+	mv a3,t5
+	sd t2,-32(s0)
+	sd t3,-40(s0)
+	sd t4,-48(s0)
+	sd t5,-56(s0)
+	sd t6,-64(s0)
+	sd s1,-72(s0)
+	call hanoi
+	ld s1,-72(s0)
+	ld t6,-64(s0)
+	ld t5,-56(s0)
+	ld t4,-48(s0)
+	ld t3,-40(s0)
+	ld t2,-32(s0)
+	j .Bhanoi6
+	.size	hanoi, .-hanoi
+	.align	1
+	.global	main
+	.type	main	@function
+main:
+	addi sp,sp,-64
+	sd ra,56(sp)
+	sd s0,48(sp)
+	addi s0,sp,64
+.Bmain0:
+	sd t2,-32(s0)
+	call getint
+	ld t2,-32(s0)
+	mv t3,a0
+	mv t2,t3
+	j .Bmain2
+.Bmain2:
+	subw t3,t2,zero
+	sgtz t4,t3
+	bne t4,zero,.Bmain5
+	j .Bmain8
+.Bmain5:
+	sd t2,-32(s0)
+	sd t3,-40(s0)
+	sd t4,-48(s0)
+	call getint
+	ld t4,-48(s0)
+	ld t3,-40(s0)
+	ld t2,-32(s0)
+	mv t3,a0
+	mv a0,t3
+	li a1,1
+	li a2,2
+	li a3,3
+	sd t2,-32(s0)
+	sd t3,-40(s0)
+	call hanoi
+	ld t3,-40(s0)
+	ld t2,-32(s0)
+	li a0,10
+	sd t2,-32(s0)
+	sd t3,-40(s0)
+	call putch
+	ld t3,-40(s0)
+	ld t2,-32(s0)
+	li t3,1
+	subw t4,t2,t3
+	mv t2,t4
+	j .Bmain2
+.Bmain8:
+	mv a0,zero
+	ld ra,56(sp)
+	ld s0,48(sp)
+	addi sp,sp,64
+	jr ra
 	.size	main, .-main
-	.global	buf
-	.bss
-	.align	3
-	.type	buf,@object
-	.size	buf,800
-buf:
-	.zero	800
 	.ident	"ForStar"
 	.section	.note.GNU-stack,"",@progbits

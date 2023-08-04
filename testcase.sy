@@ -1,47 +1,27 @@
-int buf[2][100];
 
-// sort [l, r)
-void merge_sort(int l, int r)
+void move(int x, int y)
 {
-    if (l + 1 >= r)
-        return;
+    putint(x); putch(32); putint(y); putch(44); putch(32);
+}
 
-    int mid = (l + r) / 2;
-    merge_sort(l, mid);
-    merge_sort(mid, r);
-
-    int i = l, j = mid, k = l;
-    while (i < mid && j < r) {
-        if (buf[0][i] < buf[0][j]) {
-            buf[1][k] = buf[0][i];
-            i = i + 1;
-        } else {
-            buf[1][k] = buf[0][j];
-            j = j + 1;
-        }
-        k = k + 1;
-    }
-    while (i < mid) {
-        buf[1][k] = buf[0][i];
-        i = i + 1;
-        k = k + 1;
-    }
-    while (j < r) {
-        buf[1][k] = buf[0][j];
-        j = j + 1;
-        k = k + 1;
-    }
-
-    while (l < r) {
-        buf[0][l] = buf[1][l];
-        l = l + 1;
+void hanoi(int n, int one, int two, int three)
+{
+    if (n == 1)
+        move(one, three);
+    else {
+        hanoi(n - 1, one, three, two);
+        move(one, three);
+        hanoi(n - 1, two, one, three);
     }
 }
 
 int main()
 {
-    int n = getarray(buf[0]);
-    merge_sort(0, n);
-    putarray(n, buf[0]);
+    int n = getint();
+    while (n > 0) {
+        hanoi(getint(), 1, 2, 3);
+        putch(10);
+        n = n - 1;
+    }
     return 0;
 }

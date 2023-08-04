@@ -93,7 +93,7 @@ public class RISCBasicBlock {
                 int stackIndex = 8;
                 for (Value v : irFunc.getParamList()) {
                     if (v.getType().isIntegerType() || v.getType().isPointerType() ) {
-                        if(riscFunction.myfuncParameters.get(v) < 8 && riscFunction.intMyparaIsDef[riscFunction.myfuncParameters.get(v)]){
+                        if(riscFunction.myfuncParameters.get(v) < 8 ){
                             VirtualRegister vr = getNewVr();
                             RISCOperand src = getOperand(v);
                             MvInstruction mvInstruction = new MvInstruction(vr,src);
@@ -101,7 +101,7 @@ public class RISCBasicBlock {
                             riscFunction.valueRISCOperandHashMap.put(v,vr);
                         }
                     } else if (v.getType().isFloatType() ) {
-                        if(riscFunction.myfuncParameters.get(v) < 8 && riscFunction.floatMyparaIsDef[riscFunction.myfuncParameters.get(v)]){
+                        if(riscFunction.myfuncParameters.get(v) < 8 ){
                             FloatVirtualRegister fvr = getNewFvr();
                             RISCOperand src = getOperand(v);
                             FmvInstruction mvInstruction = new FmvInstruction(fvr,src);
@@ -962,30 +962,33 @@ public class RISCBasicBlock {
         CallInstruction call1 = new CallInstruction(funcName);
         instructionList.add(call1);
         //以下操作为将a0（函数返回值）和ir中的虚拟寄存器进行对应
-        RISCOperand dst = getOperand(curInst);
+        if (!curInst.getType().isVoidType())
+        {
+            RISCOperand dst = getOperand(curInst);
 
-        if (dst instanceof RealRegister || dst instanceof VirtualRegister) {
+            if (dst instanceof RealRegister || dst instanceof VirtualRegister) {
 
-            RealRegister a0 = new RealRegister(allocAReg(0));
-            MvInstruction mv = new MvInstruction(dst, a0);
-            instructionList.add(mv);
-            riscFunction.valueRISCOperandHashMap.put(curInst, dst);
-
-
-        } else if (dst instanceof FloatRealRegister || dst instanceof FloatVirtualRegister) {
-            FloatRealRegister Fa0 = new FloatRealRegister(10);
-            FmvInstruction fmv = new FmvInstruction(dst, Fa0);
-            instructionList.add(fmv);
-            riscFunction.valueRISCOperandHashMap.put(curInst, dst);
-        } else if (dst instanceof Memory) {
-            if (curInst.getType().isIntegerType() || curInst.getType().isPointerType()) {
                 RealRegister a0 = new RealRegister(allocAReg(0));
-                SdInstruction sd = new SdInstruction(a0, dst);
-                instructionList.add(sd);
-            } else if (curInst.getType().isFloatType()) {
+                MvInstruction mv = new MvInstruction(dst, a0);
+                instructionList.add(mv);
+                riscFunction.valueRISCOperandHashMap.put(curInst, dst);
+
+
+            } else if (dst instanceof FloatRealRegister || dst instanceof FloatVirtualRegister) {
                 FloatRealRegister Fa0 = new FloatRealRegister(10);
-                FsdInstruction fsd = new FsdInstruction(Fa0, dst);
-                instructionList.add(fsd);
+                FmvInstruction fmv = new FmvInstruction(dst, Fa0);
+                instructionList.add(fmv);
+                riscFunction.valueRISCOperandHashMap.put(curInst, dst);
+            } else if (dst instanceof Memory) {
+                if (curInst.getType().isIntegerType() || curInst.getType().isPointerType()) {
+                    RealRegister a0 = new RealRegister(allocAReg(0));
+                    SdInstruction sd = new SdInstruction(a0, dst);
+                    instructionList.add(sd);
+                } else if (curInst.getType().isFloatType()) {
+                    FloatRealRegister Fa0 = new FloatRealRegister(10);
+                    FsdInstruction fsd = new FsdInstruction(Fa0, dst);
+                    instructionList.add(fsd);
+                }
             }
         }
 
@@ -1308,8 +1311,8 @@ public class RISCBasicBlock {
      */
     private void translateRet(Instruction curInst) {
         if (curInst.getNumOP() == 0) {
-            NopInstruction nop1 = new NopInstruction();
-            instructionList.add(nop1);
+//            NopInstruction nop1 = new NopInstruction();
+//            instructionList.add(nop1);
         } else if (curInst.getOperandAt(0).getType().isIntegerType()) {
             RISCOperand op1 = getOperand(curInst.getOperandAt(0));
             if (op1 instanceof Immediate) {
