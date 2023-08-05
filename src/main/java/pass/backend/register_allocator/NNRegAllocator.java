@@ -583,18 +583,24 @@ public class NNRegAllocator implements BaseBackendPass {
                                     var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
                                     RISCInstruction ldInst = new LdInstruction(tempReg, stack); // 存入溢出的值
                                     RISCInstruction sdInst = new SdInstruction(tempReg, stack); // 写回溢出值
-                                    // TODO:处理isDef
-//                                    if (riscInst.isDef(opIndex)) {
-//                                        // 如果是定义点，只需要用后store
-//                                        riscInstList.add(instIndex + 1, sdInst);
-//                                    } else {
-//                                        // 如果是使用点，只需要用前load
-//                                        riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
-//                                        instIndex += 1; // 跳过加的指令
-//                                    }
-                                    riscInstList.add(instIndex + 1, sdInst);
-                                    riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
-                                    instIndex += 1; // 跳过加的指令
+                                    // TODO:处理isDef 这是内存的好像不用？
+                                    if (riscInst.isDef(opIndex)) {
+//                                        // 如果是定义点，肯定是第一个操作数，还要看后面操作数有没有相同虚拟寄存器
+//                                        // 如果有，说明不只需要store，还要load
+//                                        for (int tempIndex = 1; tempIndex < operandList.size(); tempIndex++) {
+//                                            var tempOp = operandList.get(tempIndex);
+//                                            if (tempOp.isVirtualRegister() &&
+//                                                    ((VirtualRegister) tempOp).getName() == riscOp.)
+//                                        }
+                                        riscInstList.add(instIndex + 1, sdInst);
+                                    } else {
+                                        // 如果是使用点，只需要用前load
+                                        riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+                                        instIndex += 1; // 跳过加的指令
+                                    }
+//                                    riscInstList.add(instIndex + 1, sdInst);
+//                                    riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+//                                    instIndex += 1; // 跳过加的指令
 //                                    System.out.println(sdInst.emit());
 
                                 } else {
@@ -709,17 +715,29 @@ public class NNRegAllocator implements BaseBackendPass {
                                 RISCInstruction ldInst = new LdInstruction(tempReg, stack); // 存入溢出的值
                                 RISCInstruction sdInst = new SdInstruction(tempReg, stack); // 写回溢出值
                                 // TODO:处理isDef
-//                                if (riscInst.isDef(opIndex)) {
-//                                    // 如果是定义点，只需要用后store
-//                                    riscInstList.add(instIndex + 1, sdInst);
-//                                } else {
-//                                    // 如果是使用点，只需要用前load
-//                                    riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
-//                                    instIndex += 1; // 跳过加的指令
-//                                }
-                                riscInstList.add(instIndex + 1, sdInst);
-                                riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
-                                instIndex += 1; // 跳过加的指令
+                                if (riscInst.isDef(opIndex)) {
+                                    // 如果是定义点，肯定是第一个操作数，还要看后面操作数有没有相同虚拟寄存器
+                                    // 如果有，说明不只需要store，还要load
+                                    riscInstList.add(instIndex + 1, sdInst);
+                                    // 判断是否需要load
+                                    for (int tempIndex = 1; tempIndex < operandList.size(); tempIndex++) {
+                                        var tempOp = operandList.get(tempIndex);
+                                        if (tempOp.isVirtualRegister() &&
+                                                ((VirtualRegister) tempOp).getName() == vReg.getName()) {
+                                            // 这条指令既有Def又有Use
+                                            riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+                                            instIndex += 1; // 跳过加的指令
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    // 如果是使用点，只需要用前load
+                                    riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+                                    instIndex += 1; // 跳过加的指令
+                                }
+//                                riscInstList.add(instIndex + 1, sdInst);
+//                                riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+//                                instIndex += 1; // 跳过加的指令
 
 //                                System.out.println(sdInst.emit());
 
