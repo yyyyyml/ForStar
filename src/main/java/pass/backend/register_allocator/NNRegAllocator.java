@@ -583,14 +583,18 @@ public class NNRegAllocator implements BaseBackendPass {
                                     var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
                                     RISCInstruction ldInst = new LdInstruction(tempReg, stack); // 存入溢出的值
                                     RISCInstruction sdInst = new SdInstruction(tempReg, stack); // 写回溢出值
-                                    if (riscInst.isDef(opIndex)) {
-                                        // 如果是定义点，只需要用后store
-                                        riscInstList.add(instIndex + 1, sdInst);
-                                    } else {
-                                        // 如果是使用点，只需要用前load
-                                        riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
-                                        instIndex += 1; // 跳过加的指令
-                                    }
+                                    // TODO:处理isDef
+//                                    if (riscInst.isDef(opIndex)) {
+//                                        // 如果是定义点，只需要用后store
+//                                        riscInstList.add(instIndex + 1, sdInst);
+//                                    } else {
+//                                        // 如果是使用点，只需要用前load
+//                                        riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+//                                        instIndex += 1; // 跳过加的指令
+//                                    }
+                                    riscInstList.add(instIndex + 1, sdInst);
+                                    riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+                                    instIndex += 1; // 跳过加的指令
 //                                    System.out.println(sdInst.emit());
 
                                 } else {
@@ -704,14 +708,19 @@ public class NNRegAllocator implements BaseBackendPass {
                                 var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
                                 RISCInstruction ldInst = new LdInstruction(tempReg, stack); // 存入溢出的值
                                 RISCInstruction sdInst = new SdInstruction(tempReg, stack); // 写回溢出值
-                                if (riscInst.isDef(opIndex)) {
-                                    // 如果是定义点，只需要用后store
-                                    riscInstList.add(instIndex + 1, sdInst);
-                                } else {
-                                    // 如果是使用点，只需要用前load
-                                    riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
-                                    instIndex += 1; // 跳过加的指令
-                                }
+                                // TODO:处理isDef
+//                                if (riscInst.isDef(opIndex)) {
+//                                    // 如果是定义点，只需要用后store
+//                                    riscInstList.add(instIndex + 1, sdInst);
+//                                } else {
+//                                    // 如果是使用点，只需要用前load
+//                                    riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+//                                    instIndex += 1; // 跳过加的指令
+//                                }
+                                riscInstList.add(instIndex + 1, sdInst);
+                                riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+                                instIndex += 1; // 跳过加的指令
+
 //                                System.out.println(sdInst.emit());
 
                             } else {
