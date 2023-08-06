@@ -96,7 +96,7 @@ public class Compiler {
         emitter.emit(module);
 
 //        // 运行IR优化
-//        PassDriver passDriver = new PassDriver();
+//        PassDriver passDriver = new PassDriver(isPass);
 //        passDriver.runIR(module);
 //
 //        Emitter emitter2 = new Emitter("testcase2.ll");

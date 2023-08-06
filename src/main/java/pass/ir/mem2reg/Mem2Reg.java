@@ -228,6 +228,7 @@ public class Mem2Reg implements BaseIRPass {
                     if (address instanceof MemoryInst.Alloca && allocaSet.contains(address)) {
                         // 移除load
                         instInode.removeSelf();
+                        inst.removeAllOperand();
                     }
                 }
                 if (inst instanceof MemoryInst.Store) {
@@ -235,6 +236,7 @@ public class Mem2Reg implements BaseIRPass {
                     if (address instanceof MemoryInst.Alloca && allocaSet.contains(address)) {
                         // 移除store
                         instInode.removeSelf();
+                        inst.removeAllOperand();
                     }
                 }
             }
@@ -247,6 +249,7 @@ public class Mem2Reg implements BaseIRPass {
             if (inst instanceof MemoryInst.Alloca && allocaSet.contains(inst)) {
                 // 移除alloca
                 instInode.removeSelf();
+                inst.removeAllOperand();
             }
         }
     }

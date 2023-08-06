@@ -173,6 +173,7 @@ public class Constant extends User {
 
         public void setVal(int val) {
             this.val = val;
+            this.setName(String.valueOf(this.getVal()));
         }
     }
 

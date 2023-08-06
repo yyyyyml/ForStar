@@ -20,6 +20,7 @@ public class MultiRetEliminate implements BaseIRPass {
                     Instruction inst = instInode.getElement();
                     if (flag) {
                         instInode.removeSelf();
+                        inst.removeAllOperand();
 //                        System.out.println("删掉：" + inst);
                     }
                     if (inst.getTag() == Instruction.TAG.RET) {

@@ -9,6 +9,7 @@ import pass.backend.register_allocator.NNFloatRegAllocator;
 import pass.backend.register_allocator.NNRegAllocator;
 import pass.backend.register_allocator.RegisterAllocator;
 import pass.ir.BaseIRPass;
+import pass.ir.addmerge.AddMerge;
 import pass.ir.blockmerge.BlockMerge;
 import pass.ir.mem2reg.Mem2Reg;
 import pass.ir.multiret_eliminate.MultiRetEliminate;
@@ -30,6 +31,7 @@ public class PassDriver {
         irPassList.add(new MultiRetEliminate());
         irPassList.add(new BlockMerge());
         if (isPass) irPassList.add(new Mem2Reg());
+        irPassList.add(new AddMerge());
 //        irPassList.add(new DeadCodeEliminate()); // TODO:好像mem2reg之前还不能做这个优化，有问题
 
         if (isPass) backendPassList.add(new NNRegAllocator());

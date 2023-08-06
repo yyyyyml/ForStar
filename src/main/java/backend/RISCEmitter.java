@@ -27,7 +27,7 @@ public class RISCEmitter {
             for (RISCBasicBlock riscBB : riscFunc.getBasicBlockList()) {
                 if (riscBB.getBlockName() != null) out.append( riscBB.getBlockName() + ":\n");
                 for (RISCInstruction riscInst : riscBB.getInstructionList()) {
-//                    if (riscInst.getId() >= 0) out.append(riscInst.getId());
+                    if (riscInst.getId() >= 0) out.append(riscInst.getId());
                     out.append("\t" + riscInst.emit() + "\n");
                 }
             }
