@@ -727,6 +727,7 @@ public class NNRegAllocator implements BaseBackendPass {
                                             // 这条指令既有Def又有Use
                                             riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
                                             instIndex += 1; // 跳过加的指令
+                                            System.out.println("DEF和USE");
                                             break;
                                         }
                                     }

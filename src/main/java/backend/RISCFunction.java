@@ -10,7 +10,6 @@ import ir.values.Function;
 import org.antlr.v4.runtime.misc.Pair;
 import util.IList;
 
-import java.sql.Array;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
@@ -218,6 +217,11 @@ public class RISCFunction {
             if (addEndBlock) {
 //                System.out.println("!!!" + funcName + "\t" + "localindex=" + localStackIndex);
                 stack.push(blockIndex);
+            }
+            // 加这里吗
+            if (blockIndex == 2) {
+                curBB.prelist.add(myParaBB);
+                myParaBB.nextlist.add(curBB);
             }
         }
 

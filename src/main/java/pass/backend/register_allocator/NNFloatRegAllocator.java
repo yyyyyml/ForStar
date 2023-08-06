@@ -3,10 +3,7 @@ package pass.backend.register_allocator;
 import backend.*;
 import backend.instructions.FldInstruction;
 import backend.instructions.FsdInstruction;
-import backend.operands.FloatRealRegister;
-import backend.operands.FloatVirtualRegister;
-import backend.operands.Immediate;
-import backend.operands.Memory;
+import backend.operands.*;
 import pass.backend.BaseBackendPass;
 
 import java.util.*;
@@ -690,14 +687,31 @@ public class NNFloatRegAllocator implements BaseBackendPass {
                                 var stack = new Memory(-vReg.getStackLocation(), 1); // 临时栈
                                 RISCInstruction ldInst = new FldInstruction(tempReg, stack); // 存入溢出的值
                                 RISCInstruction sdInst = new FsdInstruction(tempReg, stack); // 写回溢出值
+                                // TODO:处理isDef
                                 if (riscInst.isDef(opIndex)) {
-                                    // 如果是定义点，只需要用后store
+                                    // 如果是定义点，肯定是第一个操作数，还要看后面操作数有没有相同虚拟寄存器
+                                    // 如果有，说明不只需要store，还要load
                                     riscInstList.add(instIndex + 1, sdInst);
+                                    // 判断是否需要load
+                                    for (int tempIndex = 1; tempIndex < operandList.size(); tempIndex++) {
+                                        var tempOp = operandList.get(tempIndex);
+                                        if (tempOp.isVirtualRegister() &&
+                                                ((VirtualRegister) tempOp).getName() == vReg.getName()) {
+                                            // 这条指令既有Def又有Use
+                                            riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+                                            instIndex += 1; // 跳过加的指令
+                                            System.out.println("DEF和USE");
+                                            break;
+                                        }
+                                    }
                                 } else {
                                     // 如果是使用点，只需要用前load
                                     riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
                                     instIndex += 1; // 跳过加的指令
                                 }
+//                                riscInstList.add(instIndex + 1, sdInst);
+//                                riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
+//                                instIndex += 1; // 跳过加的指令
 //                                System.out.println(sdInst.emit());
 
                             } else {
