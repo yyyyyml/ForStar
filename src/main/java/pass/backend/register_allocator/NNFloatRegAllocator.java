@@ -3,7 +3,10 @@ package pass.backend.register_allocator;
 import backend.*;
 import backend.instructions.FldInstruction;
 import backend.instructions.FsdInstruction;
-import backend.operands.*;
+import backend.operands.FloatRealRegister;
+import backend.operands.FloatVirtualRegister;
+import backend.operands.Immediate;
+import backend.operands.Memory;
 import pass.backend.BaseBackendPass;
 
 import java.util.*;
@@ -695,8 +698,8 @@ public class NNFloatRegAllocator implements BaseBackendPass {
                                     // 判断是否需要load
                                     for (int tempIndex = 1; tempIndex < operandList.size(); tempIndex++) {
                                         var tempOp = operandList.get(tempIndex);
-                                        if (tempOp.isVirtualRegister() &&
-                                                ((VirtualRegister) tempOp).getName() == vReg.getName()) {
+                                        if (tempOp.isFloatVirtualRegister() &&
+                                                ((FloatVirtualRegister) tempOp).getName() == vReg.getName()) {
                                             // 这条指令既有Def又有Use
                                             riscInstList.add(instIndex, ldInst); // 之前存过才需要这个
                                             instIndex += 1; // 跳过加的指令
