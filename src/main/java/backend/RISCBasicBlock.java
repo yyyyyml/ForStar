@@ -646,7 +646,7 @@ public class RISCBasicBlock {
 
         switch (cond.getTag()) {
             case EQ -> {
-                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR)||nextInst.getNumOP()!=3)
                 {
                     Register vr = tempRegister;
                     SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
@@ -677,7 +677,7 @@ public class RISCBasicBlock {
                 }
             }
             case NE -> {
-                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR)||nextInst.getNumOP()!=3)
                 {
                     Register vr = tempRegister;
                     SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
@@ -691,6 +691,7 @@ public class RISCBasicBlock {
                     if(firstBrposition == -1){
                         firstBrposition = instructionList.size();
                     }
+                    System.out.println(nextInst);
                     //获取跳转地址
                     Value v1 = nextInst.getOperandAt(1);
                     StringBuffer vName1 = new StringBuffer(v1.getName());
@@ -710,7 +711,7 @@ public class RISCBasicBlock {
                 }
             }
             case LT -> {
-                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR)||nextInst.getNumOP()!=3)
                 {
                     if (op2 instanceof Immediate) {
                         int val = ((Immediate) op2).getVal();
@@ -755,7 +756,7 @@ public class RISCBasicBlock {
 
             }
             case LE -> {
-                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR)||nextInst.getNumOP()!=3)
                 {// 小于等于 相当于大于反过来
                     Register vr = tempRegister;
                     SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
@@ -788,7 +789,7 @@ public class RISCBasicBlock {
                 }
             }
             case GT -> {
-                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR)||nextInst.getNumOP()!=3)
                 {
                     Register vr = tempRegister;
                     SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
@@ -819,7 +820,7 @@ public class RISCBasicBlock {
                 }
             }
             case GE -> {
-                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR)||nextInst.getNumOP()!=3)
                 {//大于等于相当于小于反过来
                     if (op2 instanceof Immediate) {
                         int val = ((Immediate) op2).getVal();
