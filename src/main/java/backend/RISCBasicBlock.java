@@ -646,7 +646,7 @@ public class RISCBasicBlock {
 
         switch (cond.getTag()) {
             case EQ -> {
-                if(true || nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if( nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
                 {
                     Register vr = tempRegister;
                     SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
@@ -677,7 +677,7 @@ public class RISCBasicBlock {
                 }
             }
             case NE -> {
-                if(true || nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if( nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
                 {
                     Register vr = tempRegister;
                     SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
@@ -710,7 +710,7 @@ public class RISCBasicBlock {
                 }
             }
             case LT -> {
-                if(true || nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if( nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
                 {
                     if (op2 instanceof Immediate) {
                         int val = ((Immediate) op2).getVal();
@@ -755,7 +755,7 @@ public class RISCBasicBlock {
 
             }
             case LE -> {
-                if(true || nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
                 {// 小于等于 相当于大于反过来
                     Register vr = tempRegister;
                     SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
@@ -788,7 +788,7 @@ public class RISCBasicBlock {
                 }
             }
             case GT -> {
-                if(true || nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                if( nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
                 {
                     Register vr = tempRegister;
                     SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
@@ -912,7 +912,7 @@ public class RISCBasicBlock {
             JInstruction j = new JInstruction(ms,this);
             instructionList.add(j);
         } else if (paraCount == 3) {
-            if(false && (preInst.getTag() == Instruction.TAG.EQ || preInst.getTag() == Instruction.TAG.NE || preInst.getTag() == Instruction.TAG.LT || preInst.getTag() == Instruction.TAG.LE || preInst.getTag() == Instruction.TAG.GT || preInst.getTag() == Instruction.TAG.GE)){
+            if( (preInst.getTag() == Instruction.TAG.EQ || preInst.getTag() == Instruction.TAG.NE || preInst.getTag() == Instruction.TAG.LT || preInst.getTag() == Instruction.TAG.LE || preInst.getTag() == Instruction.TAG.GT || preInst.getTag() == Instruction.TAG.GE)){
                 return;
             }
             if(firstBrposition == -1){
@@ -1258,10 +1258,6 @@ public class RISCBasicBlock {
             case SUB -> {
                 if(isZero){
                     MvInstruction mvInstruction = new MvInstruction(dst,temp1);
-                    instructionList.add(mvInstruction);
-                }
-                else if(isZero2){
-                    MvInstruction mvInstruction = new MvInstruction(dst,temp2);
                     instructionList.add(mvInstruction);
                 }
                 else {
