@@ -1154,6 +1154,8 @@ public class RISCBasicBlock {
 
         Boolean isZero = false;
         Boolean isOne = false;
+        Boolean isZero2 = false;
+        Boolean isOne2 = false;
         Value vop1 = curInst.getOperandAt(0);
         RISCOperand op1 = getOperand(vop1);
       //  System.out.println(vop1.getName() + " -> " + op1.emit());
@@ -1175,10 +1177,16 @@ public class RISCBasicBlock {
                 instructionList.add(l2);
             }
         } else if (op1 instanceof Register) {
+            if(op1 instanceof RealRegister && ((RealRegister) op1).regType.name() == "zero"){
+                isZero2 = true;
+            }
             temp1 = op1;
             //if(riscFunction.valueVRMap.get(vop1) == (VirtualRegister) op1) {riscFunction.valueVRMap.remove(vop1);}
 
         } else if (op1 instanceof Immediate) {
+            if (((Immediate) op1).getVal() == 1){
+                isOne2 = true;
+            }
             VirtualRegister vr = getNewVr();
             LiInstruction li = new LiInstruction(vr, op1);
             instructionList.add(li);
@@ -1237,6 +1245,10 @@ public class RISCBasicBlock {
                         MvInstruction mvInstruction = new MvInstruction(dst,temp1);
                         instructionList.add(mvInstruction);
                     }
+                    else if(isZero2){
+                        MvInstruction mvInstruction = new MvInstruction(dst,temp2);
+                        instructionList.add(mvInstruction);
+                    }
                     else {
                         AddwInstruction cal = new AddwInstruction(dst, temp1, temp2);
                         instructionList.add(cal);
@@ -1246,6 +1258,10 @@ public class RISCBasicBlock {
             case SUB -> {
                 if(isZero){
                     MvInstruction mvInstruction = new MvInstruction(dst,temp1);
+                    instructionList.add(mvInstruction);
+                }
+                else if(isZero2){
+                    MvInstruction mvInstruction = new MvInstruction(dst,temp2);
                     instructionList.add(mvInstruction);
                 }
                 else {
@@ -1258,6 +1274,14 @@ public class RISCBasicBlock {
                     MvInstruction mvInstruction = new MvInstruction(dst,temp1);
                     instructionList.add(mvInstruction);
                 }
+                else if(isOne2){
+                    MvInstruction mvInstruction = new MvInstruction(dst,temp2);
+                    instructionList.add(mvInstruction);
+                }
+                else if(isZero || isZero2){
+                    MvInstruction mvInstruction = new MvInstruction(dst,new RealRegister(0));
+                    instructionList.add(mvInstruction);
+                }
                 else {
                     MulwInstruction cal = new MulwInstruction(dst, temp1, temp2);
                     instructionList.add(cal);
@@ -1268,6 +1292,11 @@ public class RISCBasicBlock {
                     MvInstruction mvInstruction = new MvInstruction(dst,temp1);
                     instructionList.add(mvInstruction);
                 }
+                else if(isZero2){
+                    MvInstruction mvInstruction = new MvInstruction(dst,new RealRegister(0));
+                    instructionList.add(mvInstruction);
+                }
+                else
                 {
                     DivwInstruction cal = new DivwInstruction(dst, temp1, temp2);
                     instructionList.add(cal);
