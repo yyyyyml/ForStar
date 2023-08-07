@@ -75,24 +75,9 @@ public class Constant extends User {
                 }
             }
 
-            // Process initList: remove all zero values at the end.
-            /*for (int i = initList.size() - 1; i >= 0; i--) {
-                Constant elem = initList.get(i);
-                if (!elem.isZero()) {
-                    break;
-                }
-                initList.remove(i);
-            }*/
-
-            // Retrieve the instance and return it.
-            /*var key = new ConstArrKey(arrType, initList);
-            if (pool.containsKey(key)) {
-                return pool.get(key);
-            }*/
 
             Constant.ConstantArray newArr = new Constant.ConstantArray(arrType, initList);
 
-            //pool.put(key, newArr);
             return newArr;
         }
 
@@ -111,7 +96,6 @@ public class Constant extends User {
 
         @Override
         public String toString() {
-            // e.g. [2 x i32] [i32 1, i32 2] or [2 x i32] zeroinitializer
             StringBuilder strBuilder = new StringBuilder();
             strBuilder.append(this.getType()); // "[2 x i32]"
 

@@ -136,11 +136,11 @@ public class Builder {
     }
 
     public ConversionInst.Ptrcast buildPtrcast(Value srcVal, PointerType dstType) {
-        // Security checks.
+
         if (!srcVal.getType().isPointerType()) {
             throw new RuntimeException("A non-pointer src Value is given.");
         }
-        // Construct, insert, and return.
+
         ConversionInst.Ptrcast ptrcast = new ConversionInst.Ptrcast(srcVal,dstType);
         getCurBB().list.addLast(ptrcast.node) ;
         return ptrcast;
@@ -264,7 +264,7 @@ public class Builder {
     }
 
     public TerminatorInst.Br buildBr(Value cond, BasicBlock trueBlk, BasicBlock falseBlk) {
-        // Create and insert a block.
+
         TerminatorInst.Br condBr = new TerminatorInst.Br(cond, trueBlk, falseBlk, getCurBB());
         getCurBB().list.addLast(condBr.node);
 
@@ -273,13 +273,7 @@ public class Builder {
     }
 
     public TerminatorInst.Br buildBr(BasicBlock blk) {
-        /*
-        Security Check.
-         */
-        /*if (getCurBB().getLastInst() != null && getCurBB().getLastInst().isBr()) {
-            throw new RuntimeException("Cannot insert a Br after another Br.");
-        }*/
-        // Create and insert a block.
+
         TerminatorInst.Br uncondBr = new TerminatorInst.Br(blk, getCurBB());
         getCurBB().list.addLast(uncondBr.node);
 
@@ -288,7 +282,7 @@ public class Builder {
     }
 
     public BinaryInst buildComparison(String opr, Value lOp, Value rOp) {
-        // Security checks.
+
         if (lOp.getType() != rOp.getType()) {
             throw new RuntimeException("Unmatched types: [lOp] " + lOp.getType() + ", [rOp] " + rOp.getType());
         }
@@ -306,7 +300,7 @@ public class Builder {
                 default -> {}
             }
         }
-        // Floating point comparison.
+
         else {
             switch (opr) {
                 case "<=" -> inst = new BinaryInst(Type.BoolType.getType() , Instruction.TAG.FLE, lOp, rOp);
@@ -322,27 +316,24 @@ public class Builder {
         if (inst == null) {
             throw new RuntimeException("Operand '" + opr + "' cannot be recognized.");
         }
-        // Insert and return the inst.
+
         getCurBB().list.addLast(inst.node) ;
         return inst;
     }
 
     public ConversionInst.Zext buildZExt(Value srcVal) {
-        // Security checks.
+
         if (!srcVal.getType().isBoolType()) {
             throw new RuntimeException("A non-i1 src Value is given.");
         }
-        // Construct, insert, and return.
+
         ConversionInst.Zext zext = new ConversionInst.Zext(srcVal);
         getCurBB().list.addLast(zext.node) ;
         return zext;
     }
 
     public Constant.ConstantArray buildConstArr(ArrayType arrType, ArrayList<Constant> initList) {
-        /*
-        If the initialization list is shorter than needed,
-        filled the blanks with 0 (or .0f).
-         */
+
         boolean isZ = true;
         for(int i = initList.size()-1;i>=0;i--)
         {
@@ -367,9 +358,7 @@ public class Builder {
 
 
             if (arrType.getElemType().isArrayType()) {
-            /*
-            Build the nested initList from the given linear initList.
-             */
+
                 ArrayList<Constant> nestedInitList = new ArrayList<>();
                 int j = 0;
                 int step = arrType.getAtomLen() / arrType.getLen();
@@ -390,11 +379,11 @@ public class Builder {
                 for (int i = 0; i < initList.size(); i++) {
                     Value elem = initList.get(i);
                     if (elem.getType() != elemType) {
-                        if (elemType.isFloatType()) { // cast elem i32 -> float
+                        if (elemType.isFloatType()) {
                             int numericVal = ((Constant.ConstantInt) elem).getVal();
                             initList.set(i, buildConstant((float) numericVal));
                         }
-                        else if (elemType.isIntegerType()) { // cast elem float -> i32
+                        else if (elemType.isIntegerType()) {
                             float numericVal = ((Constant.ConstantFloat) elem).getVal();
                             initList.set(i, buildConstant((int) numericVal));
                         }

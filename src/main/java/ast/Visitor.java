@@ -469,58 +469,35 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitIfelseStmt(SysY2022Parser.IfelseStmtContext ctx) {
-        /*
-        Store current block to add on it a Br to entryBlk.
-        And then build the entry block of the condition statement.
-         */
+
         BasicBlock preBlk = builder.getCurBB();
         BasicBlock entryBlk = builder.buildBB("_COND_ENTRY");
-        // Add a Br from the old preBlk to the new entryBlk.
+
         builder.setCurBB(preBlk);
         builder.buildBr(entryBlk);
 
-        /*
-        Build an EXIT block no matter if it may become dead code
-        that cannot be reached in the CFG.
-         */
+
         BasicBlock exitBlk = builder.buildBB("_COND_EXIT");
-        /*
-        Build the TRUE branch (a block for jumping if condition is true).
-        Fill it by visiting child (the 1st stmt, the true branch).
-         */
+
         BasicBlock trueEntryBlk = builder.buildBB("_THEN");
         visit(ctx.stmt(0));
         BasicBlock trueExitBlk = builder.getCurBB();
-        // Get trueBlkEndWithTerminator flag.
+
         Instruction trueExitBlkLastInst = trueExitBlk.getLastInst();
         boolean trueBlkEndWithTerminator = trueExitBlkLastInst != null &&
                 trueExitBlkLastInst.isTerminator();
-        /*
-        Build the FALSE branch (a block for jumping if condition is false),
-        if there is the 2nd stmt, meaning that it's an IF-ELSE statement.
-        Otherwise, it's an IF statement (w/o following ELSE), and
-        falseEntryBlk will remain null.
 
-        : if(falseEntryBlk != null) -> IF-ELSE statement
-        : if(falseEntryBlk == null) -> IF statement w/o ELSE
-         */
         BasicBlock falseEntryBlk = null;
         BasicBlock falseExitBlk = null;
         boolean falseBlkEndWithTerminator = false;
         falseEntryBlk = builder.buildBB("_ELSE");
-        visit(ctx.stmt(1)); // Fill the block by visiting child.
+        visit(ctx.stmt(1));
         falseExitBlk = builder.getCurBB();
-        // Get falseBlkEndWithTerminator flag.
+
         Instruction falseExitBlkLastInst = falseExitBlk.getLastInst();
         falseBlkEndWithTerminator = falseExitBlkLastInst != null && falseExitBlkLastInst.isTerminator();
 
-        /*
-        Add Br terminator for trueExitBlock and falseExitBlock if needed (if both branches
-        end with Ret terminators.
-         */
-        // The exit block will be built when:
-        // "!trueBlkEndWithTerminator && !falseBlkEndWithTerminator" (under IF-ELSE)
-        // or "!trueBlkEndWithTerminator && no falseBlock" (i.e. IF w/o ELSE)
+
         if (!trueBlkEndWithTerminator) {
             builder.setCurBB(trueExitBlk);
             builder.buildBr(exitBlk);
@@ -530,23 +507,15 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             builder.buildBr(exitBlk);
         }
 
-        /*
-        Cope with the condition expression by visiting child cond.
-         */
+
         builder.setCurBB(entryBlk);
-        // Pass down blocks as inherited attributes for short-circuit evaluation.
+
         ctx.cond().lOrExp().trueBlk = trueEntryBlk;
         ctx.cond().lOrExp().falseBlk = (falseEntryBlk != null) ? falseEntryBlk : exitBlk;
 
         visit(ctx.cond());
 
-        /*
-        Force the BB pointer to point to the exitBlk, which will serve as the upstream
-        block for processing the following content.
-        Even if the exitBlk is a dead entry that cannot be reached, all the content will
-        still be processed. These dead basic blocks can be removed in the following
-        CFG analysis by the optimizer.
-         */
+
         builder.setCurBB(exitBlk);
 
         return null;
@@ -554,51 +523,28 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitIfStmt(SysY2022Parser.IfStmtContext ctx) {
-        /*
-        Store current block to add on it a Br to entryBlk.
-        And then build the entry block of the condition statement.
-         */
+
         BasicBlock preBlk = builder.getCurBB();
         BasicBlock entryBlk = builder.buildBB("_COND_ENTRY");
-        // Add a Br from the old preBlk to the new entryBlk.
+
         builder.setCurBB(preBlk);
         builder.buildBr(entryBlk);
 
-        /*
-        Build an EXIT block no matter if it may become dead code
-        that cannot be reached in the CFG.
-         */
+
         BasicBlock exitBlk = builder.buildBB("_COND_EXIT");
-        /*
-        Build the TRUE branch (a block for jumping if condition is true).
-        Fill it by visiting child (the 1st stmt, the true branch).
-         */
+
         BasicBlock trueEntryBlk = builder.buildBB("_THEN");
         visit(ctx.stmt());
         BasicBlock trueExitBlk = builder.getCurBB();
-        // Get trueBlkEndWithTerminator flag.
+
         Instruction trueExitBlkLastInst = trueExitBlk.getLastInst();
         boolean trueBlkEndWithTerminator = trueExitBlkLastInst != null &&
                 trueExitBlkLastInst.isTerminator();
-        /*
-        Build the FALSE branch (a block for jumping if condition is false),
-        if there is the 2nd stmt, meaning that it's an IF-ELSE statement.
-        Otherwise, it's an IF statement (w/o following ELSE), and
-        falseEntryBlk will remain null.
 
-        : if(falseEntryBlk != null) -> IF-ELSE statement
-        : if(falseEntryBlk == null) -> IF statement w/o ELSE
-         */
         BasicBlock falseEntryBlk = null;
         BasicBlock falseExitBlk = null;
         boolean falseBlkEndWithTerminator = false;
-        /*
-        Add Br terminator for trueExitBlock and falseExitBlock if needed (if both branches
-        end with Ret terminators.
-         */
-        // The exit block will be built when:
-        // "!trueBlkEndWithTerminator && !falseBlkEndWithTerminator" (under IF-ELSE)
-        // or "!trueBlkEndWithTerminator && no falseBlock" (i.e. IF w/o ELSE)
+
         if (!trueBlkEndWithTerminator) {
             builder.setCurBB(trueExitBlk);
             builder.buildBr(exitBlk);
@@ -608,23 +554,15 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             builder.buildBr(exitBlk);
         }
 
-        /*
-        Cope with the condition expression by visiting child cond.
-         */
+
         builder.setCurBB(entryBlk);
-        // Pass down blocks as inherited attributes for short-circuit evaluation.
+
         ctx.cond().lOrExp().trueBlk = trueEntryBlk;
         ctx.cond().lOrExp().falseBlk = (falseEntryBlk != null) ? falseEntryBlk : exitBlk;
 
         visit(ctx.cond());
 
-        /*
-        Force the BB pointer to point to the exitBlk, which will serve as the upstream
-        block for processing the following content.
-        Even if the exitBlk is a dead entry that cannot be reached, all the content will
-        still be processed. These dead basic blocks can be removed in the following
-        CFG analysis by the optimizer.
-         */
+
         builder.setCurBB(exitBlk);
 
         return null;
@@ -633,12 +571,12 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitLOrExp(SysY2022Parser.LOrExpContext ctx) {
-        //<editor-fold desc="For first N-1 lAndExp blocks.">
+
         for(int i = 0; i < ctx.lAndExp().size() - 1; i++) {
             BasicBlock curLOrBlk = builder.getCurBB();
             BasicBlock nxtLOrBlk = builder.buildBB("nxtLor");
 
-            // Pass down blocks as inherited attributes for short-circuit evaluation.
+
             ctx.lAndExp(i).falseBlk = nxtLOrBlk;
             ctx.lAndExp(i).trueBlk = ctx.trueBlk;
 
@@ -646,14 +584,14 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             visit(ctx.lAndExp(i));
             builder.setCurBB(nxtLOrBlk);
         }
-        //</editor-fold>
 
 
-        //<editor-fold desc="For the last lAndExp block.">
+
+
         ctx.lAndExp(ctx.lAndExp().size() - 1).falseBlk = ctx.falseBlk;
         ctx.lAndExp(ctx.lAndExp().size() - 1).trueBlk = ctx.trueBlk;
         visit(ctx.lAndExp(ctx.lAndExp().size() - 1));
-        //</editor-fold>
+
 
         return null;
     }
@@ -666,31 +604,26 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         for(int i = 0; i < ctx.eqExp().size(); i++) {
             visit(ctx.eqExp(i));
 
-            /*
-            Type conversions of the condition.
-             */
+
             if(retVal_.getType().isIntegerType()) { // i32 -> i1
-                // If eqExp gives a number (i32), cast it to be a boolean by NE comparison.
+
                 retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantInt.getConstantInt(0) );
             }
             else if (retVal_.getType().isFloatType()) { // float -> i1
                 retVal_ = builder.buildComparison("!=", retVal_, Constant.ConstantFloat.getConstantFloat(.0f));
             }
 
-            /*
-            Build the branching.
-             */
-            // For the first N-1 eqExp blocks.
+
             if(i < ctx.eqExp().size() - 1) {
-                // Build following blocks for short-circuit evaluation.
+
                 BasicBlock originBlk = builder.getCurBB();
                 BasicBlock nxtAndBlk = builder.buildBB("nxtLand");
-                // Add a branch instruction to terminate this block.
+
                 builder.setCurBB(originBlk);
                 builder.buildBr(retVal_, nxtAndBlk, ctx.falseBlk);
                 builder.setCurBB(nxtAndBlk);
             }
-            // For the last eqExp blocks.
+
             else {
                 builder.buildBr(retVal_, ctx.trueBlk, ctx.falseBlk);
             }
@@ -702,18 +635,16 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitEqExp(SysY2022Parser.EqExpContext ctx) {
-        // Retrieve left operand by visiting child.
+
         visit(ctx.relExp(0));
         Value lOp = retVal_;
 
         for (int i = 1; i < ctx.relExp().size(); i++) {
-            // Retrieve the next relExp as the right operand by visiting child.
+
             visit(ctx.relExp(i));
             Value rOp = retVal_;
 
-            /*
-            Implicit type conversions.
-             */
+
             if (lOp.getType().isFloatType() && !rOp.getType().isFloatType()) {
                 rOp = builder.buildSitofp(rOp);
             }
@@ -721,7 +652,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 lOp = builder.buildSitofp(lOp);
             }
             else {
-                // Extend if one Opd is i32 and another is i1.
+
                 if(lOp.getType().isIntegerType() && rOp.getType().isBoolType()) {
                     rOp = builder.buildZExt(rOp);
                 }
@@ -730,14 +661,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 }
             }
 
-            /*
-            Build a comparison instruction, which yields a result
-            to be the left operand for the next round.
-             */
-            String opr = ctx.getChild(2 * i - 1).getText(); // The comparison operator.
+
+            String opr = ctx.getChild(2 * i - 1).getText();
             lOp = builder.buildComparison(opr, lOp, rOp);
         }
-        // The final result is stored in the last left operand.
+
         retVal_ = lOp;
 
         return null;
@@ -746,18 +674,16 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitRelExp(SysY2022Parser.RelExpContext ctx) {
-        // Retrieve left operand by visiting child.
+
         visit(ctx.addExp(0));
         Value lOp = retVal_;
 
         for (int i = 1; i < ctx.addExp().size(); i++) {
-            // Retrieve the next addExp as the right operand by visiting child.
+
             visit(ctx.addExp(i));
             Value rOp = retVal_;
 
-            /*
-            Implicit type conversions.
-             */
+
             if (lOp.getType().isFloatType() && !rOp.getType().isFloatType()) {
                 rOp = builder.buildSitofp(rOp);
             }
@@ -765,7 +691,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 lOp = builder.buildSitofp(lOp);
             }
             else {
-                // Same as visitEqExp above: Extend if one Opd is i32 and another is i1.
+
                 if (lOp.getType().isIntegerType() && rOp.getType().isBoolType()) {
                     rOp = builder.buildZExt(rOp);
                 }
@@ -774,14 +700,11 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 }
             }
 
-            /*
-            Build a comparison instruction, which yields a result
-            to be the left operand for the next round.
-             */
-            String opr = ctx.getChild(2 * i - 1).getText(); // The comparison operator.
+
+            String opr = ctx.getChild(2 * i - 1).getText();
             lOp = builder.buildComparison(opr, lOp, rOp);
         }
-        // The final result is stored in the last left operand.
+
         retVal_ = lOp;
 
 
@@ -790,63 +713,45 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitWhileStmt(SysY2022Parser.WhileStmtContext ctx) {
-        // Deepen by one layer of nested loop.
+
         bpStk.push(new ArrayList<>());
 
 
 
-        /*
-        - Store current block to add on it a Br to entryBlk.
-        - Start a new block as the entry of loop continuing check for
-        jumping back at the end of the loop body, which is also the
-        entry block of the while statement.
-         */
+
         BasicBlock preBlk = builder.getCurBB();
 
-        // NOTICE: A new block as condEntryBlk will be created no matter
-        // whether the preBlk is empty or not.
+
         BasicBlock condEntryBlk = builder.buildBB("_WHILE_ENTRY");
-        // Add a Br from the old preBlk to the new entryBlk.
+
         builder.setCurBB(preBlk);
         builder.buildBr(condEntryBlk);
 
-        /*
-        Build an EXIT block no matter if it may become dead code
-        that cannot be reached in the CFG.
-         */
+
         BasicBlock bodyEntryBlk = builder.buildBB("_WHILE_BODY");
         BasicBlock exitBlk = builder.buildBB("_WHILE_EXIT");
 
-        /*
-        Cope with the condition expression by visiting child cond.
-         */
-        // Pass down blocks as inherited attributes for short-circuit evaluation.
+
         ctx.cond().lOrExp().trueBlk = bodyEntryBlk;
         ctx.cond().lOrExp().falseBlk = exitBlk;
 
         builder.setCurBB(condEntryBlk);
         visit(ctx.cond());
 
-        /*
-        Build the loop BODY.
-         */
+
         builder.setCurBB(bodyEntryBlk);
         visit(ctx.stmt());
         BasicBlock bodyExitBlk = builder.getCurBB();
-        // If the loop body doesn't end with Ret,
-        // add a Br jumping back to the conditional statement.
+
         if (bodyExitBlk.list.isEmpty() || !bodyExitBlk.getLastInst().isTerminator()) {
             builder.setCurBB(bodyExitBlk);
             builder.buildBr(condEntryBlk);
         }
 
-        /*
-        Force the BB pointer to point to the exitBlk just as the conditional
-        statement regardless of dead code prevention.
-         */
+
         builder.setCurBB(exitBlk);
 
-        // Pop the back-patching layer out.
+
         for (ir.Instructions.TerminatorInst.Br br : bpStk.pop()) {
             if (br.getOperandAt(0) == BREAK) {
                 br.setOperand(exitBlk, 0);
@@ -874,7 +779,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     @Override
     public Void visitBreakStmt(SysY2022Parser.BreakStmtContext ctx) {
         bpStk.peek().add(builder.buildBr(BREAK));
-        // Add a dead block for possible remaining dead code.
         builder.buildBB("_FOLLOWING_BLK");
         return null;
     }
@@ -885,7 +789,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     @Override
     public Void visitContinueStmt(SysY2022Parser.ContinueStmtContext ctx) {
         bpStk.peek().add(builder.buildBr(CONTINUE));
-        // Add a dead block for possible remaining dead code.
         builder.buildBB("_FOLLOWING_BLK");
         return null;
     }
@@ -934,7 +837,6 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         Value addr = retVal_;
         if(isConstantVar){
             this.isConstantVar = false;
-//            throw new RuntimeException("Constant variable "+ctx.getChild(0).getText() +"'s"+" value can not be changed!");
         }
         visit(ctx.exp());
         Value val = retVal_;
@@ -1254,7 +1156,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitArrConstDef(SysY2022Parser.ArrConstDefContext ctx) {
-        // Scan to retrieve the length of each dimension, storing them in a list.
+
         ArrayList<Integer> dimLens = new ArrayList<>();
         for (SysY2022Parser.ConstExpContext constExpContext : ctx.constExp()) {
             visit(constExpContext);
@@ -1262,7 +1164,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             dimLens.add(dimLen);
         }
         Type tmpType = null;
-        // Retrieve the basic element type.
+
         String bType = ctx.getParent().getChild(1).getText();
         switch (bType) {
             case "int" -> tmpType = IntegerType.getType();
@@ -1273,26 +1175,15 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         }
         ArrayType arrType = (ArrayType) tmpType;
 
-        /*
-        In SysY, no explicit addresses or pointers is allowed, because of which
-        all const local arrays can be directly promoted to be located in global space.
-        (no one cares whether its address is on stack or global segment).
 
-        Thus, all const arrays are treated as global arrays.
-        But promoted local arrays needs to be reassigned a name before emitted to prevent
-        conflicts with variables having the same names in the outer scopes.
-         */
 
         String gvName = scope.isGlobal() ? ctx.Ident().getText() : curFuncName+"_"+ ctx.Ident().getText();
 
         GlobalVariable arr;
 
-        // With Initialization.
+
         if (ctx.constInitVal() != null) {
-            // Pass down the lengths of each dimension.
-            // Visit constInitVal (ArrConstInitVal) to generate the initial list for the array
-            // which will be filled with 0 by visitArrConstInitVal if the number of given initial
-            // values is not enough.
+
             ctx.constInitVal().dimLens = dimLens;
             ctx.constInitVal().sizCurDepth = getProductOf(dimLens);
 
@@ -1300,25 +1191,23 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             visit(ctx.constInitVal());
             this.setConstFolding(OFF);
 
-            // ArrConstInitVal will generate an array of Values,
-            // convert them into Constants and build a ConstArray.
+
             ArrayList<Constant> initList = new ArrayList<>();
             for (Value val : retValList_) {
                 initList.add((Constant.ConstantInt) val);
             }
             Constant.ConstantArray initArr = builder.buildConstArr(arrType, initList);
-            // Build the ConstArray a global variable.
+
             arr = builder.buildGlobalVar(gvName, initArr);
         }
-        // W/o initialization.
+
         else {
             arr = builder.buildGlobalVar(gvName, arrType);
         }
 
-        // This line will also check if a glb var is successfully built.
-        // A java exception will be thrown if arr == null.
+
         arr.setConst();
-        // Add the array into the symbol table.
+
         scope.addSymbol(ctx.Ident().getText(), arr,"const");
 
         return null;
@@ -1326,13 +1215,12 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitArrConstInitVal(SysY2022Parser.ArrConstInitValContext ctx) {
-        // For arr[3][2] with initialization { {1,2}, {3,4}, {5,6} },
-        // the dimLen = 3 and sizSublistInitNeeded = 2.
+
         int dimLen = ctx.dimLens.get(0);
 
         ArrayList<Value> initArr = new ArrayList<>();
         for (SysY2022Parser.ConstInitValContext constInitValContext : ctx.constInitVal()) {
-            // If the one step lower level still isn't the atom element layer.
+
             if (constInitValContext instanceof SysY2022Parser.ArrConstInitValContext) {
                 constInitValContext.dimLens = new ArrayList<>(
                         ctx.dimLens.subList(1, ctx.dimLens.size()));
@@ -1340,20 +1228,20 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 visit(constInitValContext);
                 initArr.addAll(retValList_);
             }
-            // If it is the lowest layer.
+
             else {
                 visit(constInitValContext);
                 initArr.add(retVal_);
             }
         }
 
-        // Security check.
+
         if (initArr.size() > ctx.sizCurDepth) {
             throw new RuntimeException("The length of initList (" + initArr.size() + ")" +
                     " exceeds the maximum size of current depth (" + ctx.sizCurDepth + ")");
         }
 
-        // Fill the initialized list with enough 0.
+
         int sizToFillTo = (ctx.getParent() instanceof SysY2022Parser.ArrConstDefContext) ?
                 ctx.sizCurDepth : ctx.dimLens.get(ctx.dimLens.size() - 1);
         for (int i = initArr.size(); i < sizToFillTo; i++) {
@@ -1383,7 +1271,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitArrVarDef(SysY2022Parser.ArrVarDefContext ctx) {
-        // Get all lengths of dimension by looping through the constExp list.
+
 
         ArrayList<Integer> dimLens = new ArrayList<>();
         for (SysY2022Parser.ConstExpContext constExpContext : ctx.constExp()) {
@@ -1397,27 +1285,23 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         }
 
         Type tmpType = null;
-        // Retrieve the basic element type.
+
         String bType = ctx.getParent().getChild(0).getText();
         switch (bType) {
             case "int" -> tmpType = IntegerType.getType() ;
             case "float" -> tmpType = FloatType.getType();
         }
-        // Build the arrType bottom-up (reversely).
+
         for (int i = dimLens.size(); i > 0; i--) {
             tmpType = ArrayType.getType(tmpType, dimLens.get(i - 1));
         }
         ArrayType arrType = (ArrayType) tmpType;
 
-        /*
-        Global array.
-         */
+
         if (scope.isGlobal()) {
-            // With initialization.
 
             if (ctx.initVal() != null&& ctx.initVal().getChildCount() != 2 ) {
-                // Pass down dim info.
-                // Visit child to retrieve the initialized Value list (stored in retValList_).
+
                 ctx.initVal().dimLens = dimLens;
                 ctx.initVal().sizCurDepth = getProductOf(dimLens);
 
@@ -1425,45 +1309,38 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 visit(ctx.initVal());
                 this.setConstFolding(OFF);
 
-                // Convert the Values returned into Constants.
                 ArrayList<Constant> initList = new ArrayList<>();
                 for (Value val : retValList_) {
                     initList.add((Constant)val);
                 }
-                // Build the const array, set it to be a global variable and put it into the symbol table.
+
 
                 Constant.ConstantArray initArr = builder.buildConstArr(arrType, initList);
-                //System.out.println(initArr.isAllZero);
-                //System.out.println(initArr)
+
                 GlobalVariable arr = builder.buildGlobalVar(ctx.Ident().getText(), initArr);
                 scope.addSymbol(ctx.Ident().getText(), arr, "constarray") ;
             }
-            // W/o initialization.
+
             else {
                 GlobalVariable arr = builder.buildGlobalVar(ctx.Ident().getText(), arrType);
                 scope.addSymbol(ctx.Ident().getText(), arr,"constarray") ;
             }
         }
-        /*
-        Local array.
-         */
+
         else {
             var alloca = builder.buildAlloca(arrType);
             scope.addSymbol(ctx.Ident().getText(), alloca) ;
 
-            // If there's initialization, translate it as several GEP & Store combos.
+
             if (ctx.initVal() != null) {
-                // Compute and pass down dimensional info, visit child to generate initialization assignments.
+
                 ctx.initVal().dimLens = dimLens;
                 ctx.initVal().sizCurDepth = getProductOf(dimLens);
 
                 visit(ctx.initVal());
                 int zeroTail = getZeroTailLen(retValList_);
 
-                /*
-                Indexing array with any number of dimensions with GEP in 1-d array fashion.
-                 */
-                // Dereference the pointer returned by Alloca to be an 1-d array address.
+
                 ArrayList<Value> zeroIndices = new ArrayList<>() {{
                     add(builder.buildConstant(0));
                     add(builder.buildConstant(0));
@@ -1473,11 +1350,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     ptr1d = builder.buildGEP(ptr1d, zeroIndices);
                 }
 
-                /*
-                Firstly fill the memory block with zero using memset.
-                 */
-                // Args of memset.
-                // For arg str: Cast float* to i32* if needed.
+
                 MemoryInst.GEP startPoint = ptr1d;
                 Value str;
                 if (((PointerType)startPoint.getType()).getPointedType().isIntegerType()) {
@@ -1487,10 +1360,9 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     str = builder.buildPtrcast(startPoint,PointerType.getType(IntegerType.getType()));
                 }
                 Constant.ConstantInt c = builder.buildConstant(0);
-                // For arg n: In SysY, both supported data types (int/float) are 4 bytes.
+
                 Constant.ConstantInt n = builder.buildConstant(4 * arrType.getAtomLen());
 
-                //Call memset.
                 builder.buildCall((Function) scope.getVal("memset") , new ArrayList<>(){{
                     add(str);
                     add(c);
@@ -1498,20 +1370,19 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                 }});
 
 
-                // Initialize linearly using the 1d pointer and offset.
+
                 MemoryInst.GEP gep = ptr1d;
                 for (int i = 0; i < retValList_.size() - zeroTail; i++) {
                     Value initVal = retValList_.get(i);
 
-                    // If the initial Value is a Constant zero (literal 0 or .0f),
-                    // skip this round to not generate any Store instruction.
+
 
                     if (initVal instanceof Constant.ConstantInt && ((Constant.ConstantInt)initVal).getVal() == 0
                             || initVal instanceof Constant.ConstantFloat && ((Constant.ConstantFloat)initVal).getVal() == 0) {
                         continue;
                     }
 
-                    // Index the address of the cell to store initial data.
+
                     if (i > 0) {
                         int offset1d = i;
                         gep = builder.buildGEP(ptr1d, new ArrayList<>() {{
@@ -1519,7 +1390,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                         }});
                     }
 
-                    // Type matching check and conversion.
+
                     if (initVal.getType().isIntegerType() && arrType.getElemType().isFloatType()) {
                         initVal = builder.buildSitofp(initVal);
                     }
@@ -1527,7 +1398,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                         initVal = builder.buildFptosi(initVal);
                     }
 
-                    // Assign the initial value with a Store.
+
                     builder.buildStore(initVal, gep);
                 }
 
@@ -1541,14 +1412,13 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     @Override
     public Void visitArrInitval(SysY2022Parser.ArrInitvalContext ctx) {
 
-        // For arr[3][2] with initialization { {1,2}, {3,4}, {5,6} },
-        // the curDimLen = 3 and sizSublistInitNeeded = 2.
+
         int curDimLen = ctx.dimLens.get(0);
 
-        //int j = 1;
+
         ArrayList<Value> initArr = new ArrayList<>();
         for (SysY2022Parser.InitValContext initValContext : ctx.initVal()) {
-            // If the one step lower level still isn't the atom element layer.
+
             if (initValContext instanceof SysY2022Parser.ArrInitvalContext) {
                 initValContext.dimLens = new ArrayList<>(
                         ctx.dimLens.subList(1, ctx.dimLens.size()));
@@ -1559,25 +1429,20 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
                 initArr.addAll(retValList_);
             }
-            // If it is the lowest layer of an atom element.
+
             else {
                 visit(initValContext);
                 initArr.add(retVal_);
             }
         }
 
-        // Security check.
+
         if (initArr.size() > ctx.sizCurDepth) {
             throw new RuntimeException("The length of initList (" + initArr.size() + ")" +
                     " exceeds the maximum size of current depth (" + ctx.sizCurDepth + ")");
         }
 
-        // Fill the initialized list of current layer with enough 0.
-        // NOTICE1: This step is necessary for dealing with the "{}" initializer in SysY.
-        // TODO: But this can be a performance bottle neck with big "{}". same as visitArrConstInitVal
-        // NOTICE2: Only for the outer-most initializer should fill the return list up to the sizCurDepth required.
-        // Any atom elements in any nested sub-initializer (inner layer) are regarded as the inner-most layer elements,
-        // where the layer should be filled up to only the size of last dimension.
+
 
         int sizToFillTo = (ctx.getParent() instanceof SysY2022Parser.ArrVarDefContext) ?
                 ctx.sizCurDepth : ctx.dimLens.get(ctx.dimLens.size() - 1);
@@ -1591,23 +1456,19 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
 
     @Override
     public Void visitArrLVal(SysY2022Parser.ArrLValContext ctx) {
-        /*
-        Retrieve the value defined previously from the symbol table.
-         */
+
         String name  = ctx.Ident().getText();
         isConstantVar = scope.checkVarType(name);
         Value val = scope.getVal(name) ;
 
-        /*
-        Security Checks.
-         */
+
         if (val == null) {
             throw new RuntimeException("Undefined value: " + name);
         }
 
 
         if (this.inConstFolding()) {
-            // All const arrays should be promoted as global in this::visitArrConstInitVal.
+
             if (!(val instanceof GlobalVariable)
                     || !((GlobalVariable) val).isConstant()
                     || !((GlobalVariable) val).isArray()) {
@@ -1623,9 +1484,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
             retVal_ = arr.getElemByIndex(indices);
         }
         else {
-            /*
-            Retrieve the array element.
-             */
+
             Type valType = ((PointerType) val.getType()).getPointedType();
             // An array.
             if (valType.isArrayType()) {
@@ -1637,7 +1496,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
                     }});
                 }
             }
-            // A pointer (An array passed into as an argument in a function / A glb var)
+
             else {
                 MemoryInst.Load load = builder.buildLoad(
                         ((PointerType) val.getType()).getPointedType(),
@@ -1667,8 +1526,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
     public Void visitArrFuncFParam(SysY2022Parser.ArrFuncFParamContext ctx) {
         ArrayList<Integer> dimLens = new ArrayList<>();
 
-        // Retrieve dimLens info of the array as arg.
-        // 'expr' as array lengths for func formal args should be constants (Turn on ConstFolding)
+
         setConstFolding(ON);
         for (SysY2022Parser.ExpContext exprContext : ctx.exp()) {
             visit(exprContext);
@@ -1676,7 +1534,7 @@ public class Visitor extends SysY2022BaseVisitor<Void> {
         }
         setConstFolding(OFF);
 
-        // Build the ArrayType of the function argument.
+
         Type arrType;
         String bType = ctx.bType().getText();
         switch (bType) {
