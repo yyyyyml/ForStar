@@ -175,6 +175,13 @@ public class Constant extends User {
             this.val = val;
             this.setName(String.valueOf(this.getVal()));
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof ConstantInt constInt)
+                return val == constInt.getVal();
+            else return false;
+        }
     }
 
     public static class ConstantFloat extends Constant {
@@ -190,15 +197,24 @@ public class Constant extends User {
         public static ConstantFloat getConstantFloat(float value) {
             return new ConstantFloat(Type.FloatType.getType(), value);
         }
+
         @Override
         public String toString() {
 
             int Value = Float.floatToRawIntBits(this.val);
             String hexString = Integer.toHexString(Value);
-            return this.getType().toString() +" "+ hexString;
+            return this.getType().toString() + " " + hexString;
         }
+
         public float getVal() {
             return val;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof ConstantFloat constFloat)
+                return val == constFloat.getVal();
+            else return false;
         }
     }
 
@@ -223,4 +239,5 @@ public class Constant extends User {
 
         return isZ;
     }
+
 }

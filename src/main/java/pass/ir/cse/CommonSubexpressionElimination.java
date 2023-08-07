@@ -13,6 +13,7 @@ import java.util.Set;
 public class CommonSubexpressionElimination implements BaseIRPass {
     @Override
     public void run(Module module) {
+        System.out.println("CSE");
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.isBuiltin()) continue;
@@ -23,16 +24,22 @@ public class CommonSubexpressionElimination implements BaseIRPass {
                     Instruction inst = instInode.getElement();
                     if (!inst.isBinary()) continue; // 不是二元运算不管
 
+//                    System.out.println(inst);
                     boolean hasSame = false;
                     var left = inst.getOperandAt(0);
                     var right = inst.getOperandAt(1);
                     var tag = inst.getTag();
                     Instruction instToUse = null;
                     for (Instruction curInst : instSet) {
-                        if (curInst.getOperandAt(0) == left && curInst.getOperandAt(1) == right && curInst.getTag() == tag) {
+                        if (curInst.getOperandAt(0).equals(left) && curInst.getOperandAt(1).equals(right) && curInst.getTag() == tag) {
                             instToUse = curInst; // 记录之前出现的相同表达式的指令
                             hasSame = true;
                             break;
+                        } else {
+//                            System.out.println("哪里不同");
+//                            System.out.println(curInst.getOperandAt(0) == left);
+//                            System.out.println(curInst.getOperandAt(1) == right);
+//                            System.out.println(curInst.getTag() == tag);
                         }
                     }
                     if (hasSame) {
@@ -43,6 +50,7 @@ public class CommonSubexpressionElimination implements BaseIRPass {
                     } else {
                         // 没有相同子表达式，加入集合
                         instSet.add(inst);
+//                        System.out.println("加入了"+inst);
                     }
 
 

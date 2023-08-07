@@ -10,7 +10,7 @@ import util.IList;
 
 import static ir.values.Constant.ConstantInt.getConstantInt;
 
-public class AddMerge implements BaseIRPass {
+public class AddSameMerge implements BaseIRPass {
     @Override
     public void run(Module module) {
         for (IList.INode<Function, Module> funcInode : module.functionList) {

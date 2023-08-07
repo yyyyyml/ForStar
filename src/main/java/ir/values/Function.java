@@ -17,6 +17,7 @@ public class Function extends Value {
     public IList.INode<Function, Module> node;
     private boolean isBuiltin = false;//是否是库函数
     private ArrayList<Param> paramList;// 形参列表
+    public boolean canInline = false;
 
     public Function(Type type, boolean isBuiltin) {
         super(type);
