@@ -39,7 +39,8 @@ public class PassDriver {
         if (isPass) irPassList.add(new CommonSubexpressionElimination());
         if (isPass) irPassList.add(new Inline());
         if (isPass) irPassList.add(new CommonSubexpressionElimination());
-//        irPassList.add(new DeadCodeEliminate()); // TODO:好像mem2reg之前还不能做这个优化，有问题
+//        if (isPass) irPassList.add(new AddSameMerge());
+//        irPassList.add(new DeadCodeEliminate()); // TODO:有问题,不能用
 
         if (isPass) backendPassList.add(new NNRegAllocator());
         if (isPass) backendPassList.add(new NNFloatRegAllocator());
