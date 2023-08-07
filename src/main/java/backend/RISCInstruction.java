@@ -165,6 +165,6 @@ public class RISCInstruction {
         sge,
         seqz,
         sgtz,
-        fsd, divw
+        fsd, bnez, divw
     }
 }

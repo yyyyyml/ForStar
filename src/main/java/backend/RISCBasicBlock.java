@@ -177,6 +177,18 @@ public class RISCBasicBlock {
         for (IList.INode<Instruction, BasicBlock> Inode : irBB.list) {
 
             Instruction curInst = Inode.getElement();
+
+            IList.INode nextNode = irBB.list.getNext(Inode);
+            Instruction nextInst = null;
+            IList.INode preNode = irBB.list.getPrev(Inode);
+            Instruction pretInst = null;
+            if(nextNode != null){
+                nextInst = (Instruction) nextNode.getElement();
+            }
+            if(preNode != null){
+                pretInst = (Instruction) preNode.getElement();
+            }
+
             switch (curInst.getTag()) {
                 case RET -> translateRet(curInst);
                 case ALLOCA -> translateAlloca(curInst);
@@ -184,8 +196,8 @@ public class RISCBasicBlock {
                 case LOAD -> translateLoad(curInst);
                 case ADD, SUB, MUL, DIV, FADD, FSUB, FDIV, FMUL -> translateCaculate(curInst);
                 case CALL -> translateCall(curInst);
-                case BR -> translateBr(curInst);
-                case NE, LT, LE, GT, GE, EQ, FEQ, FGE, FGT, FLE, FLT, FNE -> translateCond(curInst);
+                case BR -> translateBr(curInst,pretInst);
+                case NE, LT, LE, GT, GE, EQ, FEQ, FGE, FGT, FLE, FLT, FNE -> translateCond(curInst,nextInst);
                 case GEP -> translateGep(curInst);
                 case FPTOSI -> translateFtoI(curInst);
                 case SITOFP -> translateItoF(curInst);
@@ -576,7 +588,7 @@ public class RISCBasicBlock {
 
     }
 
-    private void translateCond(Instruction curInst) {
+    private void translateCond(Instruction curInst,Instruction nextInst) {
         Instruction cond = curInst;
         Value vop1 = cond.getOperandAt(0);
         Value vop2 = cond.getOperandAt(1);
@@ -634,93 +646,223 @@ public class RISCBasicBlock {
 
         switch (cond.getTag()) {
             case EQ -> {
-                Register vr = tempRegister;
-                SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
-                instructionList.add(sub);
-                SeqzInstruction b = new SeqzInstruction(dst, vr);
-                instructionList.add(b);
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                {
+                    Register vr = tempRegister;
+                    SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
+                    instructionList.add(sub);
+                    SeqzInstruction b = new SeqzInstruction(dst, vr);
+                    instructionList.add(b);
+                }
+                else {
+                    if(firstBrposition == -1){
+                        firstBrposition = instructionList.size();
+                    }
+                    //获取跳转地址
+                    Value v1 = nextInst.getOperandAt(1);
+                    StringBuffer vName1 = new StringBuffer(v1.getName());
+                    String vN1 = new String(vName1);
+                    MyString dst1 = new MyString(".B" + irFunction.getName() + vN1);
+
+                    Value v2 = nextInst.getOperandAt(2);
+                    StringBuffer vName2 = new StringBuffer(v2.getName());
+                    String vN2 = new String(vName2);
+                    MyString dst2 = new MyString(".B" + irFunction.getName() + vN2);
+
+                    BeqInstruction beq = new BeqInstruction(temp1, temp2, dst1,this);
+                    instructionList.add(beq);
+
+                    JInstruction j = new JInstruction(dst2,this);
+                    instructionList.add(j);
+                }
             }
             case NE -> {
-                Register vr = tempRegister;
-                SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
-                instructionList.add(sub);
-                SeqzInstruction b = new SeqzInstruction(dst, vr);
-                instructionList.add(b);
-                XoriInstruction xor = new XoriInstruction(dst, dst, new Immediate(1));
-                instructionList.add(xor);
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                {
+                    Register vr = tempRegister;
+                    SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
+                    instructionList.add(sub);
+                    SeqzInstruction b = new SeqzInstruction(dst, vr);
+                    instructionList.add(b);
+                    XoriInstruction xor = new XoriInstruction(dst, dst, new Immediate(1));
+                    instructionList.add(xor);
+                }
+                else {
+                    if(firstBrposition == -1){
+                        firstBrposition = instructionList.size();
+                    }
+                    //获取跳转地址
+                    Value v1 = nextInst.getOperandAt(1);
+                    StringBuffer vName1 = new StringBuffer(v1.getName());
+                    String vN1 = new String(vName1);
+                    MyString dst1 = new MyString(".B" + irFunction.getName() + vN1);
+
+                    Value v2 = nextInst.getOperandAt(2);
+                    StringBuffer vName2 = new StringBuffer(v2.getName());
+                    String vN2 = new String(vName2);
+                    MyString dst2 = new MyString(".B" + irFunction.getName() + vN2);
+
+                    BneInstruction bne = new BneInstruction(temp1, temp2, dst1,this);
+                    instructionList.add(bne);
+
+                    JInstruction j = new JInstruction(dst2,this);
+                    instructionList.add(j);
+                }
             }
             case LT -> {
-                if(op2 instanceof Immediate)
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
                 {
-                    int val = ((Immediate) op2).getVal();
-                    if(val >= -2048 && val <=2047 )
-                    {
-                        instructionList.removeLast();
-                        SltiInstruction b = new SltiInstruction(dst, temp1, op2);
-                        instructionList.add(b);
-                    }
-                    else if(val >= 2048 && val <= 4095 )
-                    {
-                        instructionList.removeLast();
-                        SltiuInstruction b = new SltiuInstruction(dst, temp1, op2);
-                        instructionList.add(b);
-                    }
-                    else {
+                    if (op2 instanceof Immediate) {
+                        int val = ((Immediate) op2).getVal();
+                        if (val >= -2048 && val <= 2047) {
+                            instructionList.removeLast();
+                            SltiInstruction b = new SltiInstruction(dst, temp1, op2);
+                            instructionList.add(b);
+                        } else if (val >= 2048 && val <= 4095) {
+                            instructionList.removeLast();
+                            SltiuInstruction b = new SltiuInstruction(dst, temp1, op2);
+                            instructionList.add(b);
+                        } else {
+                            SltInstruction b = new SltInstruction(dst, temp1, temp2);
+                            instructionList.add(b);
+                        }
+                    } else {
                         SltInstruction b = new SltInstruction(dst, temp1, temp2);
                         instructionList.add(b);
                     }
                 }
                 else {
-                        SltInstruction b = new SltInstruction(dst, temp1, temp2);
-                        instructionList.add(b);
+                    if(firstBrposition == -1){
+                        firstBrposition = instructionList.size();
+                    }
+                    //获取跳转地址
+                    Value v1 = nextInst.getOperandAt(1);
+                    StringBuffer vName1 = new StringBuffer(v1.getName());
+                    String vN1 = new String(vName1);
+                    MyString dst1 = new MyString(".B" + irFunction.getName() + vN1);
+
+                    Value v2 = nextInst.getOperandAt(2);
+                    StringBuffer vName2 = new StringBuffer(v2.getName());
+                    String vN2 = new String(vName2);
+                    MyString dst2 = new MyString(".B" + irFunction.getName() + vN2);
+
+                    BltInstruction blt = new BltInstruction(temp1, temp2, dst1,this);
+                    instructionList.add(blt);
+
+                    JInstruction j = new JInstruction(dst2,this);
+                    instructionList.add(j);
                 }
 
             }
             case LE -> {
-                // 小于等于 相当于大于反过来
-                Register vr = tempRegister;
-                SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
-                instructionList.add(sub);
-                SgtzInstruction b = new SgtzInstruction(dst, vr);
-                instructionList.add(b);
-                XoriInstruction xor = new XoriInstruction(dst, dst, new Immediate(1));
-                instructionList.add(xor);
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                {// 小于等于 相当于大于反过来
+                    Register vr = tempRegister;
+                    SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
+                    instructionList.add(sub);
+                    SgtzInstruction b = new SgtzInstruction(dst, vr);
+                    instructionList.add(b);
+                    XoriInstruction xor = new XoriInstruction(dst, dst, new Immediate(1));
+                    instructionList.add(xor);
+                }
+                else {
+                    if(firstBrposition == -1){
+                        firstBrposition = instructionList.size();
+                    }
+                    //获取跳转地址
+                    Value v1 = nextInst.getOperandAt(1);
+                    StringBuffer vName1 = new StringBuffer(v1.getName());
+                    String vN1 = new String(vName1);
+                    MyString dst1 = new MyString(".B" + irFunction.getName() + vN1);
+
+                    Value v2 = nextInst.getOperandAt(2);
+                    StringBuffer vName2 = new StringBuffer(v2.getName());
+                    String vN2 = new String(vName2);
+                    MyString dst2 = new MyString(".B" + irFunction.getName() + vN2);
+
+                    BleInstruction ble = new BleInstruction(temp1, temp2, dst1,this);
+                    instructionList.add(ble);
+
+                    JInstruction j = new JInstruction(dst2,this);
+                    instructionList.add(j);
+                }
             }
             case GT -> {
-                Register vr = tempRegister;
-                SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
-                instructionList.add(sub);
-                SgtzInstruction b = new SgtzInstruction(dst, vr);
-                instructionList.add(b);
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                {
+                    Register vr = tempRegister;
+                    SubwInstruction sub = new SubwInstruction(vr, temp1, temp2);
+                    instructionList.add(sub);
+                    SgtzInstruction b = new SgtzInstruction(dst, vr);
+                    instructionList.add(b);
+                }
+                else {
+                    if(firstBrposition == -1){
+                        firstBrposition = instructionList.size();
+                    }
+                    //获取跳转地址
+                    Value v1 = nextInst.getOperandAt(1);
+                    StringBuffer vName1 = new StringBuffer(v1.getName());
+                    String vN1 = new String(vName1);
+                    MyString dst1 = new MyString(".B" + irFunction.getName() + vN1);
+
+                    Value v2 = nextInst.getOperandAt(2);
+                    StringBuffer vName2 = new StringBuffer(v2.getName());
+                    String vN2 = new String(vName2);
+                    MyString dst2 = new MyString(".B" + irFunction.getName() + vN2);
+
+                    BgtInstruction bgt = new BgtInstruction(temp1, temp2, dst1,this);
+                    instructionList.add(bgt);
+
+                    JInstruction j = new JInstruction(dst2,this);
+                    instructionList.add(j);
+                }
             }
             case GE -> {
-                //大于等于相当于小于反过来
-                if(op2 instanceof Immediate)
-                {
-                    int val = ((Immediate) op2).getVal();
-                    if(val >= -2048 && val <=2047 )
-                    {
-                        instructionList.removeLast();
-                        SltiInstruction b = new SltiInstruction(dst, temp1, op2);
-                        instructionList.add(b);
-                    }
-                    else if(val >= 2048 && val <= 4095 )
-                    {
-                        instructionList.removeLast();
-                        SltiuInstruction b = new SltiuInstruction(dst, temp1, op2);
-                        instructionList.add(b);
-                    }
-                    else {
+                if(nextInst == null||!nextInst.getTag().equals(Instruction.TAG.BR))
+                {//大于等于相当于小于反过来
+                    if (op2 instanceof Immediate) {
+                        int val = ((Immediate) op2).getVal();
+                        if (val >= -2048 && val <= 2047) {
+                            instructionList.removeLast();
+                            SltiInstruction b = new SltiInstruction(dst, temp1, op2);
+                            instructionList.add(b);
+                        } else if (val >= 2048 && val <= 4095) {
+                            instructionList.removeLast();
+                            SltiuInstruction b = new SltiuInstruction(dst, temp1, op2);
+                            instructionList.add(b);
+                        } else {
+                            SltInstruction b = new SltInstruction(dst, temp1, temp2);
+                            instructionList.add(b);
+                        }
+                    } else {
                         SltInstruction b = new SltInstruction(dst, temp1, temp2);
                         instructionList.add(b);
                     }
+                    XoriInstruction xor = new XoriInstruction(dst, dst, new Immediate(1));
+                    instructionList.add(xor);
                 }
                 else {
-                    SltInstruction b = new SltInstruction(dst, temp1, temp2);
-                    instructionList.add(b);
+                    if(firstBrposition == -1){
+                        firstBrposition = instructionList.size();
+                    }
+                    //获取跳转地址
+                    Value v1 = nextInst.getOperandAt(1);
+                    StringBuffer vName1 = new StringBuffer(v1.getName());
+                    String vN1 = new String(vName1);
+                    MyString dst1 = new MyString(".B" + irFunction.getName() + vN1);
+
+                    Value v2 = nextInst.getOperandAt(2);
+                    StringBuffer vName2 = new StringBuffer(v2.getName());
+                    String vN2 = new String(vName2);
+                    MyString dst2 = new MyString(".B" + irFunction.getName() + vN2);
+
+                    BgeInstruction bge = new BgeInstruction(temp1, temp2, dst1,this);
+                    instructionList.add(bge);
+
+                    JInstruction j = new JInstruction(dst2,this);
+                    instructionList.add(j);
                 }
-                XoriInstruction xor = new XoriInstruction(dst, dst, new Immediate(1));
-                instructionList.add(xor);
             }
             case FEQ -> {
                 FeqInstruction b = new FeqInstruction(dst, temp1, temp2);
@@ -756,7 +898,7 @@ public class RISCBasicBlock {
     }
 
     //控制流，
-    private void translateBr(Instruction curInst) {
+    private void translateBr(Instruction curInst,Instruction preInst) {
         int paraCount = curInst.getNumOP();
         if (paraCount == 1) {
             if(firstBrposition == -1){
@@ -770,6 +912,9 @@ public class RISCBasicBlock {
             JInstruction j = new JInstruction(ms,this);
             instructionList.add(j);
         } else if (paraCount == 3) {
+            if(preInst.getTag() == Instruction.TAG.EQ || preInst.getTag() == Instruction.TAG.NE || preInst.getTag() == Instruction.TAG.LT || preInst.getTag() == Instruction.TAG.LE || preInst.getTag() == Instruction.TAG.GT || preInst.getTag() == Instruction.TAG.GE){
+                return;
+            }
             if(firstBrposition == -1){
                 firstBrposition = instructionList.size();
             }
@@ -796,6 +941,10 @@ public class RISCBasicBlock {
                 //获得第一操作数
                 Value v0 = curInst.getOperandAt(0);
                 RISCOperand rop1 = getOperand(v0);
+                //获得比较操作数
+//                Instruction vInst = (Instruction) vcond;
+//                Value vop1 = vInst.getOperandAt(1);
+//                Value vop2 = vInst.getOperandAt(2);
 
                 //获取跳转地址
                 Value v1 = curInst.getOperandAt(1);
@@ -808,7 +957,7 @@ public class RISCBasicBlock {
                 String vN2 = new String(vName2);
                 MyString dst2 = new MyString(".B" + irFunction.getName() + vN2);
 
-                BneInstruction bne = new BneInstruction(rop1, new RealRegister(0), dst1,this);
+                BnezInstruction bne = new BnezInstruction(rop1, dst1,this);
                 instructionList.add(bne);
 
                 JInstruction j = new JInstruction(dst2,this);
