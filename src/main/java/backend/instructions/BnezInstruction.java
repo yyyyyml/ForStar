@@ -7,7 +7,7 @@ import backend.RISCOperand;
 public class BnezInstruction extends RISCInstruction {
     public RISCOperand op1;
     public RISCOperand op2;
-    public RISCOperand op3;
+
 
     public BnezInstruction(RISCOperand op1, RISCOperand op2,RISCBasicBlock BB) {
         this.operandNum = 2;
@@ -17,7 +17,7 @@ public class BnezInstruction extends RISCInstruction {
         this.setOperand(op2, 1);
         this.type = ITYPE.bnez;
         //  System.out.println("ADD TO LIST " + op3.emit() );
-        BB.nextBlocknameList.add(op3.emit());
+        BB.nextBlocknameList.add(op2.emit());
     }
 
     @Override
@@ -27,6 +27,6 @@ public class BnezInstruction extends RISCInstruction {
 
     @Override
     public String emit() {
-        return this.type.name() + " " + getOperandAt(0).emit() + "," + getOperandAt(1).emit() + "," + getOperandAt(2).emit();
+        return this.type.name() + " " + getOperandAt(0).emit() + "," + getOperandAt(1).emit() ;
     }
 }

@@ -48,7 +48,7 @@ main:
 29	lla t2,.F1
 30	flw f1,0(t2)
 31	fgt.s t2,f0,f1
-32	bne t2,zero,.Bmain18
+32	bnez t2,.Bmain18
 33	j .Bmain17
 .Bmain17:
 34	mv a0,zero
