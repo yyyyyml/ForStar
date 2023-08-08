@@ -13,6 +13,8 @@ public class Instruction extends User {
     private TAG tag;
     public boolean needPhiCheck = true; // 内联用
     public boolean isInline = false; // 内联用
+    public boolean isDelete = false; // 内联用
+
 
     public Instruction(Type type, TAG tag, int numOP) {
         super(type, numOP);

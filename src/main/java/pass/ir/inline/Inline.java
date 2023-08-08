@@ -40,6 +40,7 @@ public class Inline implements BaseIRPass {
                     for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
 
                         Instruction inst = instInode.getElement();
+//                        if (inst.isDelete) continue;
                         if (inst instanceof TerminatorInst.Call callInst) {
                             var callee = (Function) callInst.getOperandAt(0);
                             if (!callee.canInline)
@@ -124,6 +125,7 @@ public class Inline implements BaseIRPass {
                                     // 基本块映射
 //                                bbMap.put(bb, returnBB);
                                     bb.replaceAllPhiUseWith(returnBB);
+
                                     for (IList.INode<BasicBlock, Function> oldBBInode : callee.list) {
                                         BasicBlock oldBB = oldBBInode.getElement();
                                         if (oldBBInode == callee.list.getFirst()) {
@@ -173,6 +175,7 @@ public class Inline implements BaseIRPass {
                                                 checkClone(newInst); // 检查一遍有没有未替换成功的
                                         }
                                     }
+
 //                                if (isFirst) {
 //                                    System.out.println("是第一个");
 //                                    bbInode.removeSelf();
@@ -196,6 +199,32 @@ public class Inline implements BaseIRPass {
 
         }
         deleteInlineFunction(module);
+        moveAlloca(module);
+    }
+
+    private void moveAlloca(Module module) {
+        for (IList.INode<Function, Module> funcInode : module.functionList) {
+            Function func = funcInode.getElement();
+            LinkedList<IList.INode> allocaToMove = new LinkedList<>();
+            for (IList.INode<BasicBlock, Function> bbInode : func.list) {
+                BasicBlock bb = bbInode.getElement();
+                for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
+                    Instruction inst = instInode.getElement();
+
+                    if (inst instanceof MemoryInst.Alloca) {
+                        System.out.println("移动" + inst);
+                        instInode.removeSelf();
+                        allocaToMove.add(instInode);
+
+//                        func.list.getFirst().getElement().list.addFirst(instInode);
+                    }
+                }
+            }
+            for (IList.INode allocaInode : allocaToMove) {
+                func.list.getFirst().getElement().list.addFirst(allocaInode);
+            }
+
+        }
     }
 
     private void checkClone(Instruction newInst) {

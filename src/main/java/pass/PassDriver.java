@@ -18,6 +18,7 @@ import pass.ir.globalvariablederive.GlobalVariableDerive;
 import pass.ir.inline.Inline;
 import pass.ir.mem2reg.Mem2Reg;
 import pass.ir.multiret_eliminate.MultiRetEliminate;
+import pass.ir.phimerge.PhiMerge;
 
 import java.util.ArrayList;
 
@@ -36,6 +37,7 @@ public class PassDriver {
         irPassList.add(new MultiRetEliminate());
         irPassList.add(new BlockMerge());
         if (isPass) irPassList.add(new Mem2Reg());
+        if (isPass) irPassList.add(new PhiMerge());
         if (isPass) irPassList.add(new ConstantExp_Derivation());
         if (isPass) irPassList.add(new AddConstMerge());
         if (isPass) irPassList.add(new GlobalVariableDerive());
@@ -43,6 +45,7 @@ public class PassDriver {
         if (isPass) irPassList.add(new Inline());
         if (isPass) irPassList.add(new CommonSubexpressionElimination());
         if (isPass) irPassList.add(new AddSameMerge());
+        if (isPass) irPassList.add(new PhiMerge());
 //        irPassList.add(new DeadCodeEliminate()); // TODO:有问题,不能用
 
         if (isPass) backendPassList.add(new NNRegAllocator());
