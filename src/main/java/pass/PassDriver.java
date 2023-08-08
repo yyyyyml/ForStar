@@ -14,6 +14,7 @@ import pass.ir.addmerge.AddSameMerge;
 import pass.ir.blockmerge.BlockMerge;
 import pass.ir.constantexp_derivation.ConstantExp_Derivation;
 import pass.ir.cse.CommonSubexpressionElimination;
+import pass.ir.deadcode_eliminate.DeadCodeEliminate;
 import pass.ir.globalvariablederive.GlobalVariableDerive;
 import pass.ir.inline.Inline;
 import pass.ir.mem2reg.Mem2Reg;
@@ -46,7 +47,7 @@ public class PassDriver {
         if (isPass) irPassList.add(new CommonSubexpressionElimination());
         if (isPass) irPassList.add(new AddSameMerge());
         if (isPass) irPassList.add(new PhiMerge());
-//        irPassList.add(new DeadCodeEliminate()); // TODO:有问题,不能用
+        if (isPass) irPassList.add(new DeadCodeEliminate()); // 可以用了，但效果似乎一般
 
         if (isPass) backendPassList.add(new NNRegAllocator());
         if (isPass) backendPassList.add(new NNFloatRegAllocator());

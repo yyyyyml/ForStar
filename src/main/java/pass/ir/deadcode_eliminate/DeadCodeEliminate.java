@@ -1,6 +1,7 @@
 package pass.ir.deadcode_eliminate;
 
 import ir.Instruction;
+import ir.Instructions.TerminatorInst;
 import ir.Module;
 import ir.Use;
 import ir.values.BasicBlock;
@@ -26,7 +27,7 @@ public class DeadCodeEliminate implements BaseIRPass {
                         Instruction inst = instInode.getElement();
 
                         boolean removeInst = false;
-                        if (inst.needName && inst.useList.isEmpty()) {
+                        if (inst.needName && inst.useList.isEmpty() && !(inst instanceof TerminatorInst.Call)) {
                             // 看没有使用这个指令结果的，没有说明这个指令没用，删
                             removeInst = true;
 
@@ -42,8 +43,10 @@ public class DeadCodeEliminate implements BaseIRPass {
 
                         if (removeInst) {
                             instInode.removeSelf();
-//                            needEliminate = true;
+                            needEliminate = true;
+
                             System.out.println("删掉：" + i);
+//                            throw new RuntimeException("优化了");
                         }
                         i++;
 
