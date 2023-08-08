@@ -16,7 +16,7 @@ public class SraiInstruction extends RISCInstruction {
         this.setOperand(op2, 1);
         this.op3 = o3;
         this.setOperand(op3, 2);
-        this.type = ITYPE.sraiw;
+        this.type = ITYPE.srai;
     }
 
 

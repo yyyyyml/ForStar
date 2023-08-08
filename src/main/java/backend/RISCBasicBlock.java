@@ -1294,11 +1294,11 @@ public class RISCBasicBlock {
                     MvInstruction mvInstruction = new MvInstruction(dst, new RealRegister(0));
                     instructionList.add(mvInstruction);
                 }
-//                else if(op2 instanceof Immediate){
-//                    instructionList.removeLast();
-//                    this.optimizeDiv(curInst, dst, temp1, (Immediate) op2);
-//
-//                }
+                else if(op2 instanceof Immediate){
+                    instructionList.removeLast();
+                    this.optimizeDiv(curInst, dst, temp1, (Immediate) op2);
+
+                }
                 else {
                     DivwInstruction cal = new DivwInstruction(dst, temp1, temp2);
                     instructionList.add(cal);
@@ -1348,93 +1348,94 @@ public class RISCBasicBlock {
         } else {
             regAns = dst;
         }
-
+        //初始化log等参数
+        int l = this.log2(divisor);
+        int sh = l;
+        BigInteger temp = new BigInteger("1");
+        long low = temp.shiftLeft(32 + l)
+                        .divide(BigInteger.valueOf(divisor))
+                        .longValue();
+        long high = temp.shiftLeft(32 + l)
+                        .add(temp.shiftLeft(l + 1))
+                        .divide(BigInteger.valueOf(divisor))
+                        .longValue();
+        while (((low / 2) < (high / 2)) && sh > 0) {
+            low /= 2;
+            high /= 2;
+            sh--;
+        }
         if (this.isPowerOf2(divisor)) {
             int x = this.log2(divisor);
-            if (x >= 1 && x <= 30) {
-                VirtualRegister vr1 = getNewVr();
-                VirtualRegister vr2 = getNewVr();
+
+            // %1 = srli %src, #(64-x)
+            // %2 = addw %src, %1
+            // %ans = sraiw %2, #x
+            //当除数为2的整数幂
+            if (x > 0 && x < 31) {
+                VirtualRegister vr = getNewVr();
                 Immediate imm64SubX = new Immediate(64 - x);
                 Immediate immX = new Immediate(x);
-                // %1 = srli %src, #(64-x)
-                // %2 = addw %src, %1
-                // %ans = sraiw %2, #x
-                SrliInstruction srliInstruction = new SrliInstruction(vr1, src, imm64SubX);
+                SrliInstruction srliInstruction = new SrliInstruction(tempRegister, src, imm64SubX);
                 instructionList.add(srliInstruction);
-                AddwInstruction addwInstruction = new AddwInstruction(vr2, src, vr1);
+                AddwInstruction addwInstruction = new AddwInstruction(vr, src, tempRegister);
                 instructionList.add(addwInstruction);
-                SraiwInstruction sraiwInstruction = new SraiwInstruction(regAns, vr2, immX);
+                SraiwInstruction sraiwInstruction = new SraiwInstruction(regAns, vr, immX);
                 instructionList.add(sraiwInstruction);
             }
         } else {
-            int l = this.log2(divisor);
-            int sh = l;
-            var temp = new BigInteger("1");
-            long low = temp.shiftLeft(32 + l).divide(BigInteger.valueOf(divisor)).longValue();
-            long high = temp.shiftLeft(32 + l).add(temp.shiftLeft(l + 1)).divide(BigInteger.valueOf(divisor)).longValue();
-            while (((low / 2) < (high / 2)) && sh > 0) {
-                low /= 2;
-                high /= 2;
-                sh--;
-            }
-            if (high < (1L << 31)) {
 
-                var reg1 = getNewVr();
-                var reg2 = getNewVr();
-                var reg3 = getNewVr();
-                var immHigh = new BigImmediate(high);
-                var imm32PlusSh = new Immediate(32 + sh);
-                var imm31 = new Immediate(31);
-                // %1 = mul %src, #high
-                // %2 = srai %1, #(32+sh)
-                // %3 = sraiw %src, #31
-                // %ans = subw %2, %3
-                LiInstruction liInstruction = new LiInstruction(reg1, immHigh);
+            if (high < (1L << 31)) {
+                VirtualRegister vr = getNewVr();
+                VirtualRegister vr2 = getNewVr();
+                BigImmediate bigImm = new BigImmediate(high);
+                LiInstruction liInstruction = new LiInstruction(vr, bigImm);
                 instructionList.add(liInstruction);
-                MulInstruction mulInstruction = new MulInstruction(reg1, src, reg1);
+                MulInstruction mulInstruction = new MulInstruction(vr, src, vr);
                 instructionList.add(mulInstruction);
-                SraiInstruction sraiInstruction = new SraiInstruction(reg2, reg1, imm32PlusSh);
+
+                Immediate imm1 = new Immediate(32 + sh);
+                SraiInstruction sraiInstruction = new SraiInstruction(vr2, vr, imm1);
                 instructionList.add(sraiInstruction);
-                SraiwInstruction sraiwInstruction = new SraiwInstruction(reg3, src, imm31);
+
+                Immediate imm2 = new Immediate(31);
+                SraiwInstruction sraiwInstruction = new SraiwInstruction(tempRegister, src, imm2);
                 instructionList.add(sraiwInstruction);
-                SubwInstruction subwInstruction = new SubwInstruction(regAns, reg2, reg3);
+
+                SubwInstruction subwInstruction = new SubwInstruction(regAns, vr2, tempRegister);
                 instructionList.add(subwInstruction);
             } else {
                 high = high - (1L << 32);
-                var reg1 = getNewVr();
-                var reg2 = getNewVr();
-                var reg3 = getNewVr();
-                var reg4 = getNewVr();
-                var reg5 = getNewVr();
-                var immHigh = new BigImmediate(high);
-                var imm32 = new Immediate(32);
-                var immSh = new Immediate(sh);
-                var imm31 = new Immediate(31);
-                // %1 = mul %src, #high
-                // %2 = srai %1, #32
-                // %3 = addw %2, %src
-                // %4 = sariw %3, #sh
-                // %5 = sariw %src, #31
-                // %ans = subw %4, %5
-                LiInstruction liInstruction = new LiInstruction(reg1, immHigh);
+                VirtualRegister vr = getNewVr();
+                BigImmediate bigImm = new BigImmediate(high);
+                LiInstruction liInstruction = new LiInstruction(vr, bigImm);
                 instructionList.add(liInstruction);
-                MulInstruction mulInstruction = new MulInstruction(reg1, src, reg1);
+                MulInstruction mulInstruction = new MulInstruction(vr, src, vr);
                 instructionList.add(mulInstruction);
-                SraiInstruction sraiInstruction = new SraiInstruction(reg2, reg1, imm32);
+
+                VirtualRegister vr2 = getNewVr();
+                Immediate imm1 = new Immediate(32);
+                SraiInstruction sraiInstruction = new SraiInstruction(vr2, vr, imm1);
                 instructionList.add(sraiInstruction);
-                AddwInstruction addwInstruction = new AddwInstruction(reg3, reg2, src);
+
+                VirtualRegister vr3 = getNewVr();
+                AddwInstruction addwInstruction = new AddwInstruction(vr3, vr2, src);
                 instructionList.add(addwInstruction);
-                SraiwInstruction sraiwInstruction = new SraiwInstruction(reg4, reg3, immSh);
+
+                VirtualRegister vr4 = getNewVr();
+                Immediate imm2 = new Immediate(sh);
+                SraiwInstruction sraiwInstruction = new SraiwInstruction(vr4, vr3, imm2);
                 instructionList.add(sraiwInstruction);
-                SraiwInstruction sraiwInstruction2 = new SraiwInstruction(reg5, src, imm31);
+
+                Immediate imm3 = new Immediate(31);
+                SraiwInstruction sraiwInstruction2 = new SraiwInstruction(tempRegister, src, imm3);
                 instructionList.add(sraiwInstruction2);
-                SubwInstruction subwInstruction = new SubwInstruction(regAns, reg4, reg5);
+                SubwInstruction subwInstruction = new SubwInstruction(regAns, vr4, tempRegister);
                 instructionList.add(subwInstruction);
 
             }
         }
+        //如果除数小于则倒转结果
         if (op2.getVal() < 0) {
-
             SubwInstruction subwInstruction = new SubwInstruction(dst, new RealRegister(0), regAns);
             instructionList.add(subwInstruction);
         }
