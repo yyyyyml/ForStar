@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * 表示内存有关的指令
  * 包含ALLOCA,LOAD,STORE,GEP,PHI
- * 待实现PHI mem2reg时再说
+ * 其实不全是跟内存相关，只是都放在一起了
  */
 public class MemoryInst {
     /**

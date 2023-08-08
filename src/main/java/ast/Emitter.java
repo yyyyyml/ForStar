@@ -105,8 +105,6 @@ public class Emitter {
                     }
                 }
                 sb.append("}\n");
-            } else {
-                // TODO: 外部函数？
             }
         }
 

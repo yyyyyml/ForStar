@@ -46,6 +46,7 @@ public abstract class Value {
         }
     }
 
+    // 没用
     public void replaceAllUseWith(Value v, BasicBlock bb, BasicBlock curBB) {
 
         for (Use use : useList) {

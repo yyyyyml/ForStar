@@ -13,6 +13,7 @@ import java.util.ArrayList;
 /**
  * 表示基本块终止的指令
  * 包含RET,BR,CALL
+ * 其实CALL不是表示基本块终止的指令
  */
 public class TerminatorInst {
     /**

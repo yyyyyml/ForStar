@@ -53,6 +53,7 @@ public class BasicBlock extends Value {
         }
     }
 
+    // 用于删掉phi中的本基本块的[]
     public void fixPhi(ArrayList<BasicBlock> bbList) {
         for (Use use : useList) {
             if (use.getUser() instanceof MemoryInst.Phi phiInst) {
@@ -91,6 +92,7 @@ public class BasicBlock extends Value {
         }
     }
 
+    // 替换所有的Br
     public void replaceAllBrUseWith(BasicBlock v) {
         for (Use use : useList) {
             if (use.getUser() instanceof TerminatorInst.Br BrInst) {

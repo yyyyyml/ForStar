@@ -31,7 +31,6 @@ public class Constant extends User {
             if(initList.size()>0&&isZero(initList)) isAllZero = true;
             for (int i = 0; i < initList.size(); i++) {
                 Constant elem = initList.get(i);
-
 /*               if (!elem.isZero()) {*/
                 super.setOperand(elem,i);
 /*               }*/
@@ -69,9 +68,7 @@ public class Constant extends User {
 
             for (Constant elem : initList) {
                 if (arrType.getElemType() != elem.getType()) {
-                    throw new RuntimeException(
-                            "Try to get a ConstArray with different types of constants in the initialized list."
-                    );
+                    throw new RuntimeException("类型错误");
                 }
             }
 
@@ -88,7 +85,7 @@ public class Constant extends User {
                     elem = ((Constant.ConstantArray) elem).getOperandAt(idx);
                 }
                 else {
-                    throw new RuntimeException("Depth of indies given is to large.");
+                    throw new RuntimeException("getElemByIndex错误");
                 }
             }
             return elem;

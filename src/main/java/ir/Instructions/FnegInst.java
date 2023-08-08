@@ -4,6 +4,9 @@ import ir.Instruction;
 import ir.Type;
 import ir.Value;
 
+/**
+ * 浮点取反
+ */
 public class FnegInst extends Instruction {
     public FnegInst(Type type, TAG tag, int numOP, Value operand) {
         super(type, tag, numOP);
