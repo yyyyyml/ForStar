@@ -31,7 +31,7 @@ public class PassDriver {
     ArrayList<BaseBackendPass> backendPassList;
 
     public PassDriver(boolean isPass) {
-        isPass = true;
+        isPass = false;
         irPassList = new ArrayList<>();
         backendPassList = new ArrayList<>();
 
@@ -41,6 +41,7 @@ public class PassDriver {
         if (isPass) irPassList.add(new PhiMerge());
         if (isPass) irPassList.add(new ConstantExp_Derivation());
         if (isPass) irPassList.add(new AddConstMerge());
+
         if (isPass) irPassList.add(new GlobalVariableDerive());
         if (isPass) irPassList.add(new CommonSubexpressionElimination());
         if (isPass) irPassList.add(new Inline());

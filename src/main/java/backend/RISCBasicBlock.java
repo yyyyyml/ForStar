@@ -14,6 +14,7 @@ import ir.values.GlobalVariable;
 import org.antlr.v4.runtime.misc.Pair;
 import util.IList;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -1289,12 +1290,16 @@ public class RISCBasicBlock {
                     MvInstruction mvInstruction = new MvInstruction(dst,temp1);
                     instructionList.add(mvInstruction);
                 }
-                else if(isZero2){
-                    MvInstruction mvInstruction = new MvInstruction(dst,new RealRegister(0));
+                else if (isZero2) {
+                    MvInstruction mvInstruction = new MvInstruction(dst, new RealRegister(0));
                     instructionList.add(mvInstruction);
                 }
-                else
-                {
+//                else if(op2 instanceof Immediate){
+//                    instructionList.removeLast();
+//                    this.optimizeDiv(curInst, dst, temp1, (Immediate) op2);
+//
+//                }
+                else {
                     DivwInstruction cal = new DivwInstruction(dst, temp1, temp2);
                     instructionList.add(cal);
                 }
@@ -1335,6 +1340,107 @@ public class RISCBasicBlock {
 
     }
 
+    public void optimizeDiv(Instruction curInst, RISCOperand dst, RISCOperand src, Immediate op2) {
+        int divisor = Math.abs(op2.getVal());
+        RISCOperand regAns;
+        if (op2.getVal() < 0) {
+            regAns = getNewVr();
+        } else {
+            regAns = dst;
+        }
+
+        if (this.isPowerOf2(divisor)) {
+            int x = this.log2(divisor);
+            if (x >= 1 && x <= 30) {
+                VirtualRegister vr1 = getNewVr();
+                VirtualRegister vr2 = getNewVr();
+                Immediate imm64SubX = new Immediate(64 - x);
+                Immediate immX = new Immediate(x);
+                // %1 = srli %src, #(64-x)
+                // %2 = addw %src, %1
+                // %ans = sraiw %2, #x
+                SrliInstruction srliInstruction = new SrliInstruction(vr1, src, imm64SubX);
+                instructionList.add(srliInstruction);
+                AddwInstruction addwInstruction = new AddwInstruction(vr2, src, vr1);
+                instructionList.add(addwInstruction);
+                SraiwInstruction sraiwInstruction = new SraiwInstruction(regAns, vr2, immX);
+                instructionList.add(sraiwInstruction);
+            }
+        } else {
+            int l = this.log2(divisor);
+            int sh = l;
+            var temp = new BigInteger("1");
+            long low = temp.shiftLeft(32 + l).divide(BigInteger.valueOf(divisor)).longValue();
+            long high = temp.shiftLeft(32 + l).add(temp.shiftLeft(l + 1)).divide(BigInteger.valueOf(divisor)).longValue();
+            while (((low / 2) < (high / 2)) && sh > 0) {
+                low /= 2;
+                high /= 2;
+                sh--;
+            }
+            if (high < (1L << 31)) {
+
+                var reg1 = getNewVr();
+                var reg2 = getNewVr();
+                var reg3 = getNewVr();
+                var immHigh = new BigImmediate(high);
+                var imm32PlusSh = new Immediate(32 + sh);
+                var imm31 = new Immediate(31);
+                // %1 = mul %src, #high
+                // %2 = srai %1, #(32+sh)
+                // %3 = sraiw %src, #31
+                // %ans = subw %2, %3
+                LiInstruction liInstruction = new LiInstruction(reg1, immHigh);
+                instructionList.add(liInstruction);
+                MulInstruction mulInstruction = new MulInstruction(reg1, src, reg1);
+                instructionList.add(mulInstruction);
+                SraiInstruction sraiInstruction = new SraiInstruction(reg2, reg1, imm32PlusSh);
+                instructionList.add(sraiInstruction);
+                SraiwInstruction sraiwInstruction = new SraiwInstruction(reg3, src, imm31);
+                instructionList.add(sraiwInstruction);
+                SubwInstruction subwInstruction = new SubwInstruction(regAns, reg2, reg3);
+                instructionList.add(subwInstruction);
+            } else {
+                high = high - (1L << 32);
+                var reg1 = getNewVr();
+                var reg2 = getNewVr();
+                var reg3 = getNewVr();
+                var reg4 = getNewVr();
+                var reg5 = getNewVr();
+                var immHigh = new BigImmediate(high);
+                var imm32 = new Immediate(32);
+                var immSh = new Immediate(sh);
+                var imm31 = new Immediate(31);
+                // %1 = mul %src, #high
+                // %2 = srai %1, #32
+                // %3 = addw %2, %src
+                // %4 = sariw %3, #sh
+                // %5 = sariw %src, #31
+                // %ans = subw %4, %5
+                LiInstruction liInstruction = new LiInstruction(reg1, immHigh);
+                instructionList.add(liInstruction);
+                MulInstruction mulInstruction = new MulInstruction(reg1, src, reg1);
+                instructionList.add(mulInstruction);
+                SraiInstruction sraiInstruction = new SraiInstruction(reg2, reg1, imm32);
+                instructionList.add(sraiInstruction);
+                AddwInstruction addwInstruction = new AddwInstruction(reg3, reg2, src);
+                instructionList.add(addwInstruction);
+                SraiwInstruction sraiwInstruction = new SraiwInstruction(reg4, reg3, immSh);
+                instructionList.add(sraiwInstruction);
+                SraiwInstruction sraiwInstruction2 = new SraiwInstruction(reg5, src, imm31);
+                instructionList.add(sraiwInstruction2);
+                SubwInstruction subwInstruction = new SubwInstruction(regAns, reg4, reg5);
+                instructionList.add(subwInstruction);
+
+            }
+        }
+        if (op2.getVal() < 0) {
+
+            SubwInstruction subwInstruction = new SubwInstruction(dst, new RealRegister(0), regAns);
+            instructionList.add(subwInstruction);
+        }
+
+
+    }
 
 
     private void translateLoad(Instruction curInst) {
@@ -1628,5 +1734,21 @@ public class RISCBasicBlock {
         return fvr;
     }
 
-    public RealRegister getTempRegister(){return tempRegister;}
+    public RealRegister getTempRegister() {
+        return tempRegister;
+    }
+
+    public static boolean isPowerOf2(int x) {
+        return x > 0 && ((x & (x - 1)) == 0);
+    }
+
+    public static int log2(int x) {
+        if (x <= 0) throw new ArithmeticException();
+        int count = 0;
+        while (x > 1) {
+            count++;
+            x >>= 1;
+        }
+        return count;
+    }
 }
