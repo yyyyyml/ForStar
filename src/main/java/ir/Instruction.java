@@ -11,6 +11,8 @@ public class Instruction extends User {
     public IList.INode<Instruction, BasicBlock> node;
     public boolean needName = true;
     private TAG tag;
+    public boolean needPhiCheck = true; // 内联用
+    public boolean isInline = false; // 内联用
 
     public Instruction(Type type, TAG tag, int numOP) {
         super(type, numOP);

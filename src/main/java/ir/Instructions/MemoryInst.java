@@ -142,7 +142,7 @@ public class MemoryInst {
             super(type, TAG.PHI, numOP);
         }
 
-        Map<BasicBlock, Integer> opMap = new HashMap<>();
+        public Map<BasicBlock, Integer> opMap = new HashMap<>();
         int nextMapId = 0;
 
 
