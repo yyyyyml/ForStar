@@ -52,7 +52,6 @@ public abstract class User extends Value {
     }
 
     public void removeAllOperand() {
-
         for (int index = 0; index < operandList.size(); index++) {
             var use = operandList.get(index);
             use.getValue().removeUse(use);
