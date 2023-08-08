@@ -59,6 +59,18 @@ public abstract class User extends Value {
         }
     }
 
+    public void removeOperandAt(int i) {
+        for (int index = 0; index < operandList.size(); index++) {
+            var use = operandList.get(index);
+            if (use.getPosition() == i) {
+                operandList.remove(index);
+                use.getValue().removeUse(use);
+                return;
+            }
+
+        }
+    }
+
     public void addInOperandList(Use use) {
         operandList.add(use);
     }

@@ -11,7 +11,6 @@ import ir.values.BasicBlock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * 表示内存有关的指令
@@ -143,7 +142,7 @@ public class MemoryInst {
         }
 
         public Map<BasicBlock, Integer> opMap = new HashMap<>();
-        int nextMapId = 0;
+        public int nextMapId = 0;
 
 
         public Value findValue(BasicBlock basicBlock) {
@@ -153,9 +152,9 @@ public class MemoryInst {
         public void addMapping(BasicBlock basicBlock, Value value) {
             if (opMap.containsKey(basicBlock)) {
                 var currentValue = getOperandAt(opMap.get(basicBlock));
-                if (!Objects.equals(currentValue, value)) {
-                    throw new RuntimeException("Trying to assign a different value to an entry block already exists in PHI.");
-                }
+//                if (!Objects.equals(currentValue, value)) {
+//                    throw new RuntimeException("Trying to assign a different value to an entry block already exists in PHI.");
+//                }
                 return;
             }
             this.setOperand(value, nextMapId);
@@ -165,25 +164,28 @@ public class MemoryInst {
             super.numOP += 2;
         }
 
-//        public void removeMapping(BasicBlock basicBlock){
-//            if(!opMap.containsKey(basicBlock)){
-//                throw new RuntimeException("Trying to remove a mapping that does not exists");
-//            }
-//            int id = opMap.get(basicBlock);
-//            this.removeOperandAt(id);
-//            this.removeOperandAt(id+1);
-//            operandMapping.remove(basicBlock);
-//        }
-public void setMapEntry(Map.Entry<BasicBlock, Value> oldEntry, Map.Entry<BasicBlock, Value> newEntry) {
-    BasicBlock oldBB = oldEntry.getKey();
-    Value oldVal = oldEntry.getValue();
-    BasicBlock newBB = newEntry.getKey();
-    Value newVal = newEntry.getValue();
-    var pos = opMap.get(oldBB);
-    opMap.remove(oldBB);
-    opMap.put(newBB, pos);
-    this.setOperand(newVal, nextMapId);
-    this.setOperand(newBB, nextMapId + 1);
+        public void removeMapping(BasicBlock basicBlock) {
+            if (!opMap.containsKey(basicBlock)) {
+                throw new RuntimeException("Trying to remove a mapping that does not exists");
+            }
+            int id = opMap.get(basicBlock);
+            this.removeOperandAt(id);
+            this.removeOperandAt(id + 1);
+            opMap.remove(basicBlock);
+            nextMapId -= 2;
+            super.numOP -= 2;
+        }
+
+        public void setMapEntry(Map.Entry<BasicBlock, Value> oldEntry, Map.Entry<BasicBlock, Value> newEntry) {
+            BasicBlock oldBB = oldEntry.getKey();
+            Value oldVal = oldEntry.getValue();
+            BasicBlock newBB = newEntry.getKey();
+            Value newVal = newEntry.getValue();
+            var pos = opMap.get(oldBB);
+            opMap.remove(oldBB);
+            opMap.put(newBB, pos);
+            this.setOperand(newVal, nextMapId);
+            this.setOperand(newBB, nextMapId + 1);
 
 }
 

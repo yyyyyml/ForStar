@@ -2,7 +2,9 @@ package ir.values;
 
 import ir.Instruction;
 import ir.Instructions.MemoryInst;
+import ir.Instructions.TerminatorInst;
 import ir.Type;
+import ir.Use;
 import ir.Value;
 import util.IList;
 
@@ -40,5 +42,62 @@ public class BasicBlock extends Value {
         return list.getLast().getElement();
     }
 
+    public void fixPhi() {
+        for (Use use : useList) {
+            if (use.getUser() instanceof MemoryInst.Phi phiInst) {
+//                int pos = phiInst.opMap.get(this); // 这个块所在的位置
+//                Value val = phiInst.findValue(this); // 对应的value
+                phiInst.removeMapping(this);
+            }
 
+        }
+    }
+
+    public void fixPhi(ArrayList<BasicBlock> bbList) {
+        for (Use use : useList) {
+            if (use.getUser() instanceof MemoryInst.Phi phiInst) {
+                int pos = phiInst.opMap.get(this); // 这个块所在的位置
+                Value val = phiInst.findValue(this); // 对应的value
+                for (BasicBlock bb : bbList) {
+                    if (bb == bbList.get(0)) {
+                        use.setValue(bb); // 第一个先替换
+                        // 还要处理opMap
+                        phiInst.opMap.put(bb, pos);
+                        phiInst.opMap.remove(this); // 移除旧的映射关系
+                    } else {
+                        // 如果不止一个要替换的块
+                        phiInst.addMapping(bb, val);
+
+                    }
+                }
+            }
+
+        }
+    }
+
+    // 用于基本块的替换在phi出现的
+    public void replaceAllPhiUseWith(BasicBlock v) {
+
+        for (Use use : useList) {
+            if (use.getUser() instanceof MemoryInst.Phi phiInst) {
+                use.setValue(v);
+                v.useList.add(use);
+                // 还要处理opMap
+                int oldPos = phiInst.opMap.get(this);
+                phiInst.opMap.put(v, oldPos);
+                phiInst.opMap.remove(this); // 移除旧的映射关系
+            }
+
+        }
+    }
+
+    public void replaceAllBrUseWith(BasicBlock v) {
+        for (Use use : useList) {
+            if (use.getUser() instanceof TerminatorInst.Br BrInst) {
+                use.setValue(v);
+                v.useList.add(use);
+            }
+
+        }
+    }
 }

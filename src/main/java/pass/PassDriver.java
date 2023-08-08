@@ -31,7 +31,7 @@ public class PassDriver {
     ArrayList<BaseBackendPass> backendPassList;
 
     public PassDriver(boolean isPass) {
-        isPass = false;
+        isPass = true;
         irPassList = new ArrayList<>();
         backendPassList = new ArrayList<>();
 
@@ -41,14 +41,14 @@ public class PassDriver {
         if (isPass) irPassList.add(new PhiMerge());
         if (isPass) irPassList.add(new ConstantExp_Derivation());
         if (isPass) irPassList.add(new AddConstMerge());
-
         if (isPass) irPassList.add(new GlobalVariableDerive());
         if (isPass) irPassList.add(new CommonSubexpressionElimination());
-        if (isPass) irPassList.add(new Inline());
+        if (isPass) irPassList.add(new Inline()); // 隐藏功能用例36CE,但性能用例全AC
         if (isPass) irPassList.add(new CommonSubexpressionElimination());
         if (isPass) irPassList.add(new AddSameMerge());
         if (isPass) irPassList.add(new PhiMerge());
         if (isPass) irPassList.add(new DeadCodeEliminate()); // 可以用了，但效果似乎一般
+//        if (isPass) irPassList.add(new BlockMergeWithPhi()); // 用不了，有的不可以消掉
 
         if (isPass) backendPassList.add(new NNRegAllocator());
         if (isPass) backendPassList.add(new NNFloatRegAllocator());

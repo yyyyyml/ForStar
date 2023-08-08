@@ -46,18 +46,6 @@ public abstract class Value {
         }
     }
 
-    // 用于基本块的替换在phi出现的
-    public void replaceAllPhiUseWith(Value v) {
-
-        for (Use use : useList) {
-            if (use.getUser() instanceof MemoryInst.Phi) {
-                use.setValue(v);
-                v.useList.add(use);
-            }
-
-        }
-    }
-
     public void replaceAllUseWith(Value v, BasicBlock bb, BasicBlock curBB) {
 
         for (Use use : useList) {
