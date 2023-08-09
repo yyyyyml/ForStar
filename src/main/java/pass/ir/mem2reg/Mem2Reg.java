@@ -268,6 +268,7 @@ public class Mem2Reg implements BaseIRPass {
                         var newBB = (BasicBlock) inst.getOperandAt(1);
                         if (canDerive(inst)) {
                             inst.replaceAllUseWith(newVal);
+                            inst.removeAllOperand();
                             inst.node.removeSelf();
                             needDerive = true;
                         }

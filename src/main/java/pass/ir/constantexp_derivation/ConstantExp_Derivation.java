@@ -1,18 +1,13 @@
 package pass.ir.constantexp_derivation;
 
-import ir.Instructions.TerminatorInst;
-import ir.values.Constant;
-import pass.ir.BaseIRPass;
 import ir.Instruction;
-import ir.Instruction.* ;
 import ir.Module;
-import ir.Use;
+import ir.Value;
 import ir.values.BasicBlock;
+import ir.values.Constant;
 import ir.values.Function;
 import pass.ir.BaseIRPass;
 import util.IList;
-import ir.Value;
-import ir.Value.*;
 
 import java.util.Objects;
 
@@ -28,54 +23,69 @@ public class ConstantExp_Derivation implements BaseIRPass{
                     Instruction inst = instInode.getElement();
                     if(canDerive(inst)){
                         if(inst.getTag().equals(Instruction.TAG.BR) ){
-                            var c1 = inst.getOperandAt(0);
-                            var Tb = (ir.values.BasicBlock)inst.getOperandAt(1);
-                            var Fb = (ir.values.BasicBlock)inst.getOperandAt(2);
-                            //如果是条件为假
-                            if(((Constant.ConstantInt )c1).getVal() == 0){
-                                //删除原来br，生成新的无条件br
-                                TerminatorInst.Br uncondBr = new TerminatorInst.Br(Fb, bb);
-                                bb.list.addAfter(instInode,uncondBr.node);
-                                instInode.removeSelf();
-                                //删除使用当前bb的PHI
-                                //bb.fixPhi();因为并发修改而报错，不知道怎么改
-                                //删除不会进入程序块
-                                var BB = bb.nextList.get(0);
-                                BB.fixPhi();
-                                var nextBB = BB.nextList.get(0);
-                                BB.replaceAllUseWith(nextBB); // 只可能有一个后继
-                                for (BasicBlock preBB : BB.preList) {
-                                    preBB.nextList.remove(BB);
-                                    preBB.nextList.add(nextBB);
-                                    nextBB.preList.remove(BB);
-                                    nextBB.preList.add(preBB);
-                                }
-                                BB.node.removeSelf();
-                            }
-                            //如果是条件为真
-                            else{
-                                TerminatorInst.Br uncondBr = new TerminatorInst.Br(Tb, bb);
-                                bb.list.addAfter(instInode,uncondBr.node);
-                                instInode.removeSelf();
-                                //删除使用当前bb的PHI
-                                //bb.fixPhi();因为并发修改而报错，不知道怎么改
-                                //删除不会进入程序块
-                                var BB = bb.nextList.get(1);
-                                BB.fixPhi();
-                                var nextBB = BB.nextList.get(0);
-                                BB.replaceAllUseWith(nextBB); // 只可能有一个后继
-                                for (BasicBlock preBB : BB.preList) {
-                                    preBB.nextList.remove(BB);
-                                    preBB.nextList.add(nextBB);
-                                    nextBB.preList.remove(BB);
-                                    nextBB.preList.add(preBB);
-                                }
-                                BB.node.removeSelf();
-                            }
+//                            var c1 = inst.getOperandAt(0);
+//                            var tB = (ir.values.BasicBlock)inst.getOperandAt(1);
+//                            var fB = (ir.values.BasicBlock)inst.getOperandAt(2);
+//                            //如果是条件为假
+//                            if(((Constant.ConstantInt )c1).getVal() == 0){
+//                                //删除原来br，生成新的无条件br
+//                                TerminatorInst.Br uncondBr = new TerminatorInst.Br(tB, bb);
+//                                bb.list.addAfter(instInode, uncondBr.node);
+//
+//                                //删除使用当前bb的PHI
+////                                bb.fixPhiInBlock(tB);
+//                                //删除不会进入程序块
+////                                var BB = bb.nextList.get(0);
+////                                tB.fixPhi();
+//                                BasicBlock nextBB;
+//                                if (tB.nextList.size() != 0) {
+//                                    nextBB = tB.nextList.get(0);
+//                                    tB.replaceAllUseWith(nextBB); // 只可能有一个后继
+//                                    for (BasicBlock preBB : tB.preList) {
+//                                        preBB.nextList.remove(tB);
+//                                        preBB.nextList.add(nextBB);
+//                                        nextBB.preList.remove(tB);
+//                                        nextBB.preList.add(preBB);
+//                                    }
+//                                }
+//
+//
+//                                inst.removeAllOperand();
+//                                instInode.removeSelf();
+//                                tB.node.removeSelf();
+//                            }
+//                            //如果是条件为真
+//                            else{
+//                                TerminatorInst.Br uncondBr = new TerminatorInst.Br(tB, bb);
+//                                bb.list.addAfter(instInode, uncondBr.node);
+//
+//                                //删除使用当前bb的PHI
+////                                bb.fixPhiInBlock(fB);
+//                                //删除不会进入程序块
+////                                var BB = bb.nextList.get(1);
+////                                fB.fixPhi();
+//                                BasicBlock nextBB;
+//                                if (fB.nextList.size() != 0) {
+//                                    nextBB = fB.nextList.get(0);
+//                                    fB.replaceAllUseWith(nextBB); // 只可能有一个后继
+//                                    for (BasicBlock preBB : fB.preList) {
+//                                        preBB.nextList.remove(fB);
+//                                        preBB.nextList.add(nextBB);
+//                                        nextBB.preList.remove(fB);
+//                                        nextBB.preList.add(preBB);
+//                                    }
+//                                }
+//
+//
+////                                inst.removeAllOperand();
+//                                instInode.removeSelf();
+//                                fB.node.removeSelf();
+//                            }
                         }
                         else {
                             Value v = calculate(inst);
                             inst.replaceAllUseWith(v);
+//                            inst.removeAllOperand();
                             instInode.removeSelf();
                         }
                     }

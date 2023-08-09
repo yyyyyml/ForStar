@@ -38,6 +38,7 @@ public class AddConstMerge implements BaseIRPass {
                                 Constant.ConstantInt newRightOp = getConstantInt(thisRightOp.getVal() + nextRightOp.getVal());
                                 nextInst.setOperand(newRightOp, 1); // 更新右值
                                 nextLeftOp.replaceAllUseWith(thisLeftOp); // 替换左值
+//                                inst.removeAllOperand();//加了会错？
                                 instInode.removeSelf();
 
                             }

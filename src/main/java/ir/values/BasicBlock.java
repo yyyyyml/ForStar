@@ -43,7 +43,8 @@ public class BasicBlock extends Value {
     }
 
     public void fixPhi() {
-        for (Use use : useList) {
+        for (int i = 0; i < useList.size(); i++) {
+            Use use = useList.get(i);
             if (use.getUser() instanceof MemoryInst.Phi phiInst) {
 //                int pos = phiInst.opMap.get(this); // 这个块所在的位置
 //                Value val = phiInst.findValue(this); // 对应的value
@@ -52,6 +53,20 @@ public class BasicBlock extends Value {
 
         }
     }
+
+    // 只删一个bb里的一个[]
+    public void fixPhiInBlock(BasicBlock bbHasPhi) {
+        for (Use use : useList) {
+            if (use.getUser() instanceof MemoryInst.Phi phiInst && phiInst.getBB() == bbHasPhi) {
+//                int pos = phiInst.opMap.get(this); // 这个块所在的位置
+//                Value val = phiInst.findValue(this); // 对应的value
+                phiInst.removeMapping(this);
+                break;
+            }
+
+        }
+    }
+
 
     // 用于删掉phi中的本基本块的[]
     public void fixPhi(ArrayList<BasicBlock> bbList) {

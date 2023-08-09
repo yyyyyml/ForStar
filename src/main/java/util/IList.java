@@ -48,7 +48,7 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
         e.setPrev(p.getPrev());
         p.setPrev(e);
         e.setNext(p);
-
+        e.setParent(this);
         size++;
         return e;
     }
@@ -59,6 +59,7 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
         e.setNext(p.getNext());
         p.setNext(e);
         e.setPrev(p);
+        e.setParent(this);
         size++;
         return e;
     }
