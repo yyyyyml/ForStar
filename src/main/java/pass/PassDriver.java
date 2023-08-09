@@ -55,13 +55,14 @@ public class PassDriver {
         if (isPass) irPassList.add(new DeadCodeEliminate()); // 可以用了，但效果似乎一般
 
 
-        if (false) backendPassList.add(new BasicOptimize());
+        if (true) backendPassList.add(new BasicOptimize());////lwsw优化和乘法优化
         if (isPass) backendPassList.add(new NNRegAllocator()); // 有活跃变量分析的寄存器分配
         if (isPass) backendPassList.add(new NNFloatRegAllocator()); // 有活跃变量分析的寄存器分配
 //       backendPassList.add(new NewRegAllocator());
         if (!isPass) backendPassList.add(new RegisterAllocator()); // 普通的寄存器分配
 //       backendPassList.add(new NewFloatRegAllocator());
         if (!isPass) backendPassList.add(new FloatRegisterAllocator()); // 普通的寄存器分配
+        //if (true) backendPassList.add(new BasicOptimize());//lwsw优化和乘法优化
         backendPassList.add(new LargeNumberPass()); // 一些指令12位立即数的限制处理
     }
 

@@ -1436,8 +1436,8 @@ public class RISCBasicBlock {
         }
         //如果除数小于则倒转结果
         if (op2.getVal() < 0) {
-            SubwInstruction subwInstruction = new SubwInstruction(dst, new RealRegister(0), regAns);
-            instructionList.add(subwInstruction);
+            SubInstruction subInstruction = new SubInstruction(dst, new RealRegister(0), regAns);
+            instructionList.add(subInstruction);
         }
 
 
@@ -1746,6 +1746,7 @@ public class RISCBasicBlock {
     public static int log2(int x) {
         if (x <= 0) {
             System.out.println("BUG is log2");
+            return -1;
         }
         ;
         int count = 0;
