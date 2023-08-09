@@ -10,6 +10,7 @@ import pass.backend.register_allocator.NNFloatRegAllocator;
 import pass.backend.register_allocator.NNRegAllocator;
 import pass.backend.register_allocator.RegisterAllocator;
 import pass.ir.BaseIRPass;
+import pass.ir.addmerge.AddConstMerge;
 import pass.ir.addmerge.AddSameMerge;
 import pass.ir.blockmerge.BlockMerge;
 import pass.ir.cse.CommonSubexpressionElimination;
