@@ -27,6 +27,8 @@ import java.util.ArrayList;
 
 /**
  * 优化器类
+ * 驱动所有优化
+ * 按加入顺序执行优化
  */
 public class PassDriver {
     ArrayList<BaseIRPass> irPassList;

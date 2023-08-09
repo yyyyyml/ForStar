@@ -378,7 +378,7 @@ public class Inline implements BaseIRPass {
             return new TerminatorInst.Call((Function) ops.get(0), args);
         }
 
-        throw new RuntimeException("Unable to clone instruction of type " + oldInst.getClass());
+        throw new RuntimeException("没有这个类型" + oldInst.getClass());
 
     }
 
