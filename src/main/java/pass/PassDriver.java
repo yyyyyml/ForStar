@@ -13,6 +13,8 @@ import pass.ir.BaseIRPass;
 import pass.ir.addmerge.AddConstMerge;
 import pass.ir.addmerge.AddSameMerge;
 import pass.ir.blockmerge.BlockMerge;
+import pass.ir.blockmerge.BlockMergeWithPhi;
+import pass.ir.constantexp_derivation.ConstantExp_Derivation;
 import pass.ir.cse.CommonSubexpressionElimination;
 import pass.ir.deadcode_eliminate.DeadCodeEliminate;
 import pass.ir.globalvariablederive.GlobalVariableDerive;
@@ -39,7 +41,8 @@ public class PassDriver {
         irPassList.add(new BlockMerge()); // 先做基本块合并，有phi以后比较麻烦
         if (isPass) irPassList.add(new Mem2Reg()); // 有phi了
         if (isPass) irPassList.add(new PhiMerge()); // 合并一下可合并的phi
-//        if (isPass) irPassList.add(new ConstantExp_Derivation()); // 常量传播
+        if (isPass) irPassList.add(new ConstantExp_Derivation()); // 常量传播
+        if (isPass) irPassList.add(new BlockMergeWithPhi()); // 常量传播后可以用一下，目前只是消除死基本块
         if (isPass) irPassList.add(new AddConstMerge()); // 多个常数相加
         if (isPass) irPassList.add(new GlobalVariableDerive()); // 只初始化一次的全局变量当作常量传播
         if (isPass) irPassList.add(new CommonSubexpressionElimination()); // 简单的子表达式消除
@@ -49,9 +52,8 @@ public class PassDriver {
         if (isPass) irPassList.add(new PhiMerge()); // 再合并一下phi
         if (isPass) irPassList.add(new DeadCodeEliminate()); // 可以用了，但效果似乎一般
 
-//        if (isPass) irPassList.add(new BlockMergeWithPhi()); // 用不了，有的不可以消掉
 
-        if (true) backendPassList.add(new BasicOptimize());
+        if (false) backendPassList.add(new BasicOptimize());
         if (isPass) backendPassList.add(new NNRegAllocator()); // 有活跃变量分析的寄存器分配
         if (isPass) backendPassList.add(new NNFloatRegAllocator()); // 有活跃变量分析的寄存器分配
 //       backendPassList.add(new NewRegAllocator());

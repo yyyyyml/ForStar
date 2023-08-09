@@ -14,10 +14,39 @@ public class BlockMergeWithPhi implements BaseIRPass {
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.isBuiltin()) continue;
+            // 先消除一下死基本块
+            deadBlockEliminate(func);
             // 把单br的块合并
-            onlyBrCombine(func);
+//            onlyBrCombine(func); // 不是都能合，先不管
 
         }
+    }
+
+    private void deadBlockEliminate(Function func) {
+
+        boolean processed = true;
+        // 要迭代消除，直到没有可消除的
+        while (processed) {
+            boolean visitFirst = false;
+            processed = false;
+            for (IList.INode<BasicBlock, Function> bbInode : func.list) {
+                BasicBlock bb = bbInode.getElement();
+                // 跳过入口
+                if (!visitFirst) {
+                    visitFirst = true;
+                    continue;
+                }
+                if (bb.preList.size() == 0) {
+                    processed = true;
+                    for (BasicBlock nextBB : bb.nextList) {
+                        nextBB.preList.remove(bb);
+                        bb.fixPhiInBlock(nextBB);
+                    }
+                    bb.node.removeSelf();
+                }
+            }
+        }
+
     }
 
     private void onlyBrCombine(Function func) {

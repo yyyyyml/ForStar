@@ -46,9 +46,16 @@ public class BasicBlock extends Value {
         for (int i = 0; i < useList.size(); i++) {
             Use use = useList.get(i);
             if (use.getUser() instanceof MemoryInst.Phi phiInst) {
-//                int pos = phiInst.opMap.get(this); // 这个块所在的位置
-//                Value val = phiInst.findValue(this); // 对应的value
+                System.out.println("fixPhiInBlock" + phiInst);
+                System.out.println("size:" + phiInst.operandList.size());
+
                 phiInst.removeMapping(this);
+
+                System.out.println("after size:" + phiInst.operandList.size());
+                System.out.println("pos0:" + phiInst.operandList.get(0).getPosition());
+                System.out.println("pos1:" + phiInst.operandList.get(1).getPosition());
+                System.out.println("after fixPhiInBlock" + phiInst);
+//                i--;
             }
 
         }
@@ -56,12 +63,19 @@ public class BasicBlock extends Value {
 
     // 只删一个bb里的一个[]
     public void fixPhiInBlock(BasicBlock bbHasPhi) {
-        for (Use use : useList) {
+        for (int i = 0; i < useList.size(); i++) {
+            Use use = useList.get(i);
             if (use.getUser() instanceof MemoryInst.Phi phiInst && phiInst.getBB() == bbHasPhi) {
+                System.out.println("fixPhiInBlock" + phiInst);
+                System.out.println("size:" + phiInst.operandList.size());
 //                int pos = phiInst.opMap.get(this); // 这个块所在的位置
 //                Value val = phiInst.findValue(this); // 对应的value
                 phiInst.removeMapping(this);
-                break;
+                System.out.println("after size:" + phiInst.operandList.size());
+                System.out.println("pos0:" + phiInst.operandList.get(0).getPosition());
+                System.out.println("pos1:" + phiInst.operandList.get(1).getPosition());
+                System.out.println("after fixPhiInBlock" + phiInst);
+                i--;
             }
 
         }

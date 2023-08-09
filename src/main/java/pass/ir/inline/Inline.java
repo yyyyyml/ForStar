@@ -200,6 +200,39 @@ public class Inline implements BaseIRPass {
         }
         deleteInlineFunction(module);
         moveAlloca(module);
+        fixPreNextList(module);
+    }
+
+    private void fixPreNextList(Module module) {
+        for (IList.INode<Function, Module> funcInode : module.functionList) {
+            Function func = funcInode.getElement();
+            for (IList.INode<BasicBlock, Function> bbInode : func.list) {
+                BasicBlock bb = bbInode.getElement();
+                Instruction lastInst = bb.list.getLast().getElement();
+                if (lastInst instanceof TerminatorInst.Br brInst) {
+                    if (brInst.numOP == 3) {
+                        BasicBlock bb1 = (BasicBlock) brInst.getOperandAt(1);
+                        BasicBlock bb2 = (BasicBlock) brInst.getOperandAt(2);
+                        if (bb.nextList.size() != 2 || !bb.nextList.contains(bb1) || !bb.nextList.contains(bb2)) {
+                            // 不对应,要改
+                            bb.nextList.clear();
+                            bb.nextList.add(bb1);
+                            bb.nextList.add(bb2);
+                            if (!bb1.preList.contains(bb)) bb1.preList.add(bb);
+                            if (!bb2.preList.contains(bb)) bb2.preList.add(bb);
+                        }
+                    } else {
+                        BasicBlock bb1 = (BasicBlock) brInst.getOperandAt(0);
+                        if (bb.nextList.size() != 1 || !bb.nextList.contains(bb1)) {
+                            // 不对应,要改
+                            bb.nextList.clear();
+                            bb.nextList.add(bb1);
+                            if (!bb1.preList.contains(bb)) bb1.preList.add(bb);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void moveAlloca(Module module) {
@@ -252,8 +285,8 @@ public class Inline implements BaseIRPass {
         for (Use use : oldInst.operandList) {
             var usee = use.getValue();
             Value value;
-            if (usee instanceof BasicBlock) {
-                value = bbMap.get(usee);
+            if (usee instanceof BasicBlock useeBB) {
+                value = bbMap.getOrDefault(usee, useeBB);
             } else {
                 value = valueMap.getOrDefault(usee, usee); // 找旧的value对应的新value
             }
@@ -308,6 +341,7 @@ public class Inline implements BaseIRPass {
             var phi = new MemoryInst.Phi(type, 0);
             for (BasicBlock entry : oldPhi.opMap.keySet()) {
                 var value = oldPhi.findValue(entry);
+
                 phi.addMapping(bbMap.get(entry), valueMap.getOrDefault(value, value));
             }
             return phi;

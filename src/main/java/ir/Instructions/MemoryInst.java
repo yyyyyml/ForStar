@@ -11,6 +11,7 @@ import ir.values.BasicBlock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 表示内存有关的指令
@@ -146,15 +147,17 @@ public class MemoryInst {
 
 
         public Value findValue(BasicBlock basicBlock) {
-            return getOperandAt(opMap.get(basicBlock));
+            var val = getOperandAt(opMap.get(basicBlock));
+            if (val == null) throw new RuntimeException("null");
+            return val;
         }
 
         public void addMapping(BasicBlock basicBlock, Value value) {
             if (opMap.containsKey(basicBlock)) {
                 var currentValue = getOperandAt(opMap.get(basicBlock));
-//                if (!Objects.equals(currentValue, value)) {
-//                    throw new RuntimeException("Trying to assign a different value to an entry block already exists in PHI.");
-//                }
+                if (!Objects.equals(currentValue, value)) {
+                    throw new RuntimeException("已存在这个map");
+                }
                 return;
             }
             this.setOperand(value, nextMapId);
@@ -166,11 +169,45 @@ public class MemoryInst {
 
         public void removeMapping(BasicBlock basicBlock) {
             if (!opMap.containsKey(basicBlock)) {
-                throw new RuntimeException("Trying to remove a mapping that does not exists");
+                throw new RuntimeException("不存在这个map");
             }
             int id = opMap.get(basicBlock);
-            this.removeOperandAt(id);
-            this.removeOperandAt(id + 1);
+            // 删除操作数并处理pos,opMap里的位置也要处理
+            boolean isFound = false;
+            for (int index = 0; index < operandList.size(); index += 2) {
+                var useVal = operandList.get(index);
+                var useBlock = operandList.get(index + 1);
+                var beginValPos = useVal.getPosition();
+                var beginBlockPos = useBlock.getPosition();
+                System.out.println("beginValPos:" + beginValPos);
+                System.out.println("beginBlockPos:" + beginBlockPos);
+                if (isFound) {
+
+                    var curValPos = useVal.getPosition();
+                    var curBlockPos = useBlock.getPosition();
+                    System.out.println("curValPos:" + curValPos);
+                    System.out.println("curBlockPos:" + curBlockPos);
+                    useVal.setPosition(curValPos - 2);
+                    useBlock.setPosition(curBlockPos - 2);
+                    BasicBlock bbToSub = (BasicBlock) useBlock.getValue();
+                    int old = opMap.get(bbToSub);
+                    opMap.put(bbToSub, old - 2);
+                    continue;
+                }
+                if (useVal.getPosition() == id) {
+                    System.out.println("deValPos:" + beginValPos);
+                    System.out.println("deBlockPos:" + beginBlockPos);
+                    operandList.remove(index);
+                    operandList.remove(index);
+                    useVal.getValue().removeUse(useVal);
+                    useBlock.getValue().removeUse(useBlock);
+                    isFound = true;
+                    index -= 2; // 重新处理后面的pos
+                }
+
+            }
+//            this.removeOperandAt(id);
+//            this.removeOperandAt(id + 1);
             opMap.remove(basicBlock);
             nextMapId -= 2;
             super.numOP -= 2;

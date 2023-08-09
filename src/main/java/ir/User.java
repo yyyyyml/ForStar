@@ -59,12 +59,18 @@ public abstract class User extends Value {
     }
 
     public void removeOperandAt(int i) {
+//        boolean isFound = false;
         for (int index = 0; index < operandList.size(); index++) {
             var use = operandList.get(index);
+//            if (isFound) {
+//                use.setPosition(use.getPosition() - 1);
+//                continue;
+//            }
             if (use.getPosition() == i) {
                 operandList.remove(index);
                 use.getValue().removeUse(use);
-                return;
+//                isFound = true;
+//                index -= 1; // 重新处理后面的pos
             }
 
         }
