@@ -1744,11 +1744,14 @@ public class RISCBasicBlock {
     }
 
     public static int log2(int x) {
-        if (x <= 0) throw new ArithmeticException();
+        if (x <= 0) {
+            System.out.println("BUG is log2");
+        }
+        ;
         int count = 0;
         while (x > 1) {
-            count++;
             x >>= 1;
+            count++;
         }
         return count;
     }

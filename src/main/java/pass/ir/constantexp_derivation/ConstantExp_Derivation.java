@@ -22,37 +22,43 @@ public class ConstantExp_Derivation implements BaseIRPass{
                 for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
                     Instruction inst = instInode.getElement();
                     if(canDerive(inst)){
-                        if(inst.getTag().equals(Instruction.TAG.BR) ){
+                        if(inst.getTag().equals(Instruction.TAG.BR) ) {
 //                            var c1 = inst.getOperandAt(0);
 //                            var tB = (ir.values.BasicBlock)inst.getOperandAt(1);
 //                            var fB = (ir.values.BasicBlock)inst.getOperandAt(2);
+//                            // 清空原先的后继关系
+//                            bb.nextList.remove(tB);
+//                            bb.nextList.remove(fB);
+//                            tB.preList.remove(bb);
+//                            fB.preList.remove(bb);
 //                            //如果是条件为假
 //                            if(((Constant.ConstantInt )c1).getVal() == 0){
 //                                //删除原来br，生成新的无条件br
-//                                TerminatorInst.Br uncondBr = new TerminatorInst.Br(tB, bb);
+//
+//                                TerminatorInst.Br uncondBr = new TerminatorInst.Br(fB, bb);
 //                                bb.list.addAfter(instInode, uncondBr.node);
 //
 //                                //删除使用当前bb的PHI
-////                                bb.fixPhiInBlock(tB);
+//                                bb.fixPhiInBlock(tB);
 //                                //删除不会进入程序块
 ////                                var BB = bb.nextList.get(0);
 ////                                tB.fixPhi();
 //                                BasicBlock nextBB;
-//                                if (tB.nextList.size() != 0) {
-//                                    nextBB = tB.nextList.get(0);
-//                                    tB.replaceAllUseWith(nextBB); // 只可能有一个后继
-//                                    for (BasicBlock preBB : tB.preList) {
-//                                        preBB.nextList.remove(tB);
-//                                        preBB.nextList.add(nextBB);
-//                                        nextBB.preList.remove(tB);
-//                                        nextBB.preList.add(preBB);
-//                                    }
-//                                }
+////                                if (tB.nextList.size() != 0) {
+////                                    nextBB = tB.nextList.get(0);
+////                                    tB.replaceAllUseWith(nextBB); // 只可能有一个后继
+////                                    for (BasicBlock preBB : tB.preList) {
+////                                        preBB.nextList.remove(tB);
+////                                        preBB.nextList.add(nextBB);
+////                                        nextBB.preList.remove(tB);
+////                                        nextBB.preList.add(preBB);
+////                                    }
+////                                }
 //
 //
-//                                inst.removeAllOperand();
+////                                inst.removeAllOperand();
 //                                instInode.removeSelf();
-//                                tB.node.removeSelf();
+////                                tB.node.removeSelf();
 //                            }
 //                            //如果是条件为真
 //                            else{
@@ -60,26 +66,26 @@ public class ConstantExp_Derivation implements BaseIRPass{
 //                                bb.list.addAfter(instInode, uncondBr.node);
 //
 //                                //删除使用当前bb的PHI
-////                                bb.fixPhiInBlock(fB);
+//                                bb.fixPhiInBlock(fB);
 //                                //删除不会进入程序块
 ////                                var BB = bb.nextList.get(1);
 ////                                fB.fixPhi();
-//                                BasicBlock nextBB;
-//                                if (fB.nextList.size() != 0) {
-//                                    nextBB = fB.nextList.get(0);
-//                                    fB.replaceAllUseWith(nextBB); // 只可能有一个后继
-//                                    for (BasicBlock preBB : fB.preList) {
-//                                        preBB.nextList.remove(fB);
-//                                        preBB.nextList.add(nextBB);
-//                                        nextBB.preList.remove(fB);
-//                                        nextBB.preList.add(preBB);
-//                                    }
-//                                }
+////                                BasicBlock nextBB;
+////                                if (fB.nextList.size() != 0) {
+////                                    nextBB = fB.nextList.get(0);
+////                                    fB.replaceAllUseWith(nextBB); // 只可能有一个后继
+////                                    for (BasicBlock preBB : fB.preList) {
+////                                        preBB.nextList.remove(fB);
+////                                        preBB.nextList.add(nextBB);
+////                                        nextBB.preList.remove(fB);
+////                                        nextBB.preList.add(preBB);
+////                                    }
+////                                }
 //
 //
 ////                                inst.removeAllOperand();
 //                                instInode.removeSelf();
-//                                fB.node.removeSelf();
+////                                fB.node.removeSelf();
 //                            }
                         }
                         else {
