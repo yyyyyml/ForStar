@@ -215,6 +215,11 @@ public class Inline implements BaseIRPass {
                         BasicBlock bb2 = (BasicBlock) brInst.getOperandAt(2);
                         if (bb.nextList.size() != 2 || !bb.nextList.contains(bb1) || !bb.nextList.contains(bb2)) {
                             // 不对应,要改
+                            // 先修正错误
+                            for (int i = 0; i < bb.nextList.size(); i++) {
+                                var curBB = bb.nextList.get(i);
+                                curBB.preList.remove(bb);
+                            }
                             bb.nextList.clear();
                             bb.nextList.add(bb1);
                             bb.nextList.add(bb2);
@@ -225,6 +230,11 @@ public class Inline implements BaseIRPass {
                         BasicBlock bb1 = (BasicBlock) brInst.getOperandAt(0);
                         if (bb.nextList.size() != 1 || !bb.nextList.contains(bb1)) {
                             // 不对应,要改
+                            // 先修正错误
+                            for (int i = 0; i < bb.nextList.size(); i++) {
+                                var curBB = bb.nextList.get(i);
+                                curBB.preList.remove(bb);
+                            }
                             bb.nextList.clear();
                             bb.nextList.add(bb1);
                             if (!bb1.preList.contains(bb)) bb1.preList.add(bb);
@@ -238,6 +248,7 @@ public class Inline implements BaseIRPass {
     private void moveAlloca(Module module) {
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
+            if (func.isBuiltin()) continue;
             LinkedList<IList.INode> allocaToMove = new LinkedList<>();
             for (IList.INode<BasicBlock, Function> bbInode : func.list) {
                 BasicBlock bb = bbInode.getElement();
@@ -275,6 +286,15 @@ public class Inline implements BaseIRPass {
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.canInline) { // && func.list.size() == 1
+                // 把里面指令也删了？
+                for (IList.INode<BasicBlock, Function> bbInode : func.list) {
+                    BasicBlock bb = bbInode.getElement();
+                    for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
+                        Instruction inst = instInode.getElement();
+                        inst.removeAllOperand();
+                        instInode.removeSelf();
+                    }
+                }
                 funcInode.removeSelf();
             }
         }

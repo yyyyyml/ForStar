@@ -156,6 +156,7 @@ public class IList<T, P> implements Iterable<IList.INode<T, P>> {
 //            }
             if (this.next != null) this.next.prev = this.prev;
             if (this.prev != null) this.prev.next = this.next;
+            this.parentList.size--;
             this.parentList = null;
         }
     }

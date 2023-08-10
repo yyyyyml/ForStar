@@ -25,11 +25,16 @@ public class Mem2Reg implements BaseIRPass {
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.isBuiltin()) continue;
+            System.out.println("对" + func + "mem2reg");
 
             // 获取所有可提升的Alloca
             allocaSet.clear();
             getPromotableAllocaSet(func);
 //            System.out.println(allocaSet);
+            if (allocaSet.isEmpty()) System.out.println("没有需要提升的alloca");
+
+            // 要清空每个块的相关属性信息，可能多次mem2reg
+            initBasicBlock(func);
 
             // 收集每个基本块中的使用和定义信息
             collectInformation(func);
@@ -50,6 +55,16 @@ public class Mem2Reg implements BaseIRPass {
             // 消除单分支的phi
             // TODO:貌似不可行
             deriveSinglePhi(func);
+        }
+    }
+
+    private void initBasicBlock(Function func) {
+        for (IList.INode<BasicBlock, Function> bbInode : func.list) {
+            var bb = bbInode.getElement();
+            bb.npdVar.clear();
+            bb.defVar.clear();
+            bb.phiMap.clear();
+            bb.nowDefMap.clear();
         }
     }
 
@@ -99,6 +114,7 @@ public class Mem2Reg implements BaseIRPass {
                     if (address instanceof MemoryInst.Alloca && allocaSet.contains((MemoryInst.Alloca) address)) {
                         // 将定义的变量加入基本块的definedVar集合中
                         bb.defVar.add((MemoryInst.Alloca) address);
+                        System.out.println("要加入defVar");
                     }
                 }
                 if (inst instanceof MemoryInst.Load) {
@@ -108,6 +124,7 @@ public class Mem2Reg implements BaseIRPass {
                             && !bb.defVar.contains((MemoryInst.Alloca) address)) {
                         // 将需要在前一个基本块中定义的变量加入基本块的npdVar集合中，并将该基本块加入传播集合中
                         bb.npdVar.add((MemoryInst.Alloca) address);
+                        System.out.println("要加入npdVar");
                         blocksToSpread.get((MemoryInst.Alloca) address).add(bb);
                     }
                 }
@@ -126,6 +143,7 @@ public class Mem2Reg implements BaseIRPass {
                         continue;
                     }
                     // 将需要在前一个基本块中定义的变量加入前一个基本块的 npdVar 集合中，并继续传播
+                    System.out.println("传播要加入npdVar");
                     previousBasicBlock.npdVar.add(variable);
                     // 将前一个基本块添加到 newBasicBlocks 中，待下一轮继续传播
                     basicBlocks.add(previousBasicBlock);
@@ -158,6 +176,7 @@ public class Mem2Reg implements BaseIRPass {
                 }
             } else {
                 for (MemoryInst.Alloca npdVar : bb.npdVar) {
+                    System.out.println("需要插入空phi");
                     // 在基本块的开头插入一个新的phi指令，类型为npdVar的类型
                     var phiInst = new MemoryInst.Phi(npdVar.allocatedType, 0);
 //                    System.out.println("phi:" + phiInst);
@@ -209,7 +228,7 @@ public class Mem2Reg implements BaseIRPass {
                 var alloca = entry.getKey();
                 var phiInst = entry.getValue();
                 for (BasicBlock previousBasicBlock : bb.preList) {
-//                    System.out.println("fillEmptyPhi中，要把map对(%" + previousBasicBlock.getName() + "," + previousBasicBlock.nowDefMap.get(alloca) + ")加入phi");
+                    System.out.println("fillEmptyPhi中，要把map对(%" + previousBasicBlock.getName() + "," + previousBasicBlock.nowDefMap.get(alloca) + ")加入phi");
                     phiInst.addMapping(previousBasicBlock, previousBasicBlock.nowDefMap.get(alloca));
                 }
             }
