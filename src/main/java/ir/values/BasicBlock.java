@@ -65,6 +65,9 @@ public class BasicBlock extends Value {
     public void fixPhiInBlock(BasicBlock bbHasPhi) {
         for (int i = 0; i < useList.size(); i++) {
             Use use = useList.get(i);
+            if (use.getUser() instanceof MemoryInst.Phi phiInst && phiInst.node.getParentList() == null) {
+                System.out.println("这个phi没parentlist：" + phiInst);
+            }
             if (use.getUser() instanceof MemoryInst.Phi phiInst && phiInst.getBB() == bbHasPhi) {
                 System.out.println("fixPhiInBlock" + phiInst);
                 System.out.println("size:" + phiInst.operandList.size());
@@ -108,7 +111,8 @@ public class BasicBlock extends Value {
     // 用于基本块的替换在phi出现的
     public void replaceAllPhiUseWith(BasicBlock v) {
 
-        for (Use use : useList) {
+        for (int i = 0; i < useList.size(); i++) {
+            Use use = useList.get(i);
             if (use.getUser() instanceof MemoryInst.Phi phiInst) {
                 use.setValue(v);
                 v.useList.add(use);
@@ -116,6 +120,8 @@ public class BasicBlock extends Value {
                 int oldPos = phiInst.opMap.get(this);
                 phiInst.opMap.put(v, oldPos);
                 phiInst.opMap.remove(this); // 移除旧的映射关系
+                useList.remove(use); // 我觉得要在本块删掉, 块的和其他不一样，块可能还会保留，要维护uselist
+                i--;
             }
 
         }
@@ -123,10 +129,13 @@ public class BasicBlock extends Value {
 
     // 替换所有的Br
     public void replaceAllBrUseWith(BasicBlock v) {
-        for (Use use : useList) {
+        for (int i = 0; i < useList.size(); i++) {
+            Use use = useList.get(i);
             if (use.getUser() instanceof TerminatorInst.Br BrInst) {
                 use.setValue(v);
                 v.useList.add(use);
+                useList.remove(use); // 我觉得要在本块删掉, 块的和其他不一样，块可能还会保留，要维护uselist
+                i--;
             }
 
         }

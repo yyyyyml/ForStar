@@ -44,6 +44,7 @@ public abstract class Value {
             use.setValue(v);
             v.useList.add(use);
         }
+        useList.clear();
     }
 
     // 没用
@@ -72,11 +73,23 @@ public abstract class Value {
 
         for (int index = 0; index < useList.size(); index++) {
             if (use == useList.get(index)) {
-                useList.remove(index);
+                useList.remove(use);
+//                System.out.println("removeUse: "+use.getUser().getName()+"中的"+use.getValue().getName());
                 break;
             }
         }
     }
+
+//    // 用于删去所有的use
+//    public void removeAllUse(Use use) {
+//
+//        for (int index = 0; index < useList.size(); index++) {
+//            if (use == useList.get(index)) {
+//                useList.remove(index);
+//                break;
+//            }
+//        }
+//    }
 //    public boolean isConst() {
 //        if (this instanceof Constant) {
 //            if (this instanceof Constant.ConstantArray) {

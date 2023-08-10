@@ -57,7 +57,7 @@ public class ConstantExp_Derivation implements BaseIRPass{
 //                                }
 
 
-//                                inst.removeAllOperand();
+                                inst.removeAllOperand();
                                 instInode.removeSelf();
 //                                tB.node.removeSelf();
                             }
@@ -84,7 +84,7 @@ public class ConstantExp_Derivation implements BaseIRPass{
 //                                }
 
 
-//                                inst.removeAllOperand();
+                                inst.removeAllOperand();
                                 instInode.removeSelf();
 //                                fB.node.removeSelf();
                             }
@@ -92,7 +92,7 @@ public class ConstantExp_Derivation implements BaseIRPass{
                         else {
                             Value v = calculate(inst);
                             inst.replaceAllUseWith(v);
-//                            inst.removeAllOperand();
+                            inst.removeAllOperand();
                             instInode.removeSelf();
                         }
                     }

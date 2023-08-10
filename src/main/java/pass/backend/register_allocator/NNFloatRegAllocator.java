@@ -377,12 +377,12 @@ public class NNFloatRegAllocator implements BaseBackendPass {
         }
 
         sortedLiveIntervalList = sortByStart();
-//        for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
-//            System.out.println("Register: vr_f" + entry.getKey().toString());
-//            System.out.println("Start: " + entry.getValue().getStart());
-//            System.out.println("End: " + entry.getValue().getEnd());
-//            System.out.println();
-//        }
+        for (Map.Entry<Integer, LiveInterval> entry : sortedLiveIntervalList) {
+            System.out.println("Register: vr_f" + entry.getKey().toString());
+            System.out.println("Start: " + entry.getValue().getStart());
+            System.out.println("End: " + entry.getValue().getEnd());
+            System.out.println();
+        }
     }
 
     private void linearScan() {

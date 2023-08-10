@@ -48,21 +48,23 @@ public class PassDriver {
         if (isPass) irPassList.add(new AddConstMerge()); // 多个常数相加
         if (isPass) irPassList.add(new GlobalVariableDerive()); // 只初始化一次的全局变量当作常量传播
         if (isPass) irPassList.add(new CommonSubexpressionElimination()); // 简单的子表达式消除
-        if (isPass) irPassList.add(new Inline()); // 隐藏功能用例36CE,但性能用例全AC
+        if (isPass) irPassList.add(new Inline()); // 隐藏功能用例36CE,但性能用例全AC ——> 已经没问题了，现在全部AC
         if (isPass) irPassList.add(new CommonSubexpressionElimination()); // 内联后再做一次简单的子表达式消除
         if (isPass) irPassList.add(new AddSameMerge()); // 相同的数连续相加改为乘法
         if (isPass) irPassList.add(new PhiMerge()); // 再合并一下phi
         if (isPass) irPassList.add(new DeadCodeEliminate()); // 可以用了，但效果似乎一般
+        if (isPass) irPassList.add(new ConstantExp_Derivation()); // 常量传播,隐藏28会报错，性能没问题 ——> 已经没问题了，现在全部AC
+        if (isPass) irPassList.add(new BlockMergeWithPhi()); // 常量传播后可以用一下，目前只是消除死基本块
 
 
-        if (true) backendPassList.add(new BasicOptimize());////lwsw优化和乘法优化
+        if (isPass) backendPassList.add(new BasicOptimize());
         if (isPass) backendPassList.add(new NNRegAllocator()); // 有活跃变量分析的寄存器分配
         if (isPass) backendPassList.add(new NNFloatRegAllocator()); // 有活跃变量分析的寄存器分配
 //       backendPassList.add(new NewRegAllocator());
         if (!isPass) backendPassList.add(new RegisterAllocator()); // 普通的寄存器分配
 //       backendPassList.add(new NewFloatRegAllocator());
         if (!isPass) backendPassList.add(new FloatRegisterAllocator()); // 普通的寄存器分配
-        //if (true) backendPassList.add(new BasicOptimize());//lwsw优化和乘法优化
+//        if (false) backendPassList.add(new BasicOptimize());
         backendPassList.add(new LargeNumberPass()); // 一些指令12位立即数的限制处理
     }
 

@@ -263,6 +263,8 @@ public class MemoryInst {
         public String toString() {
             StringBuilder builder = new StringBuilder();
 
+//            if (this.node.getParentList() == null) builder.append("null ");
+//            else builder.append(this.getBB().getName()+" ");
             // Append the result name and type
             builder.append(getName());
             builder.append(" = phi ");

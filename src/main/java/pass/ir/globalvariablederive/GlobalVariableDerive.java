@@ -28,7 +28,7 @@ public class GlobalVariableDerive implements BaseIRPass {
                 var ldInst = (Instruction) use.getUser();
                 Constant newConst = gv.init;
                 ldInst.replaceAllUseWith(newConst);
-//                ldInst.removeAllOperand();
+//                ldInst.removeAllOperand();//TODO:我不知道为什么加这个会错
                 ldInst.node.removeSelf();
             }
             module.globalVariableList.remove(i);

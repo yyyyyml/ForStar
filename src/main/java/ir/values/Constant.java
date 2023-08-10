@@ -12,7 +12,7 @@ import java.util.Objects;
  * 常量类 继承自User类
  * 整型常量、浮点常量、数组常量定义在内部
  * <p>
- * TODO:数组待实现
+ *
  */
 public class Constant extends User {
     public Constant(Type type) {

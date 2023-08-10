@@ -3,7 +3,6 @@ package pass.ir.deadcode_eliminate;
 import ir.Instruction;
 import ir.Instructions.TerminatorInst;
 import ir.Module;
-import ir.Use;
 import ir.values.BasicBlock;
 import ir.values.Function;
 import pass.ir.BaseIRPass;
@@ -30,22 +29,14 @@ public class DeadCodeEliminate implements BaseIRPass {
                         if (inst.needName && inst.useList.isEmpty() && !(inst instanceof TerminatorInst.Call)) {
                             // 看没有使用这个指令结果的，没有说明这个指令没用，删
                             removeInst = true;
-
-                            if (!inst.operandList.isEmpty()) {
-                                // 有操作数，从useList中移除
-                                for (Use opUse : inst.operandList) {
-                                    var val = opUse.getValue();
-//                                    System.out.println(val);
-                                    val.removeUse(opUse);
-                                }
-                            }
                         }
 
                         if (removeInst) {
+                            inst.removeAllOperand();
                             instInode.removeSelf();
                             needEliminate = true;
 
-                            System.out.println("删掉：" + i);
+                            System.out.println("删掉：" + inst);
 //                            throw new RuntimeException("优化了");
                         }
                         i++;
