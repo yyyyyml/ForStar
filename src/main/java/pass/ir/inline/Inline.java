@@ -15,6 +15,7 @@ import util.IList;
 import java.util.*;
 
 public class Inline implements BaseIRPass {
+    boolean retNeedDo = false;
     Map<Value, Value> valueMap = new HashMap<>();
     Map<BasicBlock, BasicBlock> bbMap = new HashMap<>();
     Function curFunc = null;
@@ -23,7 +24,7 @@ public class Inline implements BaseIRPass {
     BasicBlock curRetBB = null;
 
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
         System.out.println("Inline");
         canInline(module); // 标记能做内联的函数
 
@@ -46,6 +47,8 @@ public class Inline implements BaseIRPass {
                             if (!callee.canInline)
                                 continue; // 不能内联，不管
                             else {
+
+                                initInstruction(callee); // 把那些属性清空
                                 // 处理内联
                                 // 先只处理单基本块的内联吧
                                 curFunc = callee;
@@ -175,6 +178,7 @@ public class Inline implements BaseIRPass {
                                                 checkClone(newInst); // 检查一遍有没有未替换成功的
                                         }
                                     }
+                                    if (returnPhi != null) checkClone(returnPhi); // phi不在以上链表里，要单独处理
 
 //                                if (isFirst) {
 //                                    System.out.println("是第一个");
@@ -198,9 +202,21 @@ public class Inline implements BaseIRPass {
             }
 
         }
-        deleteInlineFunction(module);
+//        deleteInlineFunction(module);
         moveAlloca(module);
         fixPreNextList(module);
+        return retNeedDo;
+    }
+
+    private void initInstruction(Function func) {
+        for (IList.INode<BasicBlock, Function> bbInode : func.list) {
+            BasicBlock bb = bbInode.getElement();
+            for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
+                Instruction inst = instInode.getElement();
+                inst.needPhiCheck = true;
+//                inst.isInline = false;
+            }
+        }
     }
 
     private void fixPreNextList(Module module) {
@@ -289,11 +305,7 @@ public class Inline implements BaseIRPass {
                 // 把里面指令也删了？
                 for (IList.INode<BasicBlock, Function> bbInode : func.list) {
                     BasicBlock bb = bbInode.getElement();
-                    for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
-                        Instruction inst = instInode.getElement();
-                        inst.removeAllOperand();
-                        instInode.removeSelf();
-                    }
+                    bb.removeSelfIncludingInst();
                 }
                 funcInode.removeSelf();
             }

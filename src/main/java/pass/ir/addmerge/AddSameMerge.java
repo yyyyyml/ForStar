@@ -13,8 +13,10 @@ import util.IList;
 import static ir.values.Constant.ConstantInt.getConstantInt;
 
 public class AddSameMerge implements BaseIRPass {
+    boolean retNeedDo = false;
+
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.isBuiltin()) continue;
@@ -87,6 +89,7 @@ public class AddSameMerge implements BaseIRPass {
                                     tempType = inst.getType();
                                     inst.removeAllOperand();
                                     instInode.removeSelf();
+                                    retNeedDo = true;
                                 }
                             }
                         }
@@ -97,5 +100,6 @@ public class AddSameMerge implements BaseIRPass {
             }
 
         }
+        return retNeedDo;
     }
 }

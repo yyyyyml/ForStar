@@ -11,8 +11,11 @@ import util.IList;
 import java.util.LinkedList;
 
 public class BlockMerge implements BaseIRPass {
+    boolean retNeedDo = false;
+
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
+
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.isBuiltin()) continue;
@@ -24,6 +27,7 @@ public class BlockMerge implements BaseIRPass {
             normalCombine(func);
 
         }
+        return retNeedDo;
     }
 
     private void onlyBrCombine(Function func) {

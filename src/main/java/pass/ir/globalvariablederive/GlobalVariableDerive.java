@@ -8,8 +8,10 @@ import ir.values.Constant;
 import pass.ir.BaseIRPass;
 
 public class GlobalVariableDerive implements BaseIRPass {
+    boolean retNeedDo = false;
+
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
         boolean isStore = false;
         for (int i = 0; i < module.globalVariableList.size(); i++) {
             var gv = module.globalVariableList.get(i);
@@ -34,5 +36,6 @@ public class GlobalVariableDerive implements BaseIRPass {
             module.globalVariableList.remove(i);
             i--;
         }
+        return retNeedDo;
     }
 }

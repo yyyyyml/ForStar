@@ -14,7 +14,8 @@ import java.util.Objects;
 
 public class ConstantExp_Derivation implements BaseIRPass{
     @Override
-    public void run(Module module){
+    public boolean run(Module module) {
+        boolean retNeedDo = false;
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             for (IList.INode<BasicBlock, Function> bbInode : func.list) {
@@ -22,8 +23,9 @@ public class ConstantExp_Derivation implements BaseIRPass{
 
                 for (IList.INode<Instruction, BasicBlock> instInode : bb.list) {
                     Instruction inst = instInode.getElement();
-                    if(canDerive(inst)){
-                        if(inst.getTag().equals(Instruction.TAG.BR) ) {
+                    if (canDerive(inst)) {
+                        retNeedDo = true;
+                        if (inst.getTag().equals(Instruction.TAG.BR)) {
                             var c1 = inst.getOperandAt(0);
                             var tB = (ir.values.BasicBlock) inst.getOperandAt(1);
                             var fB = (ir.values.BasicBlock) inst.getOperandAt(2);
@@ -100,6 +102,7 @@ public class ConstantExp_Derivation implements BaseIRPass{
 
             }
         }
+        return retNeedDo;
     }
     public boolean canDerive(Instruction inst){
 

@@ -101,6 +101,7 @@ public class Emitter {
                         Instruction inst = instInode.getElement();
                         sb.append("\t");
                         sb.append(inst.toString());
+//                        sb.append(" uselist.size: "+ inst.useList.size());
                         sb.append("\n");
                     }
                 }

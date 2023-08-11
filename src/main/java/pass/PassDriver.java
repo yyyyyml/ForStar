@@ -34,57 +34,70 @@ import java.util.ArrayList;
 public class PassDriver {
     ArrayList<BaseIRPass> irPassList;
     ArrayList<BaseBackendPass> backendPassList;
+    boolean isPass;
 
     public PassDriver(boolean isPass) {
-        isPass = true;
+        this.isPass = isPass;
+        this.isPass = true;
         irPassList = new ArrayList<>();
         backendPassList = new ArrayList<>();
-        if (isPass) {
-            irPassList.add(new MultiRetEliminate()); // 消除没用的ret
-            irPassList.add(new BlockMerge()); // 先做基本块合并，有phi以后比较麻烦
-            irPassList.add(new Mem2Reg()); // 有phi了
-            irPassList.add(new PhiMerge()); // 合并一下可合并的phi
-            irPassList.add(new Inline()); // 隐藏功能用例36CE,但性能用例全AC ——> 已经没问题了，现在全部AC
-            irPassList.add(new GlobalVariableDerive()); // 只初始化一次的全局变量当作常量传播
-            irPassList.add(new GlobalToLocal()); // 全局变量转局部,要inline后做，里面自带一个mem2reg和phiMerge
-            irPassList.add(new ConstantExp_Derivation()); // 常量传播
-            irPassList.add(new BlockMergeWithPhi()); // 常量传播后可以用一下，目前只是消除死基本块
-
-            irPassList.add(new AddConstMerge()); // 多个常数相加
-            irPassList.add(new CommonSubexpressionElimination()); // 简单的子表达式消除
-            irPassList.add(new AddSameMerge()); // 相同的数连续相加改为乘法
-
-            irPassList.add(new DeadCodeEliminate()); // 可以用了，但效果似乎一般
-
-
-            // 后端
-            backendPassList.add(new BasicOptimize());
-            backendPassList.add(new NNRegAllocator()); // 有活跃变量分析的寄存器分配
-            backendPassList.add(new NNFloatRegAllocator()); // 有活跃变量分析的寄存器分配
-//        if (false) backendPassList.add(new BasicOptimize());
-            backendPassList.add(new LargeNumberPass()); // 一些指令12位立即数的限制处理
-        } else {
-            irPassList.add(new MultiRetEliminate()); // 消除没用的ret
-            irPassList.add(new BlockMerge()); // 先做基本块合并，有phi以后比较麻烦
-
-            backendPassList.add(new RegisterAllocator()); // 普通的寄存器分配
-            backendPassList.add(new FloatRegisterAllocator()); // 普通的寄存器分配
-            backendPassList.add(new LargeNumberPass()); // 一些指令12位立即数的限制处理
-        }
-
-
     }
 
     public void runIR(Module module) {
-        for (BaseIRPass passClass : irPassList) {
-            passClass.run(module);
+        if (isPass) {
+            new MultiRetEliminate().run(module); // 消除没用的ret
+            new BlockMerge().run(module); // 先做基本块合并，有phi以后比较麻烦
+            new Mem2Reg().run(module); // 有phi了
+            new PhiMerge().run(module); // 合并一下可合并的phi
+            // Inline前不太能做很多优化，会导致Inline出问题
+            new Inline().run(module); // 隐藏功能用例36CE,但性能用例全AC ——> 已经没问题了，现在全部AC
+            new GlobalVariableDerive().run(module); // 只初始化一次的全局变量当作常量传播
+            new GlobalToLocal().run(module); // 全局变量转局部,要inline后做，里面自带一个mem2reg和phiMerge
+            basicSimplify(module); // 基础优化（常量传播，死块消除，连续加法，phi合并，死代码消除）
+
+
+        } else {
+            new MultiRetEliminate().run(module); // 消除没用的ret
+            new BlockMerge().run(module); // 先做基本块合并，有phi以后比较麻烦
         }
+//        for (BaseIRPass passClass : irPassList) {
+//            passClass.run(module);
+//        }
     }
 
     public void runBackend(RISCModule riscModule) {
-        for (BaseBackendPass passClass : backendPassList) {
-            passClass.run(riscModule);
+        if (isPass) {
+            // 后端
+            new BasicOptimize().run(riscModule);
+            new NNRegAllocator().run(riscModule); // 有活跃变量分析的寄存器分配
+            new NNFloatRegAllocator().run(riscModule); // 有活跃变量分析的寄存器分配
+            new LargeNumberPass().run(riscModule); // 一些指令12位立即数的限制处理
+        } else {
+            new RegisterAllocator().run(riscModule); // 普通的寄存器分配
+            new FloatRegisterAllocator().run(riscModule); // 普通的寄存器分配
+            new LargeNumberPass().run(riscModule); // 一些指令12位立即数的限制处理
         }
+//        for (BaseBackendPass passClass : backendPassList) {
+//            passClass.run(riscModule);
+//        }
+
+    }
+
+    // 都是些可以重复做的优化
+    private void basicSimplify(Module module) {
+        boolean needDo = true;
+        while (needDo) {
+            needDo = false;
+            needDo |= new ConstantExp_Derivation().run(module); // 常量传播
+            needDo |= new BlockMergeWithPhi().run(module); // 常量传播后可以用一下，目前只是消除死基本块
+            needDo |= new AddConstMerge().run(module); // 多个常数相加
+            needDo |= new CommonSubexpressionElimination().run(module); // 简单的子表达式消除
+            needDo |= new AddSameMerge().run(module); // 相同的数连续相加改为乘法
+            needDo |= new PhiMerge().run(module); // 合并一下可合并的phi
+            needDo |= new DeadCodeEliminate().run(module); // 可以用了，但效果似乎一般
+//            needDo = false;
+        }
+
     }
 
 

@@ -10,8 +10,10 @@ import pass.ir.BaseIRPass;
 import util.IList;
 
 public class PhiMerge implements BaseIRPass {
+    boolean retNeedDo = false;
+
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.isBuiltin()) continue;
@@ -32,7 +34,11 @@ public class PhiMerge implements BaseIRPass {
                             }
                         }
                         if (count == 1) {
-                            // 说明可以替换
+                            // 单phi也不一定可以，要判断这种情况
+                            // %4 = phi i32 [%7, %6]
+                            // %7 = add i32 %4, 2
+//                            for (int i = 0; i < newValue.)
+                            retNeedDo = true;
                             phiInst.replaceAllUseWith(newValue);
                             phiInst.removeAllOperand();
                             phiInst.node.removeSelf();
@@ -44,5 +50,6 @@ public class PhiMerge implements BaseIRPass {
             }
 
         }
+        return retNeedDo;
     }
 }

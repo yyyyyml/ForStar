@@ -17,17 +17,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GlobalToLocal implements BaseIRPass {
+    boolean retNeedDo = false;
     Map<GlobalVariable, Instruction> gvToMove = new HashMap<>();
 
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
         if (module.functionList.size() != 14) {
 //            System.out.println("函数数量："+module.functionList.size());
 //            for (IList.INode<Function, Module> funcInode : module.functionList) {
 //                Function func = funcInode.getElement();
 //                System.out.println(func);
 //            }
-            return; // 如果除了main还有别的函数，不做这个优化
+            return false; // 如果除了main还有别的函数，不做这个优化
         }
         System.out.println("可以做GlobalToLocal");
         boolean needMem2reg = false;
@@ -85,6 +86,7 @@ public class GlobalToLocal implements BaseIRPass {
             phiMerge.run(module);
 
         }
+        return retNeedDo;
 
 
     }

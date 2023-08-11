@@ -9,8 +9,11 @@ import pass.ir.BaseIRPass;
 import util.IList;
 
 public class BlockMergeWithPhi implements BaseIRPass {
+    boolean retNeedDo = false;
+
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
+
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.isBuiltin()) continue;
@@ -20,6 +23,7 @@ public class BlockMergeWithPhi implements BaseIRPass {
 //            onlyBrCombine(func); // 不是都能合，先不管
 
         }
+        return retNeedDo;
     }
 
     private void deadBlockEliminate(Function func) {
@@ -36,13 +40,34 @@ public class BlockMergeWithPhi implements BaseIRPass {
                     visitFirst = true;
                     continue;
                 }
+                // 跳过删过的
+                if (bb.isDelete) continue;
                 if (bb.preList.size() == 0) {
+                    // 消除没有前驱的块
+                    retNeedDo = true;
                     processed = true;
                     for (BasicBlock nextBB : bb.nextList) {
                         nextBB.preList.remove(bb);
                         bb.fixPhiInBlock(nextBB);
                     }
-                    bb.node.removeSelf();
+                    bb.removeSelfIncludingInst();
+                } else if (bb.preList.size() == 1) {
+                    // 检查是不是两个相互循环，其他块无法到达的块
+                    var preBB = bb.preList.get(0);
+                    if (preBB.preList.size() == 1 && preBB.preList.get(0) == bb) {
+                        retNeedDo = true;
+                        processed = true;
+                        for (BasicBlock nextBB : bb.nextList) {
+                            nextBB.preList.remove(bb);
+                            bb.fixPhiInBlock(nextBB);
+                        }
+                        bb.removeSelfIncludingInst();
+                        for (BasicBlock nextBB : preBB.nextList) {
+                            nextBB.preList.remove(bb);
+                            preBB.fixPhiInBlock(nextBB);
+                        }
+                        preBB.removeSelfIncludingInst();
+                    }
                 }
             }
         }

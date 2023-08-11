@@ -11,8 +11,11 @@ import util.IList;
 import static ir.values.Constant.ConstantInt.getConstantInt;
 
 public class AddConstMerge implements BaseIRPass {
+    boolean retNeedDo = false;
+
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
+
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.isBuiltin()) continue;
@@ -29,6 +32,7 @@ public class AddConstMerge implements BaseIRPass {
                             if (inst.getOperandAt(1) instanceof Constant.ConstantInt thisRightOp
                                     && nextInst.getOperandAt(1) instanceof Constant.ConstantInt nextRightOp
                                     && inst == nextInst.getOperandAt(0)) {
+                                retNeedDo = true;
                                 // 可以合并
 //                                System.out.println("被使用次数：" + inst.useList.size());
 //                                System.out.println(inst.useList.getFirst().getUser());
@@ -49,5 +53,6 @@ public class AddConstMerge implements BaseIRPass {
             }
 
         }
+        return retNeedDo;
     }
 }

@@ -11,8 +11,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class CommonSubexpressionElimination implements BaseIRPass {
+    boolean retNeedDo = false;
+
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
         System.out.println("CSE");
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
@@ -34,6 +36,7 @@ public class CommonSubexpressionElimination implements BaseIRPass {
                         if (curInst.getOperandAt(0).equals(left) && curInst.getOperandAt(1).equals(right) && curInst.getTag() == tag) {
                             instToUse = curInst; // 记录之前出现的相同表达式的指令
                             hasSame = true;
+                            retNeedDo = true;
                             break;
                         } else {
 //                            System.out.println("哪里不同");
@@ -58,6 +61,7 @@ public class CommonSubexpressionElimination implements BaseIRPass {
             }
 
         }
+        return retNeedDo;
     }
 
 

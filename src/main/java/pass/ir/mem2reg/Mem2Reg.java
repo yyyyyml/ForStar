@@ -14,6 +14,7 @@ import util.IList;
 import java.util.*;
 
 public class Mem2Reg implements BaseIRPass {
+    boolean retNeedDo = false;
     private Set<MemoryInst.Alloca> allocaSet;
 
     public Mem2Reg() {
@@ -21,7 +22,7 @@ public class Mem2Reg implements BaseIRPass {
     }
 
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.isBuiltin()) continue;
@@ -31,7 +32,10 @@ public class Mem2Reg implements BaseIRPass {
             allocaSet.clear();
             getPromotableAllocaSet(func);
 //            System.out.println(allocaSet);
-            if (allocaSet.isEmpty()) System.out.println("没有需要提升的alloca");
+            if (allocaSet.isEmpty()) {
+                System.out.println("没有需要提升的alloca");
+                return false;
+            }
 
             // 要清空每个块的相关属性信息，可能多次mem2reg
             initBasicBlock(func);
@@ -56,6 +60,7 @@ public class Mem2Reg implements BaseIRPass {
             // TODO:貌似不可行
             deriveSinglePhi(func);
         }
+        return true;
     }
 
     private void initBasicBlock(Function func) {

@@ -9,8 +9,10 @@ import pass.ir.BaseIRPass;
 import util.IList;
 
 public class DeadCodeEliminate implements BaseIRPass {
+    boolean retNeedDo = false;
+
     @Override
-    public void run(Module module) {
+    public boolean run(Module module) {
         for (IList.INode<Function, Module> funcInode : module.functionList) {
             Function func = funcInode.getElement();
             if (func.isBuiltin()) continue;
@@ -35,6 +37,7 @@ public class DeadCodeEliminate implements BaseIRPass {
                             inst.removeAllOperand();
                             instInode.removeSelf();
                             needEliminate = true;
+                            retNeedDo = true;
 
                             System.out.println("删掉：" + inst);
 //                            throw new RuntimeException("优化了");
@@ -48,5 +51,6 @@ public class DeadCodeEliminate implements BaseIRPass {
 
 
         }
+        return retNeedDo;
     }
 }
