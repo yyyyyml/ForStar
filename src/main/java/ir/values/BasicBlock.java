@@ -26,6 +26,8 @@ public class BasicBlock extends Value {
     public Map<MemoryInst.Alloca, MemoryInst.Phi> phiMap = new HashMap<>();
     public Map<MemoryInst.Alloca, Value> nowDefMap = new HashMap<>();
 
+    public boolean isDelete = false;
+
     public BasicBlock(String name) {
         super(Type.LabelType.getType());
         this.preList = new ArrayList<>();
@@ -140,4 +142,15 @@ public class BasicBlock extends Value {
 
         }
     }
+
+    public void removeSelfIncludingInst() {
+        this.node.removeSelf();
+        isDelete = true;
+        for (IList.INode<Instruction, BasicBlock> instInode : this.list) {
+            Instruction inst = instInode.getElement();
+            inst.removeAllOperand();
+            instInode.removeSelf();
+        }
+    }
+
 }

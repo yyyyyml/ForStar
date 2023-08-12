@@ -22,6 +22,7 @@ import pass.ir.globalvariablederive.GlobalVariableDerive;
 import pass.ir.inline.Inline;
 import pass.ir.mem2reg.Mem2Reg;
 import pass.ir.multiret_eliminate.MultiRetEliminate;
+import pass.ir.nophi.NoPhi;
 import pass.ir.phimerge.PhiMerge;
 
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ public class PassDriver {
             basicSimplify(module); // 基础优化（常量传播，死块消除，连续加法，phi合并，死代码消除）
 
 
+            new NoPhi().run(module); // 后端前最后一步，尝试把phi替换掉，不SSA
         } else {
             new MultiRetEliminate().run(module); // 消除没用的ret
             new BlockMerge().run(module); // 先做基本块合并，有phi以后比较麻烦

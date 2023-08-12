@@ -202,7 +202,7 @@ public class Inline implements BaseIRPass {
             }
 
         }
-//        deleteInlineFunction(module);
+        deleteInlineFunction(module);
         moveAlloca(module);
         fixPreNextList(module);
         return retNeedDo;
