@@ -1,8 +1,10 @@
 package pass.ir.blockmerge;
 
 import ir.Instruction;
+import ir.Instructions.MemoryInst;
 import ir.Instructions.TerminatorInst;
 import ir.Module;
+import ir.Use;
 import ir.values.BasicBlock;
 import ir.values.Function;
 import pass.ir.BaseIRPass;
@@ -20,7 +22,7 @@ public class BlockMergeWithPhi implements BaseIRPass {
             // 先消除一下死基本块
             deadBlockEliminate(func);
             // 把单br的块合并
-//            onlyBrCombine(func); // 不是都能合，先不管
+            onlyBrCombine(func); // 不是都能合，先不管
 
         }
         return retNeedDo;
@@ -82,7 +84,8 @@ public class BlockMergeWithPhi implements BaseIRPass {
                 BasicBlock bb = bbInode.getElement();
                 // 判断是否存在只有一条br的块
                 if (bb.list.size() == 1 && func.list.getFirst() != bbInode &&
-                        bb.list.getFirst().getElement().getTag() == Instruction.TAG.BR) {
+                        bb.list.getFirst().getElement().getTag() == Instruction.TAG.BR &&
+                        !usedByPhi(bb)) {
                     removeOnlyBrBlock(bb);
                     needDo = true;
                 }
@@ -116,8 +119,20 @@ public class BlockMergeWithPhi implements BaseIRPass {
         }
     }
 
+    private boolean usedByPhi(BasicBlock bb) {
+        for (int i = 0; i < bb.useList.size(); i++) {
+            Use use = bb.useList.get(i);
+            if (use.getUser() instanceof MemoryInst.Phi) {
+                System.out.println("有phi不能消除基本块");
+                return true;
+            }
+            ;
+        }
+        return false;
+    }
+
     private void removeOnlyBrBlock(BasicBlock bb) {
-        System.out.println("消除块有用了！");
+        System.out.println("消除单br基本块");
         var nextBB = bb.nextList.get(0);
         bb.replaceAllBrUseWith(nextBB); // 只可能有一个后继,换Br
         bb.fixPhi(bb.preList); // 修正所有用到这个块的phi
@@ -127,6 +142,6 @@ public class BlockMergeWithPhi implements BaseIRPass {
             nextBB.preList.remove(bb);
             nextBB.preList.add(preBB);
         }
-        bb.node.removeSelf();
+        bb.removeSelfIncludingInst();
     }
 }
