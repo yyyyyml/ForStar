@@ -24,6 +24,7 @@ public class RISCFunction {
 
     public HashMap<Value, RISCOperand> valueRISCOperandHashMap;
     public HashMap<RISCOperand, Value> riscOperandValueHashMap;
+    public HashMap<Value,RISCOperand> valueTempPhiMap;
     public HashMap<Value, Integer> funcParameters;
     public HashMap<Value, Integer> myfuncParameters;
     public HashMap<Value,LinkedList<Value>> phiMap;
@@ -58,6 +59,7 @@ public class RISCFunction {
         myfuncParameters = new HashMap<>();
         funcParameters = new HashMap<>();
         phiMap = new HashMap<>();
+        valueTempPhiMap = new HashMap<>();
         blockPhiMap = new HashMap<>();
         blockHashMap = new HashMap<>();
         intMyparaIsDef = new boolean[8];
@@ -141,16 +143,14 @@ public class RISCFunction {
                     }
                 }
                 else if(curInst.getTag() == Instruction.TAG.PHI){
-
-
-
-
                      //phi初版
                     RISCOperand dst;
+                    RISCOperand tempDst;
                     if(curInst.getType().isIntegerType()||curInst.getType().isPointerType()){
                         phiCount++;
                         //虚拟寄存器
                         dst = new VirtualRegister(virtualRegisterIndex++);
+                        tempDst = new VirtualRegister(virtualRegisterIndex++);
                         //栈
 //                        localStackIndex += 8;
 //                        dst = new Memory(localStackIndex, 1);
@@ -159,12 +159,14 @@ public class RISCFunction {
                         floatPhiCount++;
                         //虚拟寄存器
                         dst = new FloatVirtualRegister(floatVirtualRegisterIndex++);
+                        tempDst = new FloatVirtualRegister(floatVirtualRegisterIndex++);
                         //栈
 //                        localStackIndex += 8;
 //                        dst = new Memory(localStackIndex, 1);
                     }
-                    System.out.println(curInst.getName()+"->"+dst.emit());
+                    //System.out.println(curInst.getName()+"->"+dst.emit());
                     valueRISCOperandHashMap.put(curInst,dst);
+                    valueTempPhiMap.put(curInst,tempDst);
                     int paraCount = curInst.getNumOP();
                     if(paraCount % 2 != 0 ){
                         throw new RuntimeException("这个phi的操作数不是偶数"+curInst);

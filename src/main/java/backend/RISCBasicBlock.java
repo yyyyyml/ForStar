@@ -30,6 +30,7 @@ public class RISCBasicBlock {
     public int i;
     public boolean visitedLive = false;
     public boolean visitedLiveFloat = false;
+    public boolean isPhiOld = false;
     public LinkedList<String> preBlocknameList = new LinkedList<>();
     public LinkedList<String> nextBlocknameList = new LinkedList<>();
     public LinkedList<RISCBasicBlock> prelist = new LinkedList<>();
@@ -38,7 +39,7 @@ public class RISCBasicBlock {
     public int lastId;
     public RealRegister tempRegister = new RealRegister(13, 11);
     public FloatRealRegister floatTempRegister = new FloatRealRegister(23 + 18);
-    public HashMap<Value, RISCOperand> phiVrTempMap = new HashMap<>();
+    public HashMap<Value,RISCOperand> phiVrTempMap = new HashMap<>();
     public LinkedList<Value> phiList = new LinkedList<>();
     public int firstBrposition = -1;
 
@@ -198,7 +199,7 @@ public class RISCBasicBlock {
                 case ADD, SUB, MUL, DIV, FADD, FSUB, FDIV, FMUL -> translateCaculate(curInst);
                 case CALL -> translateCall(curInst);
                 case BR -> translateBr(curInst,pretInst);
-                case NE, LT, LE, GT, GE, EQ, FEQ, FGE, FGT, FLE, FLT, FNE -> translateCond(curInst, nextInst);
+                case NE, LT, LE, GT, GE, EQ, FEQ, FGE, FGT, FLE, FLT, FNE -> translateCond(curInst,nextInst);
                 case GEP -> translateGep(curInst);
                 case FPTOSI -> translateFtoI(curInst);
                 case SITOFP -> translateItoF(curInst);
@@ -251,7 +252,14 @@ public class RISCBasicBlock {
             for (Pair<Value,Value> pair : list){
                 Value vd = pair.a;
                 Value vs = pair.b;
-                RISCOperand dst = getOperand(vd);
+                RISCOperand dst = null;
+                if (isPhiOld){
+                    dst = getOperand(vd);
+                }
+                else {
+                    dst = riscFunc.valueTempPhiMap.get(vd);
+                }
+
                 RISCOperand src = getOperand(vs);
                 if(dst != src)
                 {
@@ -295,14 +303,17 @@ public class RISCBasicBlock {
     }
 
     private void translatePhi(Instruction curInst) {
-        RISCOperand temp = getOperand(curInst);
-        if (temp instanceof Register) {
-            phiVrTempMap.put(curInst, temp);
-            phiList.add(curInst);
-            VirtualRegister vr = getNewVr();
-            MvInstruction mv = new MvInstruction(vr, temp);
-            instructionList.add(mv);
-            riscFunction.valueRISCOperandHashMap.put(curInst, vr);
+        if(!isPhiOld)
+        {
+            RISCOperand temp = riscFunction.valueTempPhiMap.get(curInst);
+            if (temp instanceof Register) {
+                //phiVrTempMap.put(curInst, temp);
+                //phiList.add(curInst);
+                //VirtualRegister vr = getNewVr();
+                RISCOperand dst = getOperand(curInst);
+                MvInstruction mv = new MvInstruction(dst, temp);
+                instructionList.add(mv);
+            }
         }
     }
 
@@ -461,7 +472,7 @@ public class RISCBasicBlock {
                     Register basicAdd = ((Memory) basicAddress).basicAddress;
                     RISCOperand dst = getOperand(curInst);
                     int s = containedSize * 4;
-                    Register vr1 = tempRegister;
+                    Register vr1 = getNewVr();
                     LiInstruction li1 = new LiInstruction(vr1, new Immediate(s));
                     instructionList.add(li1);
                     //计算地址增量，放入vr中
@@ -548,7 +559,7 @@ public class RISCBasicBlock {
                     Register basicAdd = ((Memory) basicAddress).basicAddress;
                     RISCOperand dst = getOperand(curInst);
                     int s = 4 * totalSize;
-                    Register vr1 = tempRegister;
+                    Register vr1 = getNewVr();
                     LiInstruction li1 = new LiInstruction(vr1, new Immediate(s));
                     instructionList.add(li1);
                     //计算地址增量，放入vr中
@@ -1748,12 +1759,12 @@ public class RISCBasicBlock {
             System.out.println("BUG is log2");
             return -1;
         }
-        ;
-        int count = 0;
-        while (x > 1) {
-            x >>= 1;
-            count++;
-        }
-        return count;
+        return (int) (Math.log(x)/Math.log(2));
+        //  int count = 0;
+//        while (x > 1) {
+//            x >>= 1;
+//            count++;
+//        }
+//        return count;
     }
 }

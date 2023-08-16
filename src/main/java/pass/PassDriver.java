@@ -51,7 +51,7 @@ public class PassDriver {
             new Mem2Reg().run(module); // 有phi了
             new PhiMerge().run(module); // 合并一下可合并的phi
             // Inline前不太能做很多优化，会导致Inline出问题
-            new Inline().run(module); // 隐藏功能用例36CE,但性能用例全AC ——> 已经没问题了，现在全部AC
+            //new Inline().run(module); // 隐藏功能用例36CE,但性能用例全AC ——> 已经没问题了，现在全部AC
             new GlobalVariableDerive().run(module); // 只初始化一次的全局变量当作常量传播
             new GlobalToLocal().run(module); // 全局变量转局部,要inline后做，里面自带一个mem2reg和phiMerge
             new ConstArrayEliminate().run(module); // 一维常量数组展开
