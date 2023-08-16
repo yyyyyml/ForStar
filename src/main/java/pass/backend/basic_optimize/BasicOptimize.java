@@ -2,10 +2,7 @@ package pass.backend.basic_optimize;
 
 import backend.*;
 import backend.instructions.*;
-import backend.operands.BigImmediate;
-import backend.operands.Immediate;
-import backend.operands.Memory;
-import backend.operands.RealRegister;
+import backend.operands.*;
 import pass.backend.BaseBackendPass;
 
 import java.util.LinkedList;
@@ -25,7 +22,9 @@ public class BasicOptimize implements BaseBackendPass {
                 RISCInstruction preInst = null;
                 if(riscInstList.size()!=0){preInst = riscInstList.get(0);}
                 for (int instIndex = 0; instIndex < riscInstList.size(); instIndex++) {
+
                     RISCInstruction riscInst = riscInstList.get(instIndex);
+                    int curIndex = instIndex+1;
                     //删除不必要的ld和sd
                     if(preInst.type == RISCInstruction.ITYPE.ld){
                         if(riscInst.type == RISCInstruction.ITYPE.sd && preInst.getOperandAt(0)==riscInst.getOperandAt(0) && preInst.getOperandAt(1)==riscInst.getOperandAt(1)){
@@ -60,9 +59,11 @@ public class BasicOptimize implements BaseBackendPass {
                     if(preInst.type == RISCInstruction.ITYPE.li){
                         //简单乘法优化
                         if(riscInst.type == RISCInstruction.ITYPE.mul || riscInst.type == RISCInstruction.ITYPE.mulw){
+                            int step = 0;
                             RISCOperand temp1 = null;
-                            RISCOperand temp2 = null;
+                            //RISCOperand temp2 = null;
                             Boolean xIsNeg = false;
+                            LinkedList<RISCInstruction> tempInstList = new LinkedList<>();
                             int x=1;
                             RISCOperand dst = riscInst.getOperandAt(0);
                             //判断li中的dst是否为mul中的操作数
@@ -76,6 +77,12 @@ public class BasicOptimize implements BaseBackendPass {
                                 preInst = riscInst;
                                 continue;
                             }
+                            //临时寄存器保存
+                            RealRegister tempRegister = new RealRegister(13, 11);
+                            MvInstruction mvInstruction = new MvInstruction(tempRegister,temp1);
+                            tempInstList.add(mvInstruction);
+                            //riscInstList.add(curIndex++,mvInstruction);
+
                             //取出常数
                             if(preInst.getOperandAt(1) instanceof Immediate){
                                 x = ((Immediate) preInst.getOperandAt(1)).getVal();
@@ -88,76 +95,160 @@ public class BasicOptimize implements BaseBackendPass {
                                 x = -x;
                             }
 
-                            int log = riscBB.log2(x);
+                            int log = RISCBasicBlock.log2(x);
                             int number = 1;
                             for (int i = 0; i < log ; i++){
                                  number <<= 1;
                             }
                             int n = x - number;
-                            //小于5步替换
-                            if(n <= 4){
-                                if (instIndex + 1 < riscInstList.size() )
-                                {
-                                    preInst = riscInstList.get(instIndex + 1);
-                                }
+                            int number2 = number<<1;
+                            int n2 = number2 - x;
+
+                            //1步替换
+                            if(n <= 1){
+
+                                //SLLI
+                                SlliInstruction slliInstruction = new SlliInstruction(dst,temp1,new Immediate(log));
+                                riscInstList.add(curIndex++,slliInstruction);
+                                //ADD
                                 AddInstruction addInstruction = new AddInstruction(dst,dst,temp1);
+                                for (int i = 0; i < n ; i++){
+                                    riscInstList.add(curIndex++,addInstruction);
+                                }
+                                //取反
                                 if (xIsNeg){
                                     SubInstruction subInstruction = new SubInstruction(dst,new RealRegister(0),dst);
-                                    riscInstList.add(instIndex,subInstruction);
-                                }
-                                for (int i = 0; i < n ; i++){
-                                    riscInstList.add(instIndex,addInstruction);
-                                }
-                                SlliInstruction slliInstruction = new SlliInstruction(dst,temp1,new Immediate(log));
-                                riscInstList.add(instIndex,slliInstruction);
-                                //去除li和mul
-                                if (!xIsNeg)
-                                {
-                                    riscInstList.remove(instIndex + n + 1);
-                                    riscInstList.remove(instIndex - 1);
-                                    instIndex += (n);
-                                }
-                                else {
-                                    riscInstList.remove(instIndex + n + 2);
-                                    riscInstList.remove(instIndex - 1);
-                                    instIndex += (n+1);
-                                }
-                                continue;
-                            }
-                            else {
-                                number <<= 1;
-                                n = number - x;
-                                if (n <= 4){
-                                    if (instIndex + 1 < riscInstList.size() )
-                                    {
-                                        preInst = riscInstList.get(instIndex + 1);
-                                    }
-                                    SubwInstruction subwInstruction = new SubwInstruction(dst,dst,temp1);
-                                    if (xIsNeg){
-                                        SubInstruction subInstruction = new SubInstruction(dst,new RealRegister(0),dst);
-                                        riscInstList.add(instIndex,subInstruction);
-                                    }
-                                    for (int i = 0; i < n ; i++){
-                                        riscInstList.add(instIndex,subwInstruction);
-                                    }
-                                    SlliInstruction slliInstruction = new SlliInstruction(dst,temp1,new Immediate(log+1));
-                                    riscInstList.add(instIndex,slliInstruction);
-                                    //去除li和mul
-                                    if (!xIsNeg)
-                                    {
-                                        riscInstList.remove(instIndex + n + 1);
-                                        riscInstList.remove(instIndex - 1);
-                                        instIndex += (n);
-                                    }
-                                    else {
-                                        riscInstList.remove(instIndex + n + 2);
-                                        riscInstList.remove(instIndex - 1);
-                                        instIndex += (n+1);
-                                    }
-                                    continue;
+                                    riscInstList.add(curIndex++,subInstruction);
                                 }
 
+                                //去除li和mul
+                                riscInstList.remove(instIndex );
+                                riscInstList.remove(instIndex - 1);
+                                curIndex -= 2;
+                                //为preInst赋值
+                                if (curIndex  < riscInstList.size() )
+                                {
+                                    preInst = riscInstList.get(curIndex );
+                                }
+                                instIndex = curIndex;
+                                continue;
                             }
+                            else if (n2 <= 1){
+                                    //SLLI
+                                    SlliInstruction slliInstruction = new SlliInstruction(dst,temp1,new Immediate(log+1));
+                                    riscInstList.add(curIndex++,slliInstruction);
+                                    //ADD
+                                    SubInstruction subInstruction = new SubInstruction(dst,dst,temp1);
+                                    for (int i = 0; i < n2 ; i++){
+                                        riscInstList.add(curIndex++,subInstruction);
+                                    }
+                                    //取反
+                                    if (xIsNeg){
+                                        SubInstruction subInstruction2 = new SubInstruction(dst,new RealRegister(0),dst);
+                                        riscInstList.add(curIndex++,subInstruction2);
+                                    }
+                                    //去除li和mul
+                                    riscInstList.remove(instIndex );
+                                    riscInstList.remove(instIndex - 1);
+                                    curIndex -= 2;
+                                    //为preInst赋值
+                                    if (curIndex  < riscInstList.size() )
+                                    {
+                                        preInst = riscInstList.get(curIndex );
+                                    }
+                                    instIndex = curIndex;
+                                    continue;
+
+                            }
+                            temp1 = tempRegister;
+                            //非一步替换，多步搜索
+                            Boolean isMore = false;
+                            Boolean isFirst = true;
+                            Boolean isSub = false;
+                            if(n2 < n){isMore = true;}
+                            VirtualRegister vdst = riscBB.getNewVr();
+
+                            //非一步到位,设置步数为4
+                            while (step < 4){
+                                step++;
+                                if(isMore){log++;}
+                                //SLLI
+                                SlliInstruction slliInstruction = new SlliInstruction(vdst,temp1,new Immediate(log));
+                                tempInstList.add(slliInstruction);
+                                //riscInstList.add(curIndex++,slliInstruction);
+                                //判断是不是第一个
+                                if (isFirst){
+                                    MvInstruction mvInstruction2 = new MvInstruction(dst,vdst);
+                                    tempInstList.add(mvInstruction2);
+                                    //riscInstList.add(curIndex++,mvInstruction2);
+                                    isFirst = false;
+                                }
+                                //判断应该增还是减
+                                else if(isSub){
+                                    SubInstruction subInstruction = new SubInstruction(dst,dst,vdst);
+                                    tempInstList.add(subInstruction);
+                                    //riscInstList.add(curIndex++,subInstruction);
+                                }
+                                else {
+                                    AddInstruction addInstruction = new AddInstruction(dst,dst,vdst);
+                                    tempInstList.add(addInstruction);
+                                    //riscInstList.add(curIndex++,addInstruction);
+                                }
+                                //重新给乘数赋值,判断下一次操作是加还是减
+                                if  (isMore){
+                                    isSub = !(isSub);
+                                    x = n2;
+                                }
+                                else {
+                                    x = n;
+                                }
+                                //如果乘数小于等于1，停止循环
+                                if(x <= 1){
+                                    if(isSub){
+                                        SubInstruction subInstruction = new SubInstruction(dst,dst,temp1);
+                                        tempInstList.add(subInstruction);
+                                        //riscInstList.add(curIndex++,subInstruction);
+                                    }
+                                    else {
+                                        AddInstruction addInstruction = new AddInstruction(dst,dst,temp1);
+                                        tempInstList.add(addInstruction);
+                                        //riscInstList.add(curIndex++,addInstruction);
+                                    }
+                                    //取反
+                                    if (xIsNeg){
+                                        SubInstruction subInstruction2 = new SubInstruction(dst,new RealRegister(0),dst);
+                                        tempInstList.add(subInstruction2);
+//                                        riscInstList.add(curIndex++,subInstruction2);
+                                    }
+                                    for (RISCInstruction riscInstruction : tempInstList ){
+                                        riscInstList.add(curIndex++,riscInstruction);
+                                    }
+                                    //去除li和mul
+                                    riscInstList.remove(instIndex );
+                                    riscInstList.remove(instIndex - 1);
+                                    curIndex -= 2;
+                                    //为preInst赋值
+                                    if (curIndex  < riscInstList.size() )
+                                    {
+                                        preInst = riscInstList.get(curIndex );
+                                    }
+                                    instIndex = curIndex;
+                                    break;
+
+                                }
+                                //重新计算log,n和n2
+                                log = riscBB.log2(x);
+                                number = 1;
+                                for (int i = 0; i < log ; i++){
+                                    number <<= 1;
+                                }
+                                n = x - number;
+                                number2 = number<<1;
+                                n2 = number2 - x;
+                                if(n2 < n){isMore = true;}
+                                else {isMore = false;}
+                            }
+                            continue;
 
                         }
                     }
