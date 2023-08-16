@@ -28,8 +28,13 @@ public class NoPhi implements BaseIRPass {
                     if (inst instanceof MemoryInst.Phi phiInst) {
                         var mapList = new LinkedList<Value>();
                         for (int i = 0; i < phiInst.operandList.size(); i += 2) {
-                            mapList.add(phiInst.getOperandAt(i));
+                            var opValue = phiInst.getOperandAt(i);
+                            mapList.add(opValue);
                         }
+//                        for (int i = 0; i < mapList.size(); i++) {
+//                            var opValue = mapList.get(i);
+//                            opValue.replaceAllUseWith(phiInst);
+//                        }
                         phiMapValues.put(phiInst, mapList);
                     }
 

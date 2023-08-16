@@ -70,9 +70,9 @@ public abstract class Value {
     }
 
     public void removeUse(Use use) {
-
+        // TODO: 对于这个在gep和load这种全局变量使用的removeALlOperand()好像会有问题
         for (int index = 0; index < useList.size(); index++) {
-            if (use == useList.get(index)) {
+            if (use.equals(useList.get(index))) {
                 useList.remove(use);
 //                System.out.println("removeUse: "+use.getUser().getName()+"中的"+use.getValue().getName());
                 break;

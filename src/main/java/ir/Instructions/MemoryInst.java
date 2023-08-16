@@ -121,7 +121,7 @@ public class MemoryInst {
             StringBuilder sb = new StringBuilder();
             // %2 = getelementptr [2 x i32], [2 x i32]* %1, i64 0, i64 1
             Value ptr = getOperandAt(0); // 第一个操作数 指针
-            sb.append(this.getName()).append("= getelementptr ").
+            sb.append(this.getName()).append(" = getelementptr ").
                     append(((PointerType) ptr.getType()).getPointedType()).append(",")
                     .append(ptr.getType()).append(" ").append(ptr.getName());
             // , i64 0, i64 1

@@ -94,6 +94,7 @@ public class Constant extends User {
         @Override
         public String toString() {
             StringBuilder strBuilder = new StringBuilder();
+//            strBuilder.append(this.operandList.size());
             strBuilder.append(this.getType()); // "[2 x i32]"
 
             if (isAllZero) { // "zeroinitializer"

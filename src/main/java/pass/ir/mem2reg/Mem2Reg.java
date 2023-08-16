@@ -34,7 +34,7 @@ public class Mem2Reg implements BaseIRPass {
 //            System.out.println(allocaSet);
             if (allocaSet.isEmpty()) {
                 System.out.println("没有需要提升的alloca");
-                return false;
+                continue;
             }
 
             // 要清空每个块的相关属性信息，可能多次mem2reg

@@ -15,6 +15,7 @@ import pass.ir.addmerge.AddSameMerge;
 import pass.ir.blockmerge.BlockMerge;
 import pass.ir.blockmerge.BlockMergeWithPhi;
 import pass.ir.constantexp_derivation.ConstantExp_Derivation;
+import pass.ir.constarray_eliminate.ConstArrayEliminate;
 import pass.ir.cse.CommonSubexpressionElimination;
 import pass.ir.deadcode_eliminate.DeadCodeEliminate;
 import pass.ir.global2local.GlobalToLocal;
@@ -22,7 +23,6 @@ import pass.ir.globalvariablederive.GlobalVariableDerive;
 import pass.ir.inline.Inline;
 import pass.ir.mem2reg.Mem2Reg;
 import pass.ir.multiret_eliminate.MultiRetEliminate;
-import pass.ir.nophi.NoPhi;
 import pass.ir.phimerge.PhiMerge;
 
 import java.util.ArrayList;
@@ -54,10 +54,11 @@ public class PassDriver {
             new Inline().run(module); // 隐藏功能用例36CE,但性能用例全AC ——> 已经没问题了，现在全部AC
             new GlobalVariableDerive().run(module); // 只初始化一次的全局变量当作常量传播
             new GlobalToLocal().run(module); // 全局变量转局部,要inline后做，里面自带一个mem2reg和phiMerge
+            new ConstArrayEliminate().run(module); // 一维常量数组展开
             basicSimplify(module); // 基础优化（常量传播，死块消除，连续加法，phi合并，死代码消除）
 
 
-            new NoPhi().run(module); // 后端前最后一步，尝试把phi替换掉，不SSA
+//            new NoPhi().run(module); // 后端前最后一步，尝试把phi替换掉，不SSA
         } else {
             new MultiRetEliminate().run(module); // 消除没用的ret
             new BlockMerge().run(module); // 先做基本块合并，有phi以后比较麻烦

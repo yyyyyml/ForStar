@@ -38,7 +38,7 @@ public class RISCBasicBlock {
     public int lastId;
     public RealRegister tempRegister = new RealRegister(13, 11);
     public FloatRealRegister floatTempRegister = new FloatRealRegister(23 + 18);
-    public HashMap<Value,Memory> phiMemMap = new HashMap<>();
+    public HashMap<Value, RISCOperand> phiVrTempMap = new HashMap<>();
     public LinkedList<Value> phiList = new LinkedList<>();
     public int firstBrposition = -1;
 
@@ -198,7 +198,7 @@ public class RISCBasicBlock {
                 case ADD, SUB, MUL, DIV, FADD, FSUB, FDIV, FMUL -> translateCaculate(curInst);
                 case CALL -> translateCall(curInst);
                 case BR -> translateBr(curInst,pretInst);
-                case NE, LT, LE, GT, GE, EQ, FEQ, FGE, FGT, FLE, FLT, FNE -> translateCond(curInst,nextInst);
+                case NE, LT, LE, GT, GE, EQ, FEQ, FGE, FGT, FLE, FLT, FNE -> translateCond(curInst, nextInst);
                 case GEP -> translateGep(curInst);
                 case FPTOSI -> translateFtoI(curInst);
                 case SITOFP -> translateItoF(curInst);
@@ -208,38 +208,39 @@ public class RISCBasicBlock {
                 case PHI -> translatePhi(curInst);
             }
             //PHI
-            if(riscFunction.phiMap.containsKey(curInst)){
-                LinkedList<Value> list = riscFunction.phiMap.get(curInst);
-                for (Value vd : list)
-                {
-                    RISCOperand dst = getOperand(vd);
-                    RISCOperand src = getOperand(curInst);
-                    //虚拟寄存器
-                    if (dst instanceof Register)
-                    {
-                        if (curInst.getType().isFloatType()) {
-                            FmvInstruction fmv = new FmvInstruction(dst, src);
-                            instructionList.add(fmv);
-                        } else {
-                            MvInstruction mvInstruction = new MvInstruction(dst, src);
-                            instructionList.add(mvInstruction);
-                        }
-                    }
-                    //Meomery
-                    else if(dst instanceof Memory){
-                        if (curInst.getType().isFloatType()) {
-                            FsdInstruction fsd = new FsdInstruction(src, dst);
-                            instructionList.add(fsd);
-                        } else {
-                            SdInstruction sd = new SdInstruction(src, dst);
-                            instructionList.add(sd);
-                        }
-                    }
-                }
-            }
+            //以下弃用
+//            if(riscFunction.phiMap.containsKey(curInst)){
+//                LinkedList<Value> list = riscFunction.phiMap.get(curInst);
+//                for (Value vd : list)
+//                {
+//                    RISCOperand dst = getOperand(vd);
+//                    RISCOperand src = getOperand(curInst);
+//                    //虚拟寄存器
+//                    if (dst instanceof Register)
+//                    {
+//                        if (curInst.getType().isFloatType()) {
+//                            FmvInstruction fmv = new FmvInstruction(dst, src);
+//                            instructionList.add(fmv);
+//                        } else {
+//                            MvInstruction mvInstruction = new MvInstruction(dst, src);
+//                            instructionList.add(mvInstruction);
+//                        }
+//                    }
+//                    //Meomery
+//                    else if(dst instanceof Memory){
+//                        if (curInst.getType().isFloatType()) {
+//                            FsdInstruction fsd = new FsdInstruction(src, dst);
+//                            instructionList.add(fsd);
+//                        } else {
+//                            SdInstruction sd = new SdInstruction(src, dst);
+//                            instructionList.add(sd);
+//                        }
+//                    }
+//                }
+//            }
         }
         for (Value phi : phiList){
-            riscFunction.valueRISCOperandHashMap.put(phi,phiMemMap.get(phi));
+            riscFunction.valueRISCOperandHashMap.put(phi, phiVrTempMap.get(phi));
         }
 
         //每个块在br前为phicopy
@@ -294,14 +295,13 @@ public class RISCBasicBlock {
     }
 
     private void translatePhi(Instruction curInst) {
-        RISCOperand mem = getOperand(curInst);
-        if(mem instanceof Memory)
-        {
-            phiMemMap.put(curInst, (Memory) mem);
+        RISCOperand temp = getOperand(curInst);
+        if (temp instanceof Register) {
+            phiVrTempMap.put(curInst, temp);
             phiList.add(curInst);
             VirtualRegister vr = getNewVr();
-            LdInstruction ld = new LdInstruction(vr, mem);
-            instructionList.add(ld);
+            MvInstruction mv = new MvInstruction(vr, temp);
+            instructionList.add(mv);
             riscFunction.valueRISCOperandHashMap.put(curInst, vr);
         }
     }
@@ -1725,7 +1725,7 @@ public class RISCBasicBlock {
         return 9 + vname;
     }
 
-    private VirtualRegister getNewVr() {
+    public VirtualRegister getNewVr() {
         VirtualRegister vr = new VirtualRegister(riscFunction.virtualRegisterIndex++);
         return vr;
     }
