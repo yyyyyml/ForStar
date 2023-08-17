@@ -204,15 +204,17 @@ public class BasicOptimize implements BaseBackendPass {
                                 }
                                 //如果乘数小于等于1，停止循环
                                 if(x <= 1){
-                                    if(isSub){
-                                        SubInstruction subInstruction = new SubInstruction(dst,dst,temp1);
-                                        tempInstList.add(subInstruction);
-                                        //riscInstList.add(curIndex++,subInstruction);
-                                    }
-                                    else {
-                                        AddInstruction addInstruction = new AddInstruction(dst,dst,temp1);
-                                        tempInstList.add(addInstruction);
-                                        //riscInstList.add(curIndex++,addInstruction);
+                                    if(x == 1)
+                                    {
+                                        if (isSub) {
+                                            SubInstruction subInstruction = new SubInstruction(dst, dst, temp1);
+                                            tempInstList.add(subInstruction);
+                                            //riscInstList.add(curIndex++,subInstruction);
+                                        } else {
+                                            AddInstruction addInstruction = new AddInstruction(dst, dst, temp1);
+                                            tempInstList.add(addInstruction);
+                                            //riscInstList.add(curIndex++,addInstruction);
+                                        }
                                     }
                                     //取反
                                     if (xIsNeg){
