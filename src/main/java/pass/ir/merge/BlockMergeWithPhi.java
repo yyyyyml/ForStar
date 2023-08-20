@@ -10,6 +10,8 @@ import ir.values.Function;
 import pass.ir.BaseIRPass;
 import util.IList;
 
+import java.util.LinkedList;
+
 public class BlockMergeWithPhi implements BaseIRPass {
     boolean retNeedDo = false;
 
@@ -24,8 +26,66 @@ public class BlockMergeWithPhi implements BaseIRPass {
             // 把单br的块合并
             onlyBrCombine(func); // 不是都能合，先不管
 
+            // 普通合并，那些前后块都为1的
+            normalCombine(func); // 加入了处理phi
+
         }
         return retNeedDo;
+    }
+
+    private void normalCombine(Function func) {
+        for (IList.INode<BasicBlock, Function> bbInode : func.list) {
+            BasicBlock bb = bbInode.getElement();
+            // 常规合并，只合并pre,next都为1的
+            if (canCombinePre(bb)) {
+                System.out.println("能合并");
+                var preBB = bb.preList.get(0);
+                combine(preBB, bb);
+            }
+        }
+    }
+
+    private boolean canCombinePre(BasicBlock block) {
+        if (block.preList.size() != 1) return false;
+        if (block.list.getFirst().getElement() instanceof MemoryInst.Phi) return false;
+        var preBlock = (BasicBlock) block.preList.get(0);
+        return preBlock.nextList.size() == 1;
+    }
+
+    private void combine(BasicBlock preBB, BasicBlock followingBB) {
+        LinkedList<IList.INode<Instruction, BasicBlock>> InstToAdd = new LinkedList<>();
+        // 要移除Br
+        preBB.getLastInst().node.removeSelf();
+        // 把要移动的指令放入InstToAdd
+        for (IList.INode<Instruction, BasicBlock> instInode : followingBB.list) {
+            InstToAdd.add(instInode);
+        }
+        // 将InstToAdd中的指令移动过去
+        for (int i = 0; i < InstToAdd.size(); i++) {
+            Instruction inst = InstToAdd.get(i).getElement();
+            if (inst instanceof MemoryInst.Phi) {
+//                preBB.list.addFirst(InstToAdd.get(i)); // 加在前面
+                throw new RuntimeException("不能处理phi");
+
+            } else {
+                preBB.list.addLast(InstToAdd.get(i));
+            }
+
+        }
+        // 处理使用这个块的phi
+
+        followingBB.replaceAllPhiUseWith(preBB);
+
+
+        // 处理块的前驱后继关系
+        preBB.nextList = followingBB.nextList;
+        for (BasicBlock next2BB : preBB.nextList) {
+            next2BB.preList.remove(followingBB);
+            next2BB.preList.add(preBB);
+        }
+        // 删掉那个块
+        followingBB.node.removeSelf();
+        System.out.println("合并完");
     }
 
     private void deadBlockEliminate(Function func) {

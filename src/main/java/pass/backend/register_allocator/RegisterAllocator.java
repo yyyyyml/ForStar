@@ -1,6 +1,7 @@
 package pass.backend.register_allocator;
 
 import backend.*;
+import backend.instructions.CallInstruction;
 import backend.instructions.LdInstruction;
 import backend.instructions.SdInstruction;
 import backend.operands.Memory;
@@ -652,7 +653,7 @@ public class RegisterAllocator implements BaseBackendPass {
                         var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                         for (int i = 0; i < curRegUsage.getRegNum(); i++) {
                             if (curRegUsage.isRegisterUsed(i)) {
-                                if (i < 10) continue;
+                                if (i < 10 && ((CallInstruction) riscInst).isCallBuildIn()) continue;
                                 RealRegister reg = new RealRegister(i, 11);
                                 riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
 //                                System.out.println("开辟了新的栈 " + riscFunc.stackIndex);
