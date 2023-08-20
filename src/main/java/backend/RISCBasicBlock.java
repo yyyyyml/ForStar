@@ -1391,38 +1391,48 @@ public class RISCBasicBlock {
             regAns = dst;
         }
         //初始化log等参数
-        int l = this.log2(divisor);
+        int l = log2(divisor);
         int sh = l;
+        System.out.println("divisor is " + divisor);
         BigInteger temp = new BigInteger("1");
         long low = temp.shiftLeft(32 + l)
                         .divide(BigInteger.valueOf(divisor))
                         .longValue();
+        System.out.println("low is "+ low);
         long high = temp.shiftLeft(32 + l)
                         .add(temp.shiftLeft(l + 1))
                         .divide(BigInteger.valueOf(divisor))
                         .longValue();
+        System.out.println("high is " + high);
         while (((low / 2) < (high / 2)) && sh > 0) {
             low /= 2;
             high /= 2;
             sh--;
         }
-        if (this.isPowerOf2(divisor)) {
-            int x = this.log2(divisor);
+        System.out.println("new low is " + low + "new high is " + high + "sh is " + sh);
+        if (isPowerOf2(divisor)) {
+            int x = l;
 
-            // %1 = srli %src, #(64-x)
-            // %2 = addw %src, %1
-            // %ans = sraiw %2, #x
+            // vr1 = srli src, (64-x)
+            // vr2 = addw src, vr1
+            // ans = sraiw vr2, x
             //当除数为2的整数幂
             if (x > 0 && x < 31) {
                 VirtualRegister vr = getNewVr();
-                Immediate imm64SubX = new Immediate(64 - x);
                 Immediate immX = new Immediate(x);
-                SrliInstruction srliInstruction = new SrliInstruction(tempRegister, src, imm64SubX);
-                instructionList.add(srliInstruction);
-                AddwInstruction addwInstruction = new AddwInstruction(vr, src, tempRegister);
-                instructionList.add(addwInstruction);
+//                Immediate imm64SubX = new Immediate(64 - x);
+//                SrliInstruction srliInstruction = new SrliInstruction(tempRegister, src, imm64SubX);
+//                instructionList.add(srliInstruction);
+//                AddwInstruction addwInstruction = new AddwInstruction(vr, src, tempRegister);
+//                instructionList.add(addwInstruction);
                 SraiwInstruction sraiwInstruction = new SraiwInstruction(regAns, vr, immX);
                 instructionList.add(sraiwInstruction);
+                Immediate imm2 = new Immediate(31);
+                SraiwInstruction sraiwInstruction2 = new SraiwInstruction(tempRegister, src, imm2);
+                instructionList.add(sraiwInstruction2);
+
+                SubwInstruction subwInstruction = new SubwInstruction(regAns, vr, tempRegister);
+                instructionList.add(subwInstruction);
             }
         } else {
 
