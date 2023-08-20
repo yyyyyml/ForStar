@@ -30,7 +30,7 @@ public class RISCBasicBlock {
     public int i;
     public boolean visitedLive = false;
     public boolean visitedLiveFloat = false;
-    public boolean isPhiOld = false;
+    public boolean isPhiOld = true;
     public LinkedList<String> preBlocknameList = new LinkedList<>();
     public LinkedList<String> nextBlocknameList = new LinkedList<>();
     public LinkedList<RISCBasicBlock> prelist = new LinkedList<>();
@@ -635,7 +635,7 @@ public class RISCBasicBlock {
         Instruction cond = curInst;
         Value vop1 = cond.getOperandAt(0);
         Value vop2 = cond.getOperandAt(1);
-      //  System.out.println(curInst+"\n"+vop1+" "+vop2);
+        //  System.out.println(curInst+"\n"+vop1+" "+vop2);
         //获得存放两个数的RISCOperand
         RISCOperand op1 = getOperand(vop1);
         RISCOperand temp1 = null;
@@ -660,7 +660,7 @@ public class RISCBasicBlock {
             instructionList.add(li);
             temp1 = vr;
         }
-     //   System.out.println(op1.emit()+" "+temp1.emit());
+        //   System.out.println(op1.emit()+" "+temp1.emit());
 
         RISCOperand op2 = getOperand(vop2);
         RISCOperand temp2 = null;
@@ -684,7 +684,7 @@ public class RISCBasicBlock {
             instructionList.add(li);
             temp2 = vr;
         }
-     //   System.out.println(op2.emit()+" "+temp2.emit());
+        //   System.out.println(op2.emit()+" "+temp2.emit());
         RISCOperand dst = getOperand(curInst);
 
         switch (cond.getTag()) {
@@ -1011,7 +1011,7 @@ public class RISCBasicBlock {
     }
 
     private void translateCall(Instruction curInst) {
-     //   System.out.println(curInst);
+        //   System.out.println(curInst);
         int paraCount = curInst.getNumOP();
         int intCount = 0;
         int floatCount = 0;
@@ -1020,7 +1020,7 @@ public class RISCBasicBlock {
         for (int i = 1; i < paraCount; i++) {
             Value v = curInst.getOperandAt(i);
             RISCOperand src = getOperand(v);
-          //  System.out.println(v);
+            //  System.out.println(v);
             if (src instanceof Memory) {
 
                 if (v.getType().isIntegerType()) {
@@ -1202,7 +1202,7 @@ public class RISCBasicBlock {
         Boolean isOne2 = false;
         Value vop1 = curInst.getOperandAt(0);
         RISCOperand op1 = getOperand(vop1);
-      //  System.out.println(vop1.getName() + " -> " + op1.emit());
+        //  System.out.println(vop1.getName() + " -> " + op1.emit());
         RISCOperand temp1 = null;
         if (op1 instanceof Memory) {
             if(vop1.getType().isIntegerType()) {
@@ -1239,7 +1239,7 @@ public class RISCBasicBlock {
 
         Value vop2 = curInst.getOperandAt(1);
         RISCOperand op2 = getOperand(vop2);
-  //      System.out.println(vop2.getName() + " -> " + op2.emit());
+        //      System.out.println(vop2.getName() + " -> " + op2.emit());
         RISCOperand temp2 = null;
         if (op2 instanceof Memory) {
             if(vop2.getType().isIntegerType()) {
@@ -1391,27 +1391,26 @@ public class RISCBasicBlock {
             regAns = dst;
         }
         //初始化log等参数
-        int l = log2(divisor);
+        int l = this.log2(divisor);
         int sh = l;
         System.out.println("divisor is " + divisor);
         BigInteger temp = new BigInteger("1");
         long low = temp.shiftLeft(32 + l)
-                        .divide(BigInteger.valueOf(divisor))
-                        .longValue();
+                .divide(BigInteger.valueOf(divisor))
+                .longValue();
         System.out.println("low is "+ low);
         long high = temp.shiftLeft(32 + l)
-                        .add(temp.shiftLeft(l + 1))
-                        .divide(BigInteger.valueOf(divisor))
-                        .longValue();
+                .add(temp.shiftLeft(l + 1))
+                .divide(BigInteger.valueOf(divisor))
+                .longValue();
         System.out.println("high is " + high);
         while (((low / 2) < (high / 2)) && sh > 0) {
             low /= 2;
             high /= 2;
             sh--;
         }
-        System.out.println("new low is " + low + "new high is " + high + "sh is " + sh);
-        if (isPowerOf2(divisor)) {
-            int x = l;
+        if (this.isPowerOf2(divisor)) {
+            int x = this.log2(divisor);
 
             // vr1 = srli src, (64-x)
             // vr2 = addw src, vr1
@@ -1419,15 +1418,14 @@ public class RISCBasicBlock {
             //当除数为2的整数幂
             if (x > 0 && x < 31) {
                 VirtualRegister vr = getNewVr();
-                Immediate imm = new Immediate(x);
                 Immediate imm64SubX = new Immediate(64 - x);
+                Immediate immX = new Immediate(x);
                 SrliInstruction srliInstruction = new SrliInstruction(tempRegister, src, imm64SubX);
                 instructionList.add(srliInstruction);
                 AddwInstruction addwInstruction = new AddwInstruction(vr, src, tempRegister);
                 instructionList.add(addwInstruction);
-                SraiwInstruction sraiwInstruction = new SraiwInstruction(vr, src, imm);
+                SraiwInstruction sraiwInstruction = new SraiwInstruction(regAns, vr, immX);
                 instructionList.add(sraiwInstruction);
-
             }
         } else {
 
@@ -1789,23 +1787,8 @@ public class RISCBasicBlock {
     public static boolean isPowerOf2(int x) {
         return x > 0 && ((x & (x - 1)) == 0);
     }
-    public static boolean isPowerOf2(long x) {
-        return x > 0 && ((x & (x - 1)) == 0);
-    }
+
     public static int log2(int x) {
-        if (x <= 0) {
-            System.out.println("BUG is log2");
-            return -1;
-        }
-        return (int) (Math.log(x)/Math.log(2));
-        //  int count = 0;
-//        while (x > 1) {
-//            x >>= 1;
-//            count++;
-//        }
-//        return count;
-    }
-    public static int log2(long x) {
         if (x <= 0) {
             System.out.println("BUG is log2");
             return -1;
