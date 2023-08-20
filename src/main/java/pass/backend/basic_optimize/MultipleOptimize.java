@@ -35,7 +35,7 @@ public class MultipleOptimize implements BaseBackendPass {
                             //RISCOperand temp2 = null;
                             Boolean xIsNeg = false;
                             LinkedList<RISCInstruction> tempInstList = new LinkedList<>();
-                            int x=1;
+                            long x=1;
                             RISCOperand dst = riscInst.getOperandAt(0);
                             //判断li中的dst是否为mul中的操作数
                             if(riscInst.getOperandAt(1)==preInst.getOperandAt(0)){
@@ -59,7 +59,7 @@ public class MultipleOptimize implements BaseBackendPass {
                                 x = ((Immediate) preInst.getOperandAt(1)).getVal();
                             }
                             else if(preInst.getOperandAt(1) instanceof BigImmediate){
-                                x = Math.toIntExact(((BigImmediate) preInst.getOperandAt(1)).getVal());
+                                x = ((BigImmediate) preInst.getOperandAt(1)).getVal();
                             }
                             if (x < 0 ){
                                 xIsNeg = true;
@@ -67,13 +67,13 @@ public class MultipleOptimize implements BaseBackendPass {
                             }
 
                             int log = RISCBasicBlock.log2(x);
-                            int number = 1;
+                            long number = 1;
                             for (int i = 0; i < log ; i++){
                                 number <<= 1;
                             }
-                            int n = x - number;
-                            int number2 = number<<1;
-                            int n2 = number2 - x;
+                            long n = x - number;
+                            long number2 = number<<1;
+                            long n2 = number2 - x;
 
                             //1步替换
                             if(n <= 1){

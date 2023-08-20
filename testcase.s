@@ -132,11 +132,9 @@ main:
 	bnez s8,.Bmain58
 	j .Bmain60
 .Bmain15:
-	li t5,-858993458
+	li t5,1717986919
 	mul t5,s7,t5
-	srai s8,t5,32
-	addw s4,s8,s7
-	sraiw s8,s4,3
+	srai s8,t5,34
 	sraiw s9,s7,31
 	subw s4,s8,s9
 	mv s9,s4
