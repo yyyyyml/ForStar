@@ -1397,28 +1397,41 @@ public class RISCBasicBlock {
         int sh = log-1;
         if(isPowerOf2(divisor)){
             //q0 = (n+(n>>(log-1))>>>(32-log))>>log;
-            SraiInstruction sraiInstruction = new SraiInstruction(regAns,src,new Immediate(log-1));
+            RISCOperand temp = null;
+            if(dst == src){
+                temp = getNewVr();
+            }
+            else {
+                temp = regAns;
+            }
+            SraiInstruction sraiInstruction = new SraiInstruction(temp,src,new Immediate(log-1));
             instructionList.add(sraiInstruction);
-            SrliInstruction srliInstruction = new SrliInstruction(regAns,regAns,new Immediate(32-log));
+            SrliInstruction srliInstruction = new SrliInstruction(temp,temp,new Immediate(32-log));
             instructionList.add(srliInstruction);
-            AddInstruction addInstruction = new AddInstruction(regAns,regAns,src);
+            AddInstruction addInstruction = new AddInstruction(temp,temp,src);
             instructionList.add(addInstruction);
-            SraiInstruction sraiInstruction1 = new SraiInstruction(regAns,regAns,new Immediate(log));
+            SraiInstruction sraiInstruction1 = new SraiInstruction(regAns,temp,new Immediate(log));
             instructionList.add(sraiInstruction1);
         }
         else if(m < (1L<<31)){
 //            int q0 = Math.toIntExact((m * n) >> 32 >> sh);
-
-            LiInstruction liInstruction = new LiInstruction(regAns,new BigImmediate(m));
+            RISCOperand temp = null;
+            if(dst == src){
+                temp = getNewVr();
+            }
+            else {
+                temp = regAns;
+            }
+            LiInstruction liInstruction = new LiInstruction(temp,new BigImmediate(m));
             instructionList.add(liInstruction);
-            MulInstruction mulInstruction = new MulInstruction(regAns,regAns,src);
+            MulInstruction mulInstruction = new MulInstruction(temp,temp,src);
             instructionList.add(mulInstruction);
-            SraiInstruction sraiInstruction = new SraiInstruction(regAns,regAns,new Immediate(32+sh));
+            SraiInstruction sraiInstruction = new SraiInstruction(temp,temp,new Immediate(32+sh));
             instructionList.add(sraiInstruction);
             //q0 = q0-xsignN;
             SraiwInstruction sraiwInstruction2 = new SraiwInstruction(tempRegister, src, new Immediate(31));
             instructionList.add(sraiwInstruction2);
-            SubwInstruction subwInstruction = new SubwInstruction(regAns, regAns, tempRegister);
+            SubwInstruction subwInstruction = new SubwInstruction(regAns, temp, tempRegister);
             instructionList.add(subwInstruction);
         }
         else {
