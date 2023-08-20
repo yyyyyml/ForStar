@@ -4,96 +4,547 @@
 	.attribute stack_align, 16
 	.text
 	.align	1
+	.global	radixSort
+	.type	radixSort	@function
+radixSort:
+	addi sp,sp,-400
+	sd ra,392(sp)
+	sd s0,384(sp)
+	addi s0,sp,400
+	mv t2,a0
+	sd t2,-224(s0)
+	mv t2,a1
+	sd t2,-216(s0)
+	mv t2,a2
+	sd t2,-344(s0)
+	mv s7,a3
+.BradixSort4:
+	addi s10,s0,-80
+	mv a0,s10
+	mv a1,zero
+	li a2,64
+	call memset
+	addi s10,s0,-144
+	mv a0,s10
+	mv a1,zero
+	li a2,64
+	call memset
+	addi s10,s0,-208
+	mv a0,s10
+	mv a1,zero
+	li a2,64
+	call memset
+	li s10,-1
+	ld t2,-224(s0)
+	beq t2,s10,.BradixSort13
+	j .BradixSort14
+.BradixSort12:
+	ld t2,-344(s0)
+	mv s10,t2
+	j .BradixSort17
+.BradixSort13:
+	ld ra,392(sp)
+	ld s0,384(sp)
+	addi sp,sp,400
+	jr ra
+.BradixSort14:
+	ld t2,-344(s0)
+	addi s9,t2,1
+	bge s9,s7,.BradixSort13
+	j .BradixSort12
+.BradixSort17:
+	blt s10,s7,.BradixSort20
+	j .BradixSort54
+.BradixSort20:
+	slli t5,s10,2
+	ld t2,-216(s0)
+	add t6,t2,t5
+	lw t5,0(t6)
+	mv s9,t5
+	mv t4,zero
+	j .BradixSort23
+.BradixSort23:
+	ld t2,-224(s0)
+	blt t4,t2,.BradixSort27
+	j .BradixSort30
+.BradixSort27:
+	srli t3,s9,60
+	addw t6,s9,t3
+	sraiw t5,t6,4
+	addi t6,t4,1
+	mv s9,t5
+	mv t4,t6
+	j .BradixSort23
+.BradixSort30:
+	srli t3,s9,60
+	addw t5,s9,t3
+	sraiw t4,t5,4
+	slli t5,t4,4
+	subw t6,s9,t5
+	j .BradixSort34
+.BradixSort34:
+	slli s6,t6,2
+	addi s6,s6,-208
+	add t4,s0,s6
+	slli s11,s10,2
+	ld t2,-216(s0)
+	add s8,t2,s11
+	lw s11,0(s8)
+	mv s9,s11
+	mv t5,zero
+	j .BradixSort38
+.BradixSort38:
+	ld t2,-224(s0)
+	blt t5,t2,.BradixSort42
+	j .BradixSort45
+.BradixSort42:
+	srli t3,s9,60
+	addw s8,s9,t3
+	sraiw s11,s8,4
+	addi s8,t5,1
+	mv s9,s11
+	mv t5,s8
+	j .BradixSort38
+.BradixSort45:
+	srli t3,s9,60
+	addw s11,s9,t3
+	sraiw t6,s11,4
+	slli s11,t6,4
+	subw s8,s9,s11
+	j .BradixSort49
+.BradixSort49:
+	slli s1,s8,2
+	addi s1,s1,-208
+	add s9,s0,s1
+	lw s11,0(s9)
+	addi s9,s11,1
+	sw s9,0(t4)
+	addi s9,s10,1
+	mv s10,s9
+	j .BradixSort17
+.BradixSort54:
+	ld t2,-344(s0)
+	sw t2,-80(s0)
+	lw s9,-208(s0)
+	ld t2,-344(s0)
+	addw s8,t2,s9
+	sw s8,-144(s0)
+	li s10,1
+	j .BradixSort60
+.BradixSort60:
+	li s9,16
+	blt s10,s9,.BradixSort63
+	j .BradixSort73
+.BradixSort63:
+	slli s2,s10,2
+	addi s2,s2,-80
+	add s9,s0,s2
+	li s8,1
+	subw s7,s10,s8
+	slli s3,s7,2
+	addi s3,s3,-144
+	add s8,s0,s3
+	lw s7,0(s8)
+	sw s7,0(s9)
+	slli s4,s10,2
+	addi s4,s4,-144
+	add s9,s0,s4
+	slli s5,s10,2
+	addi s5,s5,-208
+	add s8,s0,s5
+	lw s6,0(s8)
+	addw s8,s7,s6
+	sw s8,0(s9)
+	addi s9,s10,1
+	mv s10,s9
+	j .BradixSort60
+.BradixSort73:
+	mv s10,zero
+	j .BradixSort74
+.BradixSort74:
+	li s9,16
+	blt s10,s9,.BradixSort83
+	j .BradixSort77
+.BradixSort77:
+	ld t2,-344(s0)
+	sw t2,-80(s0)
+	lw s8,-208(s0)
+	ld t2,-344(s0)
+	addw s7,t2,s8
+	sw s7,-144(s0)
+	mv s9,zero
+	j .BradixSort176
+.BradixSort83:
+	slli t2,s10,2
+	sd t2,-336(s0)
+	addi t2,t2,-80
+	sd t2,-336(s0)
+	add s8,s0,t2
+	lw s7,0(s8)
+	slli t2,s10,2
+	sd t2,-328(s0)
+	addi t2,t2,-144
+	sd t2,-328(s0)
+	add s8,s0,t2
+	lw s6,0(s8)
+	blt s7,s6,.BradixSort89
+	j .BradixSort94
+.BradixSort89:
+	slli t2,s10,2
+	sd t2,-320(s0)
+	addi t2,t2,-80
+	sd t2,-320(s0)
+	add s7,s0,t2
+	lw s6,0(s7)
+	slli s7,s6,2
+	ld t2,-216(s0)
+	add s6,t2,s7
+	lw s7,0(s6)
+	mv s8,s7
+	j .BradixSort96
+.BradixSort94:
+	addi s7,s10,1
+	mv s10,s7
+	j .BradixSort74
+.BradixSort96:
+	mv s7,s8
+	mv s6,zero
+	j .BradixSort98
+.BradixSort98:
+	ld t2,-224(s0)
+	blt s6,t2,.BradixSort102
+	j .BradixSort105
+.BradixSort102:
+	srli t3,s7,60
+	addw s1,s7,t3
+	sraiw s2,s1,4
+	addi s1,s6,1
+	mv s7,s2
+	mv s6,s1
+	j .BradixSort98
+.BradixSort105:
+	srli t3,s7,60
+	addw s1,s7,t3
+	sraiw s2,s1,4
+	slli s1,s2,4
+	subw s6,s7,s1
+	j .BradixSort109
+.BradixSort109:
+	bne s6,s10,.BradixSort111
+	j .BradixSort171
+.BradixSort111:
+	mv s7,s8
+	mv s6,zero
+	j .BradixSort112
+.BradixSort112:
+	ld t2,-224(s0)
+	blt s6,t2,.BradixSort116
+	j .BradixSort119
+.BradixSort116:
+	srli t3,s7,60
+	addw s1,s7,t3
+	sraiw s2,s1,4
+	addi s1,s6,1
+	mv s7,s2
+	mv s6,s1
+	j .BradixSort112
+.BradixSort119:
+	srli t3,s7,60
+	addw s1,s7,t3
+	sraiw s2,s1,4
+	slli s1,s2,4
+	subw s6,s7,s1
+	j .BradixSort123
+.BradixSort123:
+	slli t2,s6,2
+	sd t2,-312(s0)
+	addi t2,t2,-80
+	sd t2,-312(s0)
+	add s3,s0,t2
+	lw s4,0(s3)
+	slli s3,s4,2
+	ld t2,-216(s0)
+	add s4,t2,s3
+	lw s2,0(s4)
+	mv s7,s8
+	mv s1,zero
+	j .BradixSort128
+.BradixSort128:
+	ld t2,-224(s0)
+	blt s1,t2,.BradixSort132
+	j .BradixSort135
+.BradixSort132:
+	srli t3,s7,60
+	addw s6,s7,t3
+	sraiw s3,s6,4
+	addi s6,s1,1
+	mv s7,s3
+	mv s1,s6
+	j .BradixSort128
+.BradixSort135:
+	srli t3,s7,60
+	addw s1,s7,t3
+	sraiw s3,s1,4
+	slli s1,s3,4
+	subw s6,s7,s1
+	j .BradixSort139
+.BradixSort139:
+	slli t2,s6,2
+	sd t2,-304(s0)
+	addi t2,t2,-80
+	sd t2,-304(s0)
+	add s3,s0,t2
+	lw s4,0(s3)
+	slli s3,s4,2
+	ld t2,-216(s0)
+	add s4,t2,s3
+	sw s8,0(s4)
+	mv s7,s8
+	mv s1,zero
+	j .BradixSort143
+.BradixSort143:
+	ld t2,-224(s0)
+	blt s1,t2,.BradixSort147
+	j .BradixSort150
+.BradixSort147:
+	srli t3,s7,60
+	addw s6,s7,t3
+	sraiw s3,s6,4
+	addi s6,s1,1
+	mv s7,s3
+	mv s1,s6
+	j .BradixSort143
+.BradixSort150:
+	srli t3,s7,60
+	addw s1,s7,t3
+	sraiw s3,s1,4
+	slli s1,s3,4
+	subw s6,s7,s1
+	j .BradixSort154
+.BradixSort154:
+	slli t2,s6,2
+	sd t2,-296(s0)
+	addi t2,t2,-80
+	sd t2,-296(s0)
+	add s3,s0,t2
+	mv s7,s8
+	mv s1,zero
+	j .BradixSort156
+.BradixSort156:
+	ld t2,-224(s0)
+	blt s1,t2,.BradixSort160
+	j .BradixSort163
+.BradixSort160:
+	srli t3,s7,60
+	addw s6,s7,t3
+	sraiw s4,s6,4
+	addi s6,s1,1
+	mv s7,s4
+	mv s1,s6
+	j .BradixSort156
+.BradixSort163:
+	srli t3,s7,60
+	addw s1,s7,t3
+	sraiw s4,s1,4
+	slli s1,s4,4
+	subw s6,s7,s1
+	j .BradixSort167
+.BradixSort167:
+	slli t2,s6,2
+	sd t2,-232(s0)
+	addi t2,t2,-80
+	sd t2,-232(s0)
+	add s7,s0,t2
+	lw s1,0(s7)
+	addi s7,s1,1
+	sw s7,0(s3)
+	mv s8,s2
+	j .BradixSort96
+.BradixSort171:
+	slli t2,s10,2
+	sd t2,-240(s0)
+	addi t2,t2,-80
+	sd t2,-240(s0)
+	add s7,s0,t2
+	lw s6,0(s7)
+	slli s1,s6,2
+	ld t2,-216(s0)
+	add s2,t2,s1
+	sw s8,0(s2)
+	addi s1,s6,1
+	sw s1,0(s7)
+	j .BradixSort83
+.BradixSort176:
+	li s10,16
+	blt s9,s10,.BradixSort180
+	j .BradixSort179
+.BradixSort179:
+	ld ra,392(sp)
+	ld s0,384(sp)
+	addi sp,sp,400
+	jr ra
+.BradixSort180:
+	bgt s9,zero,.BradixSort189
+	j .BradixSort182
+.BradixSort182:
+	li s10,1
+	ld t2,-224(s0)
+	subw s8,t2,s10
+	slli t2,s9,2
+	sd t2,-248(s0)
+	addi t2,t2,-80
+	sd t2,-248(s0)
+	add s10,s0,t2
+	lw s7,0(s10)
+	slli t2,s9,2
+	sd t2,-256(s0)
+	addi t2,t2,-144
+	sd t2,-256(s0)
+	add s10,s0,t2
+	lw s6,0(s10)
+	mv a0,s8
+	ld t2,-216(s0)
+	mv a1,t2
+	mv a2,s7
+	mv a3,s6
+	sd s10,-360(s0)
+	sd s9,-368(s0)
+	sd s8,-376(s0)
+	sd s7,-384(s0)
+	sd s6,-392(s0)
+	call radixSort
+	ld s6,-392(s0)
+	ld s7,-384(s0)
+	ld s8,-376(s0)
+	ld s9,-368(s0)
+	ld s10,-360(s0)
+	addi s10,s9,1
+	mv s9,s10
+	j .BradixSort176
+.BradixSort189:
+	slli t2,s9,2
+	sd t2,-264(s0)
+	addi t2,t2,-80
+	sd t2,-264(s0)
+	add s10,s0,t2
+	li s8,1
+	subw s7,s9,s8
+	slli t2,s7,2
+	sd t2,-272(s0)
+	addi t2,t2,-144
+	sd t2,-272(s0)
+	add s8,s0,t2
+	lw s7,0(s8)
+	sw s7,0(s10)
+	slli t2,s9,2
+	sd t2,-280(s0)
+	addi t2,t2,-144
+	sd t2,-280(s0)
+	add s10,s0,t2
+	slli t2,s9,2
+	sd t2,-288(s0)
+	addi t2,t2,-208
+	sd t2,-288(s0)
+	add s8,s0,t2
+	lw s6,0(s8)
+	addw s8,s7,s6
+	sw s8,0(s10)
+	j .BradixSort182
+	.size	radixSort, .-radixSort
+	.align	1
 	.global	main
 	.type	main	@function
 main:
-	addi sp,sp,-80
-	sd ra,72(sp)
-	sd s0,64(sp)
-	addi s0,sp,80
+	addi sp,sp,-64
+	sd ra,56(sp)
+	sd s0,48(sp)
+	addi s0,sp,64
 .Bmain0:
-	li s10,5
-	sw s10,-56(s0)
-	li s10,5
-	sw s10,-48(s0)
-	li s10,1
-	sw s10,-40(s0)
-	li s10,2
-	subw s9,zero,s10
-	sw s9,-32(s0)
-	li s10,2
-	sw s10,-24(s0)
-	lw s10,-32(s0)
-	li s9,1
-	mv s9,s10
-	srli s10,s10,63
-	add s10,s10,s9
-	srai s10,s10,1
-	blt s10,zero,.Bmain11
-	j .Bmain13
-.Bmain11:
-	lw s10,-24(s0)
-	mv a0,s10
-	call putint
-	j .Bmain25
-.Bmain13:
-	lw s10,-56(s0)
-	lw s9,-48(s0)
-	subw s8,s10,s9
-	bne s8,zero,.Bmain18
-	j .Bmain25
-.Bmain18:
-	lw s10,-40(s0)
-	addi s9,s10,3
-	srli s10,s10,63
-	add s10,s10,s9
-	srai s10,s10,1
-	li s8,2
-	mulw s7,s10,s8
-	subw s10,s9,s7
-	bne s10,zero,.Bmain11
-	j .Bmain25
-.Bmain25:
-	lw s10,-32(s0)
-	srli s9,s9,63
-	add s9,s9,s10
-	srai s9,s9,1
-	li s8,2
-	mulw s7,s9,s8
-	subw s9,s10,s7
-	addi s10,s9,67
-	blt s10,zero,.Bmain33
-	j .Bmain35
-.Bmain32:
+	lla s9,a
+	addi s7,s9,0
+	mv a0,s7
+	call getarray
+	mv s8,a0
 	mv a0,zero
-	ld ra,72(sp)
-	ld s0,64(sp)
-	addi sp,sp,80
-	jr ra
-.Bmain33:
-	li s10,4
-	sw s10,-24(s0)
-	lw s10,-24(s0)
-	mv a0,s10
+	call _sysy_starttime
+	li a0,8
+	addi s7,s9,0
+	mv a1,s7
+	mv a2,zero
+	mv a3,s8
+	sd s10,-32(s0)
+	sd s9,-40(s0)
+	sd s8,-48(s0)
+	sd s7,-56(s0)
+	call radixSort
+	ld s7,-56(s0)
+	ld s8,-48(s0)
+	ld s9,-40(s0)
+	ld s10,-32(s0)
+	mv s10,zero
+	j .Bmain3
+.Bmain3:
+	blt s10,s8,.Bmain6
+	j .Bmain17
+.Bmain6:
+	lla s9,ans
+	lw s7,0(s9)
+	lla s9,a
+	slli s6,s10,2
+	add s1,s9,s6
+	lw s9,0(s1)
+	li s6,2
+	addw s1,s6,s10
+	divw s6,s9,s1
+	mulw s2,s6,s1
+	subw s6,s9,s2
+	mulw s9,s10,s6
+	addw s6,s7,s9
+	addi s9,s10,1
+	lla s7,ans
+	sw s6,0(s7)
+	mv s10,s9
+	j .Bmain3
+.Bmain17:
+	lla s10,ans
+	lw s9,0(s10)
+	blt s9,zero,.Bmain22
+	j .Bmain20
+.Bmain20:
+	mv a0,zero
+	call _sysy_stoptime
+	lla s10,ans
+	lw s9,0(s10)
+	mv a0,s9
 	call putint
-	j .Bmain32
-.Bmain35:
-	lw s10,-56(s0)
-	lw s9,-48(s0)
-	subw s8,s10,s9
-	bne s8,zero,.Bmain40
-	j .Bmain32
-.Bmain40:
-	lw s10,-40(s0)
-	addi s9,s10,2
-	srli s10,s10,63
-	add s10,s10,s9
-	srai s10,s10,1
-	li s8,2
-	mulw s7,s10,s8
-	subw s10,s9,s7
-	bne s10,zero,.Bmain33
-	j .Bmain32
+	li a0,10
+	call putch
+	mv a0,zero
+	ld ra,56(sp)
+	ld s0,48(sp)
+	addi sp,sp,64
+	jr ra
+.Bmain22:
+	lla s10,ans
+	lw s9,0(s10)
+	subw s10,zero,s9
+	lla s9,ans
+	sw s10,0(s9)
+	j .Bmain20
 	.size	main, .-main
+	.global	a
+	.bss
+	.align	3
+	.type	a,@object
+	.size	a,120000040
+a:
+	.zero	120000040
+	.global	ans
+	.bss
+	.align	2
+	.type	ans,@object
+	.size	ans,4
+ans:
+	.zero	4
 	.ident	"ForStar"
 	.section	.note.GNU-stack,"",@progbits

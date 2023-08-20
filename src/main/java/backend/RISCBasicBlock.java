@@ -1338,7 +1338,7 @@ public class RISCBasicBlock {
                 }
                 else if(op2 instanceof Immediate){
                     instructionList.removeLast();
-                    this.optimizeDiv2(curInst, dst, temp1, (Immediate) op2);
+                    this.optimizeDiv(curInst, dst, temp1, (Immediate) op2);
 
                 }
                 else {
@@ -1382,7 +1382,7 @@ public class RISCBasicBlock {
 
     }
 
-    private void optimizeDiv2(Instruction curInst, RISCOperand dst, RISCOperand src, Immediate op2) {
+    private void optimizeDiv(Instruction curInst, RISCOperand dst, RISCOperand src, Immediate op2) {
         int divisor = Math.abs(op2.getVal());
         RISCOperand regAns;
         if (op2.getVal() < 0) {
@@ -1404,11 +1404,12 @@ public class RISCBasicBlock {
             else {
                 temp = regAns;
             }
-            if (log != 1)
-            {
-                SraiInstruction sraiInstruction = new SraiInstruction(temp, src, new Immediate(log - 1));
-                instructionList.add(sraiInstruction);
-            }
+            //64位寄存器符号位无需扩展
+//            if (log != 1)
+//            {
+//                SraiInstruction sraiInstruction = new SraiInstruction(temp, src, new Immediate(log - 1));
+//                instructionList.add(sraiInstruction);
+//            }
             SrliInstruction srliInstruction = new SrliInstruction(temp,temp,new Immediate(64-log));
             instructionList.add(srliInstruction);
             AddInstruction addInstruction = new AddInstruction(temp,temp,src);
@@ -1447,112 +1448,112 @@ public class RISCBasicBlock {
         }
     }
 
-    public void optimizeDiv(Instruction curInst, RISCOperand dst, RISCOperand src, Immediate op2) {
-        int divisor = Math.abs(op2.getVal());
-        RISCOperand regAns;
-        if (op2.getVal() < 0) {
-            regAns = getNewVr();
-        } else {
-            regAns = dst;
-        }
-        //初始化log等参数
-        int l = this.log2(divisor);
-        int sh = l;
-        System.out.println("divisor is " + divisor);
-        BigInteger temp = new BigInteger("1");
-        long low = temp.shiftLeft(32 + l)
-                .divide(BigInteger.valueOf(divisor))
-                .longValue();
-        System.out.println("low is "+ low);
-        long high = temp.shiftLeft(32 + l)
-                .add(temp.shiftLeft(l + 1))
-                .divide(BigInteger.valueOf(divisor))
-                .longValue();
-        System.out.println("high is " + high);
-        while (((low / 2) < (high / 2)) && sh > 0) {
-            low /= 2;
-            high /= 2;
-            sh--;
-        }
-        if (this.isPowerOf2(divisor)) {
-            int x = this.log2(divisor);
-
-            // vr1 = srli src, (64-x)
-            // vr2 = addw src, vr1
-            // ans = sraiw vr2, x
-            //当除数为2的整数幂
-            if (x > 0 && x < 31) {
-                VirtualRegister vr = getNewVr();
-                Immediate imm64SubX = new Immediate(64 - x);
-                Immediate immX = new Immediate(x);
-                SrliInstruction srliInstruction = new SrliInstruction(tempRegister, src, imm64SubX);
-                instructionList.add(srliInstruction);
-                AddwInstruction addwInstruction = new AddwInstruction(vr, src, tempRegister);
-                instructionList.add(addwInstruction);
-                SraiwInstruction sraiwInstruction = new SraiwInstruction(regAns, vr, immX);
-                instructionList.add(sraiwInstruction);
-
-            }
-        } else {
-
-            if (high < (1L << 31)) {
-                VirtualRegister vr = getNewVr();
-                VirtualRegister vr2 = getNewVr();
-                BigImmediate bigImm = new BigImmediate(high);
-                LiInstruction liInstruction = new LiInstruction(vr, bigImm);
-                instructionList.add(liInstruction);
-                MulInstruction mulInstruction = new MulInstruction(vr, src, vr);
-                instructionList.add(mulInstruction);
-
-                Immediate imm1 = new Immediate(32 + sh);
-                SraiInstruction sraiInstruction = new SraiInstruction(vr2, vr, imm1);
-                instructionList.add(sraiInstruction);
-
-                Immediate imm2 = new Immediate(31);
-                SraiwInstruction sraiwInstruction = new SraiwInstruction(tempRegister, src, imm2);
-                instructionList.add(sraiwInstruction);
-
-                SubwInstruction subwInstruction = new SubwInstruction(regAns, vr2, tempRegister);
-                instructionList.add(subwInstruction);
-            } else {
-                high = high - (1L << 32);
-                VirtualRegister vr = getNewVr();
-                BigImmediate bigImm = new BigImmediate(high);
-                LiInstruction liInstruction = new LiInstruction(vr, bigImm);
-                instructionList.add(liInstruction);
-                MulInstruction mulInstruction = new MulInstruction(vr, src, vr);
-                instructionList.add(mulInstruction);
-
-                VirtualRegister vr2 = getNewVr();
-                Immediate imm1 = new Immediate(32);
-                SraiInstruction sraiInstruction = new SraiInstruction(vr2, vr, imm1);
-                instructionList.add(sraiInstruction);
-
-                VirtualRegister vr3 = getNewVr();
-                AddwInstruction addwInstruction = new AddwInstruction(vr3, vr2, src);
-                instructionList.add(addwInstruction);
-
-                VirtualRegister vr4 = getNewVr();
-                Immediate imm2 = new Immediate(sh);
-                SraiwInstruction sraiwInstruction = new SraiwInstruction(vr4, vr3, imm2);
-                instructionList.add(sraiwInstruction);
-
-                Immediate imm3 = new Immediate(31);
-                SraiwInstruction sraiwInstruction2 = new SraiwInstruction(tempRegister, src, imm3);
-                instructionList.add(sraiwInstruction2);
-                SubwInstruction subwInstruction = new SubwInstruction(regAns, vr4, tempRegister);
-                instructionList.add(subwInstruction);
-
-            }
-        }
-        //如果除数小于则倒转结果
-        if (op2.getVal() < 0) {
-            SubInstruction subInstruction = new SubInstruction(dst, new RealRegister(0), regAns);
-            instructionList.add(subInstruction);
-        }
-
-
-    }
+//    public void optimizeDiv(Instruction curInst, RISCOperand dst, RISCOperand src, Immediate op2) {
+//        int divisor = Math.abs(op2.getVal());
+//        RISCOperand regAns;
+//        if (op2.getVal() < 0) {
+//            regAns = getNewVr();
+//        } else {
+//            regAns = dst;
+//        }
+//        //初始化log等参数
+//        int l = this.log2(divisor);
+//        int sh = l;
+//        System.out.println("divisor is " + divisor);
+//        BigInteger temp = new BigInteger("1");
+//        long low = temp.shiftLeft(32 + l)
+//                .divide(BigInteger.valueOf(divisor))
+//                .longValue();
+//        System.out.println("low is "+ low);
+//        long high = temp.shiftLeft(32 + l)
+//                .add(temp.shiftLeft(l + 1))
+//                .divide(BigInteger.valueOf(divisor))
+//                .longValue();
+//        System.out.println("high is " + high);
+//        while (((low / 2) < (high / 2)) && sh > 0) {
+//            low /= 2;
+//            high /= 2;
+//            sh--;
+//        }
+//        if (this.isPowerOf2(divisor)) {
+//            int x = this.log2(divisor);
+//
+//            // vr1 = srli src, (64-x)
+//            // vr2 = addw src, vr1
+//            // ans = sraiw vr2, x
+//            //当除数为2的整数幂
+//            if (x > 0 && x < 31) {
+//                VirtualRegister vr = getNewVr();
+//                Immediate imm64SubX = new Immediate(64 - x);
+//                Immediate immX = new Immediate(x);
+//                SrliInstruction srliInstruction = new SrliInstruction(tempRegister, src, imm64SubX);
+//                instructionList.add(srliInstruction);
+//                AddwInstruction addwInstruction = new AddwInstruction(vr, src, tempRegister);
+//                instructionList.add(addwInstruction);
+//                SraiwInstruction sraiwInstruction = new SraiwInstruction(regAns, vr, immX);
+//                instructionList.add(sraiwInstruction);
+//
+//            }
+//        } else {
+//
+//            if (high < (1L << 31)) {
+//                VirtualRegister vr = getNewVr();
+//                VirtualRegister vr2 = getNewVr();
+//                BigImmediate bigImm = new BigImmediate(high);
+//                LiInstruction liInstruction = new LiInstruction(vr, bigImm);
+//                instructionList.add(liInstruction);
+//                MulInstruction mulInstruction = new MulInstruction(vr, src, vr);
+//                instructionList.add(mulInstruction);
+//
+//                Immediate imm1 = new Immediate(32 + sh);
+//                SraiInstruction sraiInstruction = new SraiInstruction(vr2, vr, imm1);
+//                instructionList.add(sraiInstruction);
+//
+//                Immediate imm2 = new Immediate(31);
+//                SraiwInstruction sraiwInstruction = new SraiwInstruction(tempRegister, src, imm2);
+//                instructionList.add(sraiwInstruction);
+//
+//                SubwInstruction subwInstruction = new SubwInstruction(regAns, vr2, tempRegister);
+//                instructionList.add(subwInstruction);
+//            } else {
+//                high = high - (1L << 32);
+//                VirtualRegister vr = getNewVr();
+//                BigImmediate bigImm = new BigImmediate(high);
+//                LiInstruction liInstruction = new LiInstruction(vr, bigImm);
+//                instructionList.add(liInstruction);
+//                MulInstruction mulInstruction = new MulInstruction(vr, src, vr);
+//                instructionList.add(mulInstruction);
+//
+//                VirtualRegister vr2 = getNewVr();
+//                Immediate imm1 = new Immediate(32);
+//                SraiInstruction sraiInstruction = new SraiInstruction(vr2, vr, imm1);
+//                instructionList.add(sraiInstruction);
+//
+//                VirtualRegister vr3 = getNewVr();
+//                AddwInstruction addwInstruction = new AddwInstruction(vr3, vr2, src);
+//                instructionList.add(addwInstruction);
+//
+//                VirtualRegister vr4 = getNewVr();
+//                Immediate imm2 = new Immediate(sh);
+//                SraiwInstruction sraiwInstruction = new SraiwInstruction(vr4, vr3, imm2);
+//                instructionList.add(sraiwInstruction);
+//
+//                Immediate imm3 = new Immediate(31);
+//                SraiwInstruction sraiwInstruction2 = new SraiwInstruction(tempRegister, src, imm3);
+//                instructionList.add(sraiwInstruction2);
+//                SubwInstruction subwInstruction = new SubwInstruction(regAns, vr4, tempRegister);
+//                instructionList.add(subwInstruction);
+//
+//            }
+//        }
+//        //如果除数小于则倒转结果
+//        if (op2.getVal() < 0) {
+//            SubInstruction subInstruction = new SubInstruction(dst, new RealRegister(0), regAns);
+//            instructionList.add(subInstruction);
+//        }
+//
+//
+//    }
 
 
     private void translateLoad(Instruction curInst) {
