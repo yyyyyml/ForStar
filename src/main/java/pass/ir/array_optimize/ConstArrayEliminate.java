@@ -1,4 +1,4 @@
-package pass.ir.constarray_eliminate;
+package pass.ir.array_optimize;
 
 import ir.Instruction;
 import ir.Instructions.MemoryInst;
@@ -20,8 +20,8 @@ public class ConstArrayEliminate implements BaseIRPass {
                     System.out.println("可以消除常数数组");
                     // 没有被重新赋值过，可以消除
                     doEliminate(gv, initArr);
-                    module.globalVariableList.remove(i);
-                    i--;
+//                    module.globalVariableList.remove(i);
+//                    i--;
                 }
 
             }

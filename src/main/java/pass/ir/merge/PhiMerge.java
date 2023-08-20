@@ -1,4 +1,4 @@
-package pass.ir.phimerge;
+package pass.ir.merge;
 
 import ir.Instruction;
 import ir.Instructions.MemoryInst;

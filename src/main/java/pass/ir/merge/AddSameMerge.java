@@ -1,4 +1,4 @@
-package pass.ir.addmerge;
+package pass.ir.merge;
 
 import ir.Instruction;
 import ir.Instructions.BinaryInst;

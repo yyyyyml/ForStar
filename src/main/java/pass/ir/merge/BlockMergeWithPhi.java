@@ -1,4 +1,4 @@
-package pass.ir.blockmerge;
+package pass.ir.merge;
 
 import ir.Instruction;
 import ir.Instructions.MemoryInst;

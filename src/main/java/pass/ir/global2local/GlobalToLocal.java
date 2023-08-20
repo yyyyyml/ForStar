@@ -10,7 +10,7 @@ import ir.values.Function;
 import ir.values.GlobalVariable;
 import pass.ir.BaseIRPass;
 import pass.ir.mem2reg.Mem2Reg;
-import pass.ir.phimerge.PhiMerge;
+import pass.ir.merge.PhiMerge;
 import util.IList;
 
 import java.util.HashMap;

@@ -32,7 +32,7 @@ public class Constant extends User {
             for (int i = 0; i < initList.size(); i++) {
                 Constant elem = initList.get(i);
 /*               if (!elem.isZero()) {*/
-                super.setOperand(elem,i);
+                super.setOperand(elem, i);
 /*               }*/
             }
 
