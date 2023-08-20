@@ -132,9 +132,9 @@ main:
 	bnez s6,.Bmain58
 	j .Bmain60
 .Bmain15:
-	srli s9,s5,60
-	addw s6,s5,s9
-	sraiw s7,s6,4
+	sraiw s6,s5,4
+	sraiw s9,s5,31
+	subw s7,s6,s9
 	slli s6,s7,4
 	subw s7,s5,s6
 	bne s7,zero,.Bmain20
