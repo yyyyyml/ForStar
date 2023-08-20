@@ -46,6 +46,18 @@ public class BasicOptimize implements BaseBackendPass {
                             instIndex-- ;
                             continue;
                         }
+                        else if(riscInst.isDef(0)&&riscInst.getOperandAt(0).emit().equals("t2")&&riscInst.getOperandAt(1).emit().equals("t2")&&preInst.getOperandAt(0).emit().equals("t2")){
+                            if(instIndex-2 >= 0 )
+                            {
+                                preInst = riscInstList.get(instIndex - 2);
+                            }
+                            else {
+                                preInst = null;
+                            }
+                            riscInstList.remove(instIndex-1);
+                            instIndex-- ;
+                            continue;
+                        }
                     }
                     else if(preInst.type == RISCInstruction.ITYPE.lw){
                         if(riscInst.type == RISCInstruction.ITYPE.sw && preInst.getOperandAt(0).emit().equals(riscInst.getOperandAt(0).emit() )&& preInst.getOperandAt(1).emit().equals(riscInst.getOperandAt(1).emit() )){

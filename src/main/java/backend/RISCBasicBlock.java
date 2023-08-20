@@ -1311,10 +1311,18 @@ public class RISCBasicBlock {
             }
             case MUL -> {
                 if(isOne){
+                    if (instructionList.getLast().type == RISCInstruction.ITYPE.li)
+                    {
+                        instructionList.removeLast();
+                    }
                     MvInstruction mvInstruction = new MvInstruction(dst,temp1);
                     instructionList.add(mvInstruction);
                 }
                 else if(isOne2){
+                    if (instructionList.getLast().type == RISCInstruction.ITYPE.li)
+                    {
+                        instructionList.removeLast();
+                    }
                     MvInstruction mvInstruction = new MvInstruction(dst,temp2);
                     instructionList.add(mvInstruction);
                 }
@@ -1412,10 +1420,10 @@ public class RISCBasicBlock {
 //            }
             SrliInstruction srliInstruction = new SrliInstruction(temp,temp,new Immediate(64-log));
             instructionList.add(srliInstruction);
-            AddInstruction addInstruction = new AddInstruction(temp,temp,src);
-            instructionList.add(addInstruction);
-            SraiInstruction sraiInstruction1 = new SraiInstruction(regAns,temp,new Immediate(log));
-            instructionList.add(sraiInstruction1);
+            AddwInstruction addwInstruction = new AddwInstruction(temp,temp,src);
+            instructionList.add(addwInstruction);
+            SraiwInstruction sraiwInstruction = new SraiwInstruction(regAns,temp,new Immediate(log));
+            instructionList.add(sraiwInstruction);
         }
         else if(m < (1L<<31)){
 //            int q0 = Math.toIntExact((m * n) >> 32 >> sh);
