@@ -36,7 +36,7 @@ public class RegisterAllocator implements BaseBackendPass {
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>(); // 编号对应的虚拟寄存器对象
         time2Function = new ArrayList<>();
-        regNum = 13;
+        regNum = 14;
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
@@ -361,10 +361,10 @@ public class RegisterAllocator implements BaseBackendPass {
                                 var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                                 int tempRegID;
                                 if (is14TempEmpty) {
-                                    tempRegID = 14;
+                                    tempRegID = 15;
                                     is14TempEmpty = false;
                                 } else if (is13TempEmpty) {
-                                    tempRegID = 13;
+                                    tempRegID = 14;
                                     is13TempEmpty = false;
                                 } else {
                                     tempRegID = curRegUsage.getNextFreeRegister();
@@ -496,10 +496,10 @@ public class RegisterAllocator implements BaseBackendPass {
                             var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                             int tempRegID;
                             if (is14TempEmpty) {
-                                tempRegID = 14;
+                                tempRegID = 15;
                                 is14TempEmpty = false;
                             } else if (is13TempEmpty) {
-                                tempRegID = 13;
+                                tempRegID = 14;
                                 is13TempEmpty = false;
                             } else {
                                 tempRegID = curRegUsage.getNextFreeRegister();
@@ -652,7 +652,7 @@ public class RegisterAllocator implements BaseBackendPass {
                         var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                         for (int i = 0; i < curRegUsage.getRegNum(); i++) {
                             if (curRegUsage.isRegisterUsed(i)) {
-                                if (i > 4) continue;
+                                if (i < 10) continue;
                                 RealRegister reg = new RealRegister(i, 11);
                                 riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
 //                                System.out.println("开辟了新的栈 " + riscFunc.stackIndex);

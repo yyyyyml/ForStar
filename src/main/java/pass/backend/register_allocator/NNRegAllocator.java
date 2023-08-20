@@ -1,6 +1,7 @@
 package pass.backend.register_allocator;
 
 import backend.*;
+import backend.instructions.CallInstruction;
 import backend.instructions.LdInstruction;
 import backend.instructions.SdInstruction;
 import backend.operands.Memory;
@@ -44,7 +45,7 @@ public class NNRegAllocator implements BaseBackendPass {
         liveIntervalMapList = new HashMap<>();
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>(); // 编号对应的虚拟寄存器对象
-        regNum = 13;
+        regNum = 14;
         def = new HashMap<>();
         use = new HashMap<>();
         in = new HashMap<>();
@@ -560,10 +561,10 @@ public class NNRegAllocator implements BaseBackendPass {
                                 var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                                 int tempRegID;
                                 if (is14TempEmpty) {
-                                    tempRegID = 14;
+                                    tempRegID = 15;
                                     is14TempEmpty = false;
                                 } else if (is13TempEmpty) {
-                                    tempRegID = 13;
+                                    tempRegID = 14;
                                     is13TempEmpty = false;
                                 } else {
                                     tempRegID = curRegUsage.getNextFreeRegister();
@@ -691,10 +692,10 @@ public class NNRegAllocator implements BaseBackendPass {
                             var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                             int tempRegID;
                             if (is14TempEmpty) {
-                                tempRegID = 14;
+                                tempRegID = 15;
                                 is14TempEmpty = false;
                             } else if (is13TempEmpty) {
-                                tempRegID = 13;
+                                tempRegID = 14;
                                 is13TempEmpty = false;
                             } else {
                                 tempRegID = curRegUsage.getNextFreeRegister();
@@ -810,6 +811,7 @@ public class NNRegAllocator implements BaseBackendPass {
                     if (lessRegSave) { //可以保存更少的寄存器，但是TLE了一个？
                         var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                         for (int i = 0; i < curRegUsage.getRegNum(); i++) {
+                            if (i < 10 && ((CallInstruction) riscInst).isCallBuildIn()) continue;
                             if (curRegUsage.isRegisterUsed(i)) {
                                 RealRegister reg = new RealRegister(i, 11);
                                 riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置

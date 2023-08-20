@@ -1,8 +1,14 @@
 package pass.backend.basic_optimize;
 
 import backend.*;
-import backend.instructions.*;
-import backend.operands.*;
+import backend.instructions.AddInstruction;
+import backend.instructions.MvInstruction;
+import backend.instructions.SlliInstruction;
+import backend.instructions.SubInstruction;
+import backend.operands.BigImmediate;
+import backend.operands.Immediate;
+import backend.operands.RealRegister;
+import backend.operands.VirtualRegister;
 import pass.backend.BaseBackendPass;
 
 import java.util.LinkedList;
@@ -49,8 +55,8 @@ public class MultipleOptimize implements BaseBackendPass {
                                 continue;
                             }
                             //临时寄存器保存
-                            RealRegister tempRegister = new RealRegister(13, 11);
-                            MvInstruction mvInstruction = new MvInstruction(tempRegister,temp1);
+                            RealRegister tempRegister = new RealRegister(13, 12);
+                            MvInstruction mvInstruction = new MvInstruction(tempRegister, temp1);
                             tempInstList.add(mvInstruction);
                             //riscInstList.add(curIndex++,mvInstruction);
 

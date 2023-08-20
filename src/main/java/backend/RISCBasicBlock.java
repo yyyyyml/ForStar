@@ -37,7 +37,7 @@ public class RISCBasicBlock {
     public LinkedList<RISCBasicBlock> nextlist = new LinkedList<>();
     public int firstId = Integer.MAX_VALUE;
     public int lastId;
-    public RealRegister tempRegister = new RealRegister(13, 11);
+    public RealRegister tempRegister = new RealRegister(13, 12);
     public FloatRealRegister floatTempRegister = new FloatRealRegister(23 + 18);
     public HashMap<Value,RISCOperand> phiVrTempMap = new HashMap<>();
     public LinkedList<Value> phiList = new LinkedList<>();

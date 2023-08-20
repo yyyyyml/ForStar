@@ -40,7 +40,7 @@ public class NewRegAllocator implements BaseBackendPass {
         activeList = new ArrayList<>();
         intMapVreg = new HashMap<>(); // 编号对应的虚拟寄存器对象
         time2Function = new ArrayList<>();
-        regNum = 13;
+        regNum = 14;
     }
 
     // 寄存器第一次出现，设置Start，并放进Map
@@ -426,10 +426,10 @@ public class NewRegAllocator implements BaseBackendPass {
                                 var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                                 int tempRegID;
                                 if (is14TempEmpty) {
-                                    tempRegID = 14;
+                                    tempRegID = 15;
                                     is14TempEmpty = false;
                                 } else if (is13TempEmpty) {
-                                    tempRegID = 13;
+                                    tempRegID = 14;
                                     is13TempEmpty = false;
                                 } else {
                                     tempRegID = curRegUsage.getNextFreeRegister();
@@ -552,10 +552,10 @@ public class NewRegAllocator implements BaseBackendPass {
                             var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                             int tempRegID;
                             if (is14TempEmpty) {
-                                tempRegID = 14;
+                                tempRegID = 15;
                                 is14TempEmpty = false;
                             } else if (is13TempEmpty) {
-                                tempRegID = 13;
+                                tempRegID = 14;
                                 is13TempEmpty = false;
                             } else {
                                 tempRegID = curRegUsage.getNextFreeRegister();
