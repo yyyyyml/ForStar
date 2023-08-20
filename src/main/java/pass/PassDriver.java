@@ -36,7 +36,7 @@ public class PassDriver {
 
     public PassDriver(boolean isPass) {
         this.isPass = isPass;
-        this.isPass = true;
+        this.isPass = false;
         irPassList = new ArrayList<>();
         backendPassList = new ArrayList<>();
     }

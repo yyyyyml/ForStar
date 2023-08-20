@@ -1398,15 +1398,18 @@ public class RISCBasicBlock {
         if(isPowerOf2(divisor)){
             //q0 = (n+(n>>(log-1))>>>(32-log))>>log;
             RISCOperand temp = null;
-            if(dst == src){
+            if(dst.emit().equals(src.emit()) ){
                 temp = getNewVr();
             }
             else {
                 temp = regAns;
             }
-            SraiInstruction sraiInstruction = new SraiInstruction(temp,src,new Immediate(log-1));
-            instructionList.add(sraiInstruction);
-            SrliInstruction srliInstruction = new SrliInstruction(temp,temp,new Immediate(32-log));
+            if (log != 1)
+            {
+                SraiInstruction sraiInstruction = new SraiInstruction(temp, src, new Immediate(log - 1));
+                instructionList.add(sraiInstruction);
+            }
+            SrliInstruction srliInstruction = new SrliInstruction(temp,temp,new Immediate(64-log));
             instructionList.add(srliInstruction);
             AddInstruction addInstruction = new AddInstruction(temp,temp,src);
             instructionList.add(addInstruction);
@@ -1416,7 +1419,7 @@ public class RISCBasicBlock {
         else if(m < (1L<<31)){
 //            int q0 = Math.toIntExact((m * n) >> 32 >> sh);
             RISCOperand temp = null;
-            if(dst == src){
+            if(dst.emit().equals(src.emit())){
                 temp = getNewVr();
             }
             else {
