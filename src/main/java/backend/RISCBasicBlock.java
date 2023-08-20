@@ -1338,7 +1338,7 @@ public class RISCBasicBlock {
                 }
                 else if(op2 instanceof Immediate){
                     instructionList.removeLast();
-                    this.optimizeDiv(curInst, dst, temp1, (Immediate) op2);
+                    this.optimizeDiv2(curInst, dst, temp1, (Immediate) op2);
 
                 }
                 else {
@@ -1380,6 +1380,55 @@ public class RISCBasicBlock {
 //            instructionList.add(mv);
 //        }
 
+    }
+
+    private void optimizeDiv2(Instruction curInst, RISCOperand dst, RISCOperand src, Immediate op2) {
+        int divisor = Math.abs(op2.getVal());
+        RISCOperand regAns;
+        if (op2.getVal() < 0) {
+            regAns = getNewVr();
+        } else {
+            regAns = dst;
+        }
+        //初始化log等参数
+        int log = (int) Math.max(1,Math.ceil(log2(divisor)));
+        long m = (long) (1 + Math.floor(Math.pow(2,(32+log-1))/divisor));
+        System.out.println(m);
+        int sh = log-1;
+        if(isPowerOf2(divisor)){
+            //q0 = (n+(n>>(log-1))>>>(32-log))>>log;
+            SraiInstruction sraiInstruction = new SraiInstruction(regAns,src,new Immediate(log-1));
+            instructionList.add(sraiInstruction);
+            SrliInstruction srliInstruction = new SrliInstruction(regAns,regAns,new Immediate(32-log));
+            instructionList.add(srliInstruction);
+            AddInstruction addInstruction = new AddInstruction(regAns,regAns,src);
+            instructionList.add(addInstruction);
+            SraiInstruction sraiInstruction1 = new SraiInstruction(regAns,regAns,new Immediate(log));
+            instructionList.add(sraiInstruction1);
+        }
+        else if(m < (1L<<31)){
+//            int q0 = Math.toIntExact((m * n) >> 32 >> sh);
+
+            LiInstruction liInstruction = new LiInstruction(regAns,new BigImmediate(m));
+            instructionList.add(liInstruction);
+            MulInstruction mulInstruction = new MulInstruction(regAns,regAns,src);
+            instructionList.add(mulInstruction);
+            SraiInstruction sraiInstruction = new SraiInstruction(regAns,regAns,new Immediate(32+sh));
+            instructionList.add(sraiInstruction);
+            //q0 = q0-xsignN;
+            SraiwInstruction sraiwInstruction2 = new SraiwInstruction(tempRegister, src, new Immediate(31));
+            instructionList.add(sraiwInstruction2);
+            SubwInstruction subwInstruction = new SubwInstruction(regAns, regAns, tempRegister);
+            instructionList.add(subwInstruction);
+        }
+        else {
+            throw new RuntimeException("除法bug！！！！！！");
+        }
+        //如果除数小于则倒转结果
+        if (op2.getVal() < 0) {
+            SubInstruction subInstruction = new SubInstruction(dst, new RealRegister(0), regAns);
+            instructionList.add(subInstruction);
+        }
     }
 
     public void optimizeDiv(Instruction curInst, RISCOperand dst, RISCOperand src, Immediate op2) {
@@ -1426,6 +1475,7 @@ public class RISCBasicBlock {
                 instructionList.add(addwInstruction);
                 SraiwInstruction sraiwInstruction = new SraiwInstruction(regAns, vr, immX);
                 instructionList.add(sraiwInstruction);
+
             }
         } else {
 

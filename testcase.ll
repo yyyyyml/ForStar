@@ -35,8 +35,8 @@ define dso_local i32 @main(){
 	br i1 %14, label  %58, label  %60
 
 15:
-	%16 = sdiv i32 %8, 10
-	%17 = mul i32 %16, 10
+	%16 = sdiv i32 %8, 8
+	%17 = mul i32 %16, 8
 	%18 = sub i32 %8, %17
 	%19 = icmp ne i32 %18, 0
 	br i1 %19, label  %20, label  %21
