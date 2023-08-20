@@ -19,6 +19,7 @@ public class BasicBlock extends Value {
     public IList.INode<BasicBlock, Function> node;
     public ArrayList<BasicBlock> preList; // 跳转到这里的基本块列表
     public ArrayList<BasicBlock> nextList; // 能够跳转到的基本块列表
+    public boolean needfixphi = false;
 
     // 用于mem2reg的
     public Set<MemoryInst.Alloca> npdVar = new HashSet<>();

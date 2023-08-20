@@ -6,7 +6,7 @@
         <PerGrammarGenerationSettings>
           <option name="fileName" value="$PROJECT_DIR$/src/main/java/frontend/SysY2022.g4" />
           <option name="autoGen" value="true" />
-          <option name="outputDir" value="E:\ForStar\src\main\java" />
+          <option name="outputDir" value="D:\ForStar\src\main\java" />
           <option name="libDir" value="" />
           <option name="encoding" value="" />
           <option name="pkg" value="" />
