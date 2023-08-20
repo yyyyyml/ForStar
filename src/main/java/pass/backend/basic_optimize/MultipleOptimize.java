@@ -25,35 +25,6 @@ public class MultipleOptimize implements BaseBackendPass {
 
                     RISCInstruction riscInst = riscInstList.get(instIndex);
                     int curIndex = instIndex+1;
-                    //删除不必要的ld和sd
-                    if(preInst.type == RISCInstruction.ITYPE.ld){
-                        if(riscInst.type == RISCInstruction.ITYPE.sd && preInst.getOperandAt(0)==riscInst.getOperandAt(0) && preInst.getOperandAt(1)==riscInst.getOperandAt(1)){
-                            riscInstList.remove(instIndex);
-                            instIndex-- ;
-                            continue;
-                        }
-                    }
-                    else if(preInst.type == RISCInstruction.ITYPE.sd){
-                        if(riscInst.type == RISCInstruction.ITYPE.ld && preInst.getOperandAt(0)==riscInst.getOperandAt(0) && preInst.getOperandAt(1)==riscInst.getOperandAt(1)){
-                            riscInstList.remove(instIndex);
-                            instIndex-- ;
-                            continue;
-                        }
-                    }
-                    else if(preInst.type == RISCInstruction.ITYPE.lw){
-                        if(riscInst.type == RISCInstruction.ITYPE.sw && preInst.getOperandAt(0)==riscInst.getOperandAt(0) && preInst.getOperandAt(1)==riscInst.getOperandAt(1)){
-                            riscInstList.remove(instIndex);
-                            instIndex-- ;
-                            continue;
-                        }
-                    }
-                    else if(preInst.type == RISCInstruction.ITYPE.sw){
-                        if(riscInst.type == RISCInstruction.ITYPE.lw && preInst.getOperandAt(0)==riscInst.getOperandAt(0) && preInst.getOperandAt(1)==riscInst.getOperandAt(1)){
-                            riscInstList.remove(instIndex);
-                            instIndex-- ;
-                            continue;
-                        }
-                    }
 
 
                     if(preInst.type == RISCInstruction.ITYPE.li){

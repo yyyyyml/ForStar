@@ -31,6 +31,14 @@ public class BasicOptimize implements BaseBackendPass {
                             instIndex-- ;
                             continue;
                         }
+                        //ld s10,address  mv vr,s10 -> ld vr,address
+                        else if( riscInst.type == RISCInstruction.ITYPE.mv && preInst.getOperandAt(0).emit().equals("s10") && preInst.getOperandAt(0).emit().equals(riscInst.getOperandAt(1).emit()))
+                        {
+                            preInst.setOperand(riscInst.getOperandAt(0),0);
+                            riscInstList.remove(instIndex);
+                            instIndex-- ;
+                            continue;
+                        }
                     }
                     else if(preInst.type == RISCInstruction.ITYPE.sd){
                         if(riscInst.type == RISCInstruction.ITYPE.ld && preInst.getOperandAt(0).emit().equals(riscInst.getOperandAt(0).emit() )&& preInst.getOperandAt(1).emit().equals(riscInst.getOperandAt(1).emit() )){
@@ -50,6 +58,16 @@ public class BasicOptimize implements BaseBackendPass {
                         if(riscInst.type == RISCInstruction.ITYPE.lw && preInst.getOperandAt(0).emit().equals(riscInst.getOperandAt(0).emit() )&& preInst.getOperandAt(1).emit().equals(riscInst.getOperandAt(1).emit() )){
                             riscInstList.remove(instIndex);
                             instIndex-- ;
+                            continue;
+                        }
+                    }
+                    //mv s10,vr sd s10,address -> sd vr,address
+                    else if(preInst.type == RISCInstruction.ITYPE.mv){
+                        if( riscInst.type == RISCInstruction.ITYPE.sd && preInst.getOperandAt(0).emit().equals("s10") && preInst.getOperandAt(0).emit().equals(riscInst.getOperandAt(0).emit())){
+                            riscInst.setOperand(preInst.getOperandAt(1),0);
+                            riscInstList.remove(instIndex-1);
+                            instIndex-- ;
+                            preInst = riscInst;
                             continue;
                         }
                     }
