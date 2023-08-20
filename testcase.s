@@ -7,16 +7,16 @@
 	.global	main
 	.type	main	@function
 main:
-	li t1,-16576
+	li t1,-16592
 	add sp,sp,t1
-	li t0,16568
+	li t0,16584
 	add t0,t0,sp
 	sd ra,0(t0)
 	sd s0,-8(t0)
-	li t1,16576
+	li t1,16592
 	add s0,sp,t1
 .Bmain0:
-	li t0,-16424
+	li t0,-16440
 	add t0,t0,s0
 	sd t2,0(t0)
 	sd t3,-8(t0)
@@ -28,7 +28,7 @@ main:
 	fsd f1,-96(t0)
 	fsd f2,-104(t0)
 	call getint
-	li t0,-16528
+	li t0,-16544
 	add t0,t0,s0
 	fld f2,0(t0)
 	fld f1,8(t0)
@@ -39,7 +39,7 @@ main:
 	ld t4,88(t0)
 	ld t3,96(t0)
 	ld t2,104(t0)
-	mv s3,a0
+	mv s5,a0
 	mv a0,zero
 	sd t2,104(t0)
 	sd t3,96(t0)
@@ -47,17 +47,17 @@ main:
 	sd t5,80(t0)
 	sd t6,72(t0)
 	sd s1,64(t0)
-	sd s3,56(t0)
+	sd s5,56(t0)
 	fsd f0,16(t0)
 	fsd f1,8(t0)
 	fsd f2,0(t0)
 	call _sysy_starttime
-	li t0,-16528
+	li t0,-16544
 	add t0,t0,s0
 	fld f2,0(t0)
 	fld f1,8(t0)
 	fld f0,16(t0)
-	ld s3,56(t0)
+	ld s5,56(t0)
 	ld s1,64(t0)
 	ld t6,72(t0)
 	ld t5,80(t0)
@@ -65,28 +65,28 @@ main:
 	ld t3,96(t0)
 	ld t2,104(t0)
 	mv t2,zero
-	lla s4,.F0
-	fld f0,0(s4)
-	mv t3,s3
+	lla s6,.F0
+	fld f0,0(s6)
+	mv t3,s5
 	mv t4,zero
-	lla s3,.F1
-	fld f1,0(s3)
-	lla s3,.F0
-	fld f2,0(s3)
+	lla s5,.F1
+	fld f1,0(s5)
+	lla s5,.F0
+	fld f2,0(s5)
 	j .Bmain4
 .Bmain4:
-	mv s3,t2
+	mv s5,t2
 	fmv.s f3,f0
-	mv s4,t3
-	mv s5,t4
+	mv s6,t3
+	mv s7,t4
 	fmv.s f4,f1
 	fmv.s f5,f2
-	li s6,500000
-	blt s5,s6,.Bmain15
+	li s8,500000
+	blt s7,s8,.Bmain15
 	j .Bmain12
 .Bmain12:
 	mv a0,zero
-	li t0,-16424
+	li t0,-16440
 	add t0,t0,s0
 	sd t2,0(t0)
 	sd t3,-8(t0)
@@ -94,10 +94,10 @@ main:
 	sd t5,-24(t0)
 	sd t6,-32(t0)
 	sd s1,-40(t0)
-	sd s3,-48(t0)
-	sd s4,-56(t0)
-	sd s5,-64(t0)
-	sd s6,-72(t0)
+	sd s5,-48(t0)
+	sd s6,-56(t0)
+	sd s7,-64(t0)
+	sd s8,-72(t0)
 	fsd f0,-88(t0)
 	fsd f1,-96(t0)
 	fsd f2,-104(t0)
@@ -105,7 +105,7 @@ main:
 	fsd f4,-120(t0)
 	fsd f5,-128(t0)
 	call _sysy_stoptime
-	li t0,-16552
+	li t0,-16568
 	add t0,t0,s0
 	fld f5,0(t0)
 	fld f4,8(t0)
@@ -113,37 +113,45 @@ main:
 	fld f2,24(t0)
 	fld f1,32(t0)
 	fld f0,40(t0)
-	ld s6,56(t0)
-	ld s5,64(t0)
-	ld s4,72(t0)
-	ld s3,80(t0)
+	ld s8,56(t0)
+	ld s7,64(t0)
+	ld s6,72(t0)
+	ld s5,80(t0)
 	ld s1,88(t0)
 	ld t6,96(t0)
 	ld t5,104(t0)
 	ld t4,112(t0)
 	ld t3,120(t0)
 	ld t2,128(t0)
-	lla s6,.F2
-	flw f6,0(s6)
+	lla s8,.F2
+	flw f6,0(s8)
 	fsub.s f7,f3,f6
-	lla s6,.F3
-	flw f6,0(s6)
-	fle.s s6,f7,f6
-	bnez s6,.Bmain58
+	lla s8,.F3
+	flw f6,0(s8)
+	fle.s s8,f7,f6
+	bnez s8,.Bmain58
 	j .Bmain60
 .Bmain15:
-	sraiw s6,s5,4
-	sraiw s9,s5,31
-	subw s7,s6,s9
-	slli s6,s7,4
-	subw s7,s5,s6
-	bne s7,zero,.Bmain20
+	li t5,-858993458
+	mul t5,s7,t5
+	srai s8,t5,32
+	addw s4,s8,s7
+	sraiw s8,s4,3
+	sraiw s9,s7,31
+	subw s4,s8,s9
+	mv s9,s4
+	slli s4,s9,3
+	mv t6,s4
+	slli s4,s9,1
+	add t6,t6,s4
+	subw s4,s7,t6
+	bne s4,zero,.Bmain20
 	j .Bmain21
 .Bmain20:
-	mv s6,s3
+	mv s4,s5
 	fmv.s f6,f3
-	mv s7,s4
-	mv s8,s5
+	mv s8,s6
+	mv s3,s7
 	lla s2,.F1
 	fld f7,0(s2)
 	lla s2,.F0
@@ -156,89 +164,95 @@ main:
 	lla s2,.F5
 	flw f9,0(s2)
 	fadd.s f19,f4,f9
-	mv s6,s3
+	mv s4,s5
 	fmv.s f6,f3
-	mv s7,s4
-	mv s8,s5
+	mv s8,s6
+	mv s3,s7
 	fmv.s f7,f19
 	fmv.s f8,f18
 	j .Bmain24
 .Bmain24:
-	mv s2,s6
+	mv s2,s4
 	fmv.s f4,f6
-	mv s3,s7
-	mv s4,s8
+	mv s5,s8
+	mv s6,s3
 	fmv.s f5,f7
 	fmv.s f9,f8
-	blt s2,s3,.Bmain32
+	blt s2,s5,.Bmain32
 	j .Bmain40
 .Bmain32:
-	slli t5,s2,2
-	li t1,-8208
-	add t5,t5,t1
-	add s5,s0,t5
-	fcvt.s.w f18,s2
-	fadd.s f19,f9,f18
-	fsw f19,0(s5)
-	slli t6,s2,2
-	li t1,-16400
-	add t6,t6,t1
-	add s5,s0,t6
-	fcvt.s.w f18,s2
-	fadd.s f19,f5,f18
-	fsw f19,0(s5)
-	addi s5,s2,1
-	mv s6,s5
-	fmv.s f6,f4
-	mv s7,s3
-	mv s8,s4
-	fmv.s f7,f5
-	fmv.s f8,f9
-	j .Bmain24
-.Bmain40:
-	mv s5,zero
-	lla s6,.F0
-	fld f6,0(s6)
-	j .Bmain43
-.Bmain43:
-	mv s6,s5
-	fmv.s f7,f6
-	blt s6,s3,.Bmain47
-	j .Bmain55
-.Bmain47:
-	slli s1,s6,2
+	slli s1,s2,2
 	li t1,-8208
 	add s1,s1,t1
 	add s7,s0,s1
-	flw f8,0(s7)
-	slli s10,s6,2
-	li t0,-16408
+	fcvt.s.w f18,s2
+	fadd.s f19,f9,f18
+	fsw f19,0(s7)
+	slli s10,s2,2
+	li t0,-16424
 	add t0,t0,s0
 	sd s10,0(t0)
 	li t1,-16400
 	add s10,s10,t1
 	sd s10,0(t0)
 	add s7,s0,s10
+	fcvt.s.w f18,s2
+	fadd.s f19,f5,f18
+	fsw f19,0(s7)
+	addi s7,s2,1
+	mv s4,s7
+	fmv.s f6,f4
+	mv s8,s5
+	mv s3,s6
+	fmv.s f7,f5
+	fmv.s f8,f9
+	j .Bmain24
+.Bmain40:
+	mv s3,zero
+	lla s4,.F0
+	fld f6,0(s4)
+	j .Bmain43
+.Bmain43:
+	mv s4,s3
+	fmv.s f7,f6
+	blt s4,s5,.Bmain47
+	j .Bmain55
+.Bmain47:
+	slli s10,s4,2
+	li t0,-16416
+	add t0,t0,s0
+	sd s10,0(t0)
+	li t1,-8208
+	add s10,s10,t1
+	sd s10,0(t0)
+	add s7,s0,s10
+	flw f8,0(s7)
+	slli s10,s4,2
+	sd s10,8(t0)
+	li t1,-16400
+	add s10,s10,t1
+	sd s10,8(t0)
+	add s7,s0,s10
 	flw f18,0(s7)
 	fmul.s f19,f8,f18
 	fadd.s f8,f7,f19
-	addi s7,s6,1
-	mv s5,s7
+	addi s7,s4,1
+	mv s3,s7
 	fmv.s f6,f8
 	j .Bmain43
 .Bmain55:
 	fadd.s f6,f4,f7
-	addi s5,s4,1
+	addi s3,s6,1
 	mv t2,s2
 	fmv.s f0,f6
-	mv t3,s3
-	mv t4,s5
+	mv t3,s5
+	mv t4,s3
 	fmv.s f1,f5
 	fmv.s f2,f9
 	j .Bmain4
 .Bmain58:
 	mv a0,zero
-	li t0,-16424
+	li t0,-16440
 	add t0,t0,s0
 	sd t2,0(t0)
 	sd t3,-8(t0)
@@ -248,8 +262,8 @@ main:
 	sd s1,-40(t0)
 	sd s2,-48(t0)
 	sd s3,-56(t0)
-	sd s4,-64(t0)
-	sd s5,-72(t0)
+	sd s5,-64(t0)
+	sd s6,-72(t0)
 	fsd f0,-88(t0)
 	fsd f1,-96(t0)
 	fsd f2,-104(t0)
@@ -260,7 +274,7 @@ main:
 	fsd f7,-144(t0)
 	fsd f9,-152(t0)
 	call putint
-	li t0,-16576
+	li t0,-16592
 	add t0,t0,s0
 	fld f9,0(t0)
 	fld f7,8(t0)
@@ -271,8 +285,8 @@ main:
 	fld f2,48(t0)
 	fld f1,56(t0)
 	fld f0,64(t0)
-	ld s5,80(t0)
-	ld s4,88(t0)
+	ld s6,80(t0)
+	ld s5,88(t0)
 	ld s3,96(t0)
 	ld s2,104(t0)
 	ld s1,112(t0)
@@ -282,16 +296,16 @@ main:
 	ld t3,144(t0)
 	ld t2,152(t0)
 	mv a0,zero
-	li t0,16568
+	li t0,16584
 	add t0,t0,sp
 	ld ra,0(t0)
 	ld s0,-8(t0)
-	li t1,16576
+	li t1,16592
 	add sp,sp,t1
 	jr ra
 .Bmain59:
 	li a0,1
-	li t0,-16424
+	li t0,-16440
 	add t0,t0,s0
 	sd t2,0(t0)
 	sd t3,-8(t0)
@@ -301,8 +315,8 @@ main:
 	sd s1,-40(t0)
 	sd s2,-48(t0)
 	sd s3,-56(t0)
-	sd s4,-64(t0)
-	sd s5,-72(t0)
+	sd s5,-64(t0)
+	sd s6,-72(t0)
 	fsd f0,-88(t0)
 	fsd f1,-96(t0)
 	fsd f2,-104(t0)
@@ -313,7 +327,7 @@ main:
 	fsd f7,-144(t0)
 	fsd f9,-152(t0)
 	call putint
-	li t0,-16576
+	li t0,-16592
 	add t0,t0,s0
 	fld f9,0(t0)
 	fld f7,8(t0)
@@ -324,8 +338,8 @@ main:
 	fld f2,48(t0)
 	fld f1,56(t0)
 	fld f0,64(t0)
-	ld s5,80(t0)
-	ld s4,88(t0)
+	ld s6,80(t0)
+	ld s5,88(t0)
 	ld s3,96(t0)
 	ld s2,104(t0)
 	ld s1,112(t0)
@@ -335,11 +349,11 @@ main:
 	ld t3,144(t0)
 	ld t2,152(t0)
 	li a0,1
-	li t0,16568
+	li t0,16584
 	add t0,t0,sp
 	ld ra,0(t0)
 	ld s0,-8(t0)
-	li t1,16576
+	li t1,16592
 	add sp,sp,t1
 	jr ra
 .Bmain60:

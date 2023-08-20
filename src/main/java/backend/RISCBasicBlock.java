@@ -1404,11 +1404,11 @@ public class RISCBasicBlock {
                         .divide(BigInteger.valueOf(divisor))
                         .longValue();
         System.out.println("high is " + high);
-        while (((low / 2) < (high / 2)) && sh > 0) {
-            low /= 2;
-            high /= 2;
-            sh--;
-        }
+//        while (((low / 2) < (high / 2)) && sh > 0) {
+//            low /= 2;
+//            high /= 2;
+//            sh--;
+//        }
         System.out.println("new low is " + low + "new high is " + high + "sh is " + sh);
         if (isPowerOf2(divisor)) {
             int x = l;
@@ -1420,18 +1420,18 @@ public class RISCBasicBlock {
             if (x > 0 && x < 31) {
                 VirtualRegister vr = getNewVr();
                 Immediate imm = new Immediate(x);
-//                Immediate imm64SubX = new Immediate(64 - x);
-//                SrliInstruction srliInstruction = new SrliInstruction(tempRegister, src, imm64SubX);
-//                instructionList.add(srliInstruction);
-//                AddwInstruction addwInstruction = new AddwInstruction(vr, src, tempRegister);
-//                instructionList.add(addwInstruction);
+                Immediate imm64SubX = new Immediate(64 - x);
+                SrliInstruction srliInstruction = new SrliInstruction(tempRegister, src, imm64SubX);
+                instructionList.add(srliInstruction);
+                AddwInstruction addwInstruction = new AddwInstruction(vr, src, tempRegister);
+                instructionList.add(addwInstruction);
                 SraiwInstruction sraiwInstruction = new SraiwInstruction(vr, src, imm);
                 instructionList.add(sraiwInstruction);
-                Immediate imm2 = new Immediate(31);
-                SraiwInstruction sraiwInstruction2 = new SraiwInstruction(tempRegister, src, imm2);
-                instructionList.add(sraiwInstruction2);
-                SubwInstruction subwInstruction = new SubwInstruction(regAns, vr, tempRegister);
-                instructionList.add(subwInstruction);
+//                Immediate imm2 = new Immediate(31);
+//                SraiwInstruction sraiwInstruction2 = new SraiwInstruction(tempRegister, src, imm2);
+//                instructionList.add(sraiwInstruction2);
+//                SubwInstruction subwInstruction = new SubwInstruction(regAns, vr, tempRegister);
+//                instructionList.add(subwInstruction);
             }
         } else {
 

@@ -21,7 +21,7 @@ int main() {
     float b = 1.0;
     starttime();
     while ( i < COUNT) {
-        if (i % 16) {
+        if (i % 10) {
             a = 0.0;
             b = 1.0;
         } else {
