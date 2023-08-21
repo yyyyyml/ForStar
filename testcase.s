@@ -121,7 +121,6 @@ main:
 	mv t2,s7
 	sd t2,-112(s0)
 	slli s7,t3,8
-	ld t2,-112(s0)
 	add t2,t2,s7
 	slli s7,t3,6
 	add t2,t2,s7
@@ -150,7 +149,6 @@ main:
 	mv t2,s7
 	sd t2,-96(s0)
 	slli s7,t3,8
-	ld t2,-96(s0)
 	add t2,t2,s7
 	slli s7,t3,6
 	add t2,t2,s7
@@ -201,7 +199,6 @@ main:
 	mv t2,s6
 	sd t2,-72(s0)
 	slli s6,t3,8
-	ld t2,-72(s0)
 	add t2,t2,s6
 	slli s6,t3,6
 	add t2,t2,s6
@@ -224,7 +221,6 @@ main:
 	mv t2,s2
 	sd t2,-32(s0)
 	slli s2,t3,8
-	ld t2,-32(s0)
 	add t2,t2,s2
 	slli s2,t3,6
 	add t2,t2,s2
@@ -247,7 +243,6 @@ main:
 	mv t2,s11
 	sd t2,-48(s0)
 	slli s11,t3,8
-	ld t2,-48(s0)
 	add t2,t2,s11
 	slli s11,t3,6
 	add t2,t2,s11
@@ -266,7 +261,6 @@ main:
 	mv t2,s2
 	sd t2,-56(s0)
 	slli s2,t3,8
-	ld t2,-56(s0)
 	add t2,t2,s2
 	slli s2,t3,6
 	add t2,t2,s2
@@ -284,7 +278,6 @@ main:
 	mv t2,s2
 	sd t2,-64(s0)
 	slli s2,t3,8
-	ld t2,-64(s0)
 	add t2,t2,s2
 	slli s2,t3,6
 	add t2,t2,s2
