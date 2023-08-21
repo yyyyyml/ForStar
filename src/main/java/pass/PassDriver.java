@@ -12,6 +12,7 @@ import pass.backend.register_allocator.NNFloatRegAllocator;
 import pass.backend.register_allocator.NNRegAllocator;
 import pass.backend.register_allocator.RegisterAllocator;
 import pass.ir.BaseIRPass;
+import pass.ir.array_optimize.ArrayLocalToGlobal;
 import pass.ir.array_optimize.ConstArrayEliminate;
 import pass.ir.constantexp_derivation.ConstantExp_Derivation;
 import pass.ir.cse.CommonSubexpressionElimination;
@@ -56,8 +57,8 @@ public class PassDriver {
             new GEPMerge().run(module);
             new LoadStoreMerge().run(module);
             basicSimplify(module); // 基础优化（常量传播，死块消除，连续加法，phi合并，死代码消除）
-//            new ArrayLocalToGlobal().run(module);
-//            basicSimplify(module); // 基础优化（常量传播，死块消除，连续加法，phi合并，死代码消除）
+            new ArrayLocalToGlobal().run(module);
+            basicSimplify(module); // 基础优化（常量传播，死块消除，连续加法，phi合并，死代码消除）
 
 
 //            new NoPhi().run(module); // 后端前最后一步，尝试把phi替换掉，不SSA
