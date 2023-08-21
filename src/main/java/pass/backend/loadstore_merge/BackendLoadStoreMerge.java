@@ -3,6 +3,7 @@ package pass.backend.loadstore_merge;
 import backend.*;
 import backend.instructions.LdInstruction;
 import backend.instructions.SdInstruction;
+import backend.instructions.SwInstruction;
 import pass.backend.BaseBackendPass;
 
 import java.util.LinkedList;
@@ -78,7 +79,7 @@ public class BackendLoadStoreMerge implements BaseBackendPass {
                     sdTempStackAddress = null;
                     lastSdIndex = -1;
                 }
-            } else if (riscInst instanceof SdInstruction) {
+            } else if (riscInst instanceof SdInstruction || riscInst instanceof SwInstruction) {
                 if (!(riscInst.getOperandAt(0).emit().equals("t2"))
                         && tempStackAddress != null
                         && riscInst.getOperandAt(1).emit().equals(tempStackAddress.emit())) {
