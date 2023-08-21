@@ -294,8 +294,8 @@ public class RISCBasicBlock {
                                 instructionList.add(firstBrposition + index++, ldInstruction);
                             }
                             else {
-                                FldInstruction fldInstruction = new FldInstruction(dst, src);
-                                instructionList.add(firstBrposition + index++, fldInstruction);
+                                FlwInstruction flwInstruction = new FlwInstruction(dst, src);
+                                instructionList.add(firstBrposition + index++, flwInstruction);
                             }
                         } else {
                             MvInstruction mvInstruction = new MvInstruction(dst, src);
