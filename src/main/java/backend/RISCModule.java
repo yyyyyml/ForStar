@@ -32,7 +32,7 @@ public class RISCModule {
         if (((PointerType) gv.getType()).getPointedType().isArrayType()) {
             int totalSize = ((ArrayType) ((PointerType) gv.getType()).getPointedType()).getTotalSize();
             LinkedList<Integer> valList = new LinkedList<>();
-            System.out.println(11111111);
+            //System.out.println(11111111);
             if (true) {
                 RISCGlobalvarBlock GVB = new RISCGlobalvarBlock(valList, gv.getName().substring(1), totalSize, gv.init);
                 GlobalVarMap.put(gv, GVB);

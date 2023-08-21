@@ -6,6 +6,7 @@ import pass.backend.BaseBackendPass;
 import pass.backend.basic_optimize.BasicOptimize;
 import pass.backend.basic_optimize.MultipleOptimize;
 import pass.backend.large_number.LargeNumberPass;
+import pass.backend.loadstore_merge.BackendLoadStoreMerge;
 import pass.backend.register_allocator.FloatRegisterAllocator;
 import pass.backend.register_allocator.NNFloatRegAllocator;
 import pass.backend.register_allocator.NNRegAllocator;
@@ -76,8 +77,8 @@ public class PassDriver {
             new NNRegAllocator().run(riscModule); // 有活跃变量分析的寄存器分配
             new NNFloatRegAllocator().run(riscModule); // 有活跃变量分析的寄存器分配
             new LargeNumberPass().run(riscModule); // 一些指令12位立即数的限制处理
-//            new LoadStoreMerge().run(riscModule);
             new BasicOptimize().run(riscModule);
+            new BackendLoadStoreMerge().run(riscModule);
         } else {
             new RegisterAllocator().run(riscModule); // 普通的寄存器分配
             new FloatRegisterAllocator().run(riscModule); // 普通的寄存器分配
