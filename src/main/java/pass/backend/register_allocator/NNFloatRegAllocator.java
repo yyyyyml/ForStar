@@ -786,7 +786,7 @@ public class NNFloatRegAllocator implements BaseBackendPass {
                     if (lessRegSave) { //可以保存更少的寄存器，但是TLE了一个？
                         var curRegUsage = regUsageTracker.getPreRegisterUsage(position);
                         for (int i = 0; i < curRegUsage.getRegNum(); i++) {
-                            if (i < 29 && ((CallInstruction) riscInst).isCallBuildIn()) continue;
+                            if (((CallInstruction) riscInst).isCallBuildIn()) continue;
                             if (curRegUsage.isRegisterUsed(i)) {
                                 FloatRealRegister reg = new FloatRealRegister(i + 18);
                                 riscFunc.stackIndex += 8; // 开辟出临时保存寄存器值的位置
