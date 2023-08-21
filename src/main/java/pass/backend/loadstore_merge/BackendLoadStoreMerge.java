@@ -35,7 +35,7 @@ public class BackendLoadStoreMerge implements BaseBackendPass {
                     continue;
                 }
             }
-            else if(riscInst instanceof SdInstruction && riscInst.getOperandAt(0).emit().equals("t2")){
+            else if((riscInst instanceof SdInstruction || riscInst instanceof SwInstruction) && riscInst.getOperandAt(0).emit().equals("t2")){
                 sdTempStackAddress = riscInst.getOperandAt(1);
             }
             else {
